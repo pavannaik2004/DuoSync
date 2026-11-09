@@ -2,6 +2,8 @@ import PropTypes from 'prop-types';
 import { Link, useParams } from 'react-router-dom';
 import StatusMessage from '../components/StatusMessage';
 import Lobby from '../components/game/Lobby';
+import GameScreen from '../components/game/GameScreen';
+import Results from '../components/game/Results';
 import useAttempt from '../hooks/useAttempt';
 import { patterns } from '../utils/validators';
 
@@ -22,8 +24,8 @@ function PlayRoom({ code }) {
   if (!state) return <StatusMessage kind="loading" message="Joining the room…" />;
 
   let screen = <Lobby state={state} actions={actions} />;
-  if (state.status === 'in_progress') screen = <p>The game has started.</p>;
-  else if (state.result) screen = <p>The game is over.</p>;
+  if (state.status === 'in_progress') screen = <GameScreen state={state} actions={actions} />;
+  else if (state.result) screen = <Results state={state} />;
 
   return (
     <div className="play">
