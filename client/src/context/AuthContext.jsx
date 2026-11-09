@@ -26,16 +26,16 @@ export function AuthProvider({ children }) {
 
   // Asks the server who the saved token belongs to; `isCurrent` drops stale replies.
   const loadIdentity = useCallback((isCurrent = () => true) => {
-    me().then(
-      (identity) => {
+    me()
+      .then((identity) => {
         if (isCurrent()) setState(fromIdentity(identity));
-      },
-      (err) => {
+      })
+      .catch((err) => {
+        // Also catches a malformed reply, so the session check can never hang.
         if (!isCurrent()) return;
         if (err.code === 'AUTH_REQUIRED') logout();
         else setState({ ...ANON, status: 'error' });
-      },
-    );
+      });
   }, [logout]);
 
   const refresh = useCallback(() => {

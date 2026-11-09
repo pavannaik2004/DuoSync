@@ -57,6 +57,10 @@ export async function api(path, { method = 'GET', body } = {}) {
 
   if (res.status === 204) return null;
   const data = await res.json().catch(() => null);
+  if (res.ok && data === null) {
+    // e.g. VITE_API_URL points at the static site, which answers every path with index.html.
+    throw new ApiError(res.status, 'BAD_RESPONSE', 'The server sent an unexpected reply. Check the API address and try again.');
+  }
   if (!res.ok) {
     const err = new ApiError(
       res.status,

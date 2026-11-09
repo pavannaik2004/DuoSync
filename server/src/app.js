@@ -8,15 +8,16 @@ const AppError = require('./utils/AppError');
 
 /**
  * Builds the Express app without listening, so tests can drive it with
- * Supertest. `options.authRateLimit` overrides the login/signup limit.
+ * Supertest. Options override the login/signup limit and the allowed origins.
  */
 function createApp(options = {}) {
   const authRateLimit = options.authRateLimit ?? config.authRateLimit;
+  const clientOrigins = options.clientOrigins ?? config.clientOrigins;
   const app = express();
 
   app.set('trust proxy', 1); // behind Render's proxy: rate-limit by the real client IP
   app.use(helmet());
-  app.use(cors({ origin: config.clientOrigin }));
+  app.use(cors({ origin: clientOrigins }));
   app.use(express.json({ limit: '20kb' }));
 
   app.use('/api', createApiRouter({ authRateLimit }));

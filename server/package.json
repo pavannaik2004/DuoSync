@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
-    "test": "jest --runInBand"
+    "test": "jest --runInBand",
+    "dev:memory": "node scripts/devMemoryDb.js"
   },
   "license": "UNLICENSED",
   "dependencies": {
