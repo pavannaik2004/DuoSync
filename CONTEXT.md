@@ -4,10 +4,10 @@ The single source of truth for project progress. **Read this before starting any
 
 ## Current state
 
-- **Phase:** 1 Foundation. Code complete and merged into `main`; hosted deployment pending.
-- **Next:** deploy (README → Deploy; needs the user's Atlas, Render and Vercel accounts), then run the Phase 1 gate on the hosted URL. After that, write the Phase 2 plan.
-- **Hosted URLs:** none yet
-- **Open blockers:** deployment accounts (DECISIONS Q2); the *Themed Puzzle Sets* document for Phase 3 (Q4)
+- **Phase:** 1 Foundation **complete** (gate passed on the hosted site). Phase 2 not started.
+- **Next:** write the Phase 2 plan (Core attempt); start it with the deferred minors below.
+- **Hosted URLs:** API `https://duosync-api.onrender.com` (Render, free tier; sleeps when idle). Client: Vercel, root `client` (URL not yet recorded). Repo: `https://github.com/pavannaik2004/DuoSync`
+- **Open blockers:** the *Themed Puzzle Sets* document for Phase 3 (Q4)
 - **Run locally:** `npm --prefix server run dev:memory` + `npm run dev:client` (no database needed)
 - **Tests:** `npm test` → 64 backend tests
 - **Deferred minors from the Phase 1 review** (do these early in Phase 2): a former captain can rename an archived team; an archived team page still shows the "Open seat" row; a guest's "Create an account" link drops `?next=`; no fetch timeout or "server waking up" hint on cold starts; the join-race test asserts only status codes
@@ -24,7 +24,7 @@ The single source of truth for project progress. **Read this before starting any
 
 ## Phase checklist
 
-- [ ] 1 Foundation: code done, gate (two accounts form a team on the hosted URL) pending deployment
+- [x] 1 Foundation: gate passed 2026-11-09 (two accounts formed a team on the hosted site)
 - [ ] 2 Core attempt (EL Phase I)
 - [ ] 3 Challenges + level engine
 - [ ] 4 Competition + resilience (EL Phase II)
@@ -69,3 +69,9 @@ Newest entry last. Format: `### YYYY-MM-DD — <title>`, then what was done, the
 
 - At the user's request, `phase-1-foundation` was merged into `main` locally (fast-forward to 27b0713), and the branch was deleted. No remote is configured yet.
 - Verify on the merged `main`: `npm test` → 64/64 pass.
+
+### 2026-11-09 — Deployed; Phase 1 gate passed
+
+- The user pushed to GitHub (`pavannaik2004/DuoSync`) and deployed: MongoDB Atlas, the API on Render (`https://duosync-api.onrender.com`) and the client on Vercel.
+- Checked: `/api/health` → 200 `{"status":"ok"}`; an unknown `/api/*` path → 404 JSON. The bare root shows Express's `Cannot GET /`, which is expected because the API serves only `/api`.
+- The user tested the whole flow on the hosted site and confirmed it works, so the Phase 1 gate has passed. DECISIONS Q2 is resolved.

@@ -38,13 +38,13 @@ Status: **Decided** · **Deferred** (open, with the phase by which it must be se
 | D28 | 2026-11-09 | `CLIENT_ORIGIN` takes a comma-separated list; trailing slashes are ignored | A trailing slash or a Vercel preview URL otherwise fails with an opaque CORS error (final review) | Decided |
 | D29 | 2026-11-09 | `safeNext` resolves `next` with `new URL()`, requires the same origin, and rejects control characters and backslashes; a top-level `ErrorBoundary` catches render errors | `/\t/evil.com` slipped through and blanked the page (final review); NFR-20 says never a blank page | Decided |
 | D30 | 2026-11-09 | The API client treats a 200 reply that isn't JSON as an error (`BAD_RESPONSE`) | A wrong `VITE_API_URL` on Vercel otherwise leaves an endless "Checking your session" spinner | Decided |
+| D31 | 2026-11-09 | Hosting: MongoDB Atlas M0, Render free web service (`duosync-api`, from `render.yaml`), Vercel for the client | Free tiers that fit the PRD; resolves Q2 | Decided |
 
 ## Deferred
 
 | # | Date | Question | Must settle by | Notes |
 | --- | --- | --- | --- | --- |
 | Q1 | 2026-11-09 | Admin account seeding: Phase 1 or with the theme seed in Phase 3? | Phase 3 | Phase 1 tests set roles directly in the DB |
-| Q2 | 2026-11-09 | Hosting accounts and URLs (Atlas, Render, Vercel) | Phase 1, Task 10 | Needs the user's accounts |
 | Q3 | 2026-11-09 | Can the challenge creator see the in-progress team view if they also play in it? | Phase 4 | SCORE-5 vs. the fairness of the "accepted risk" |
 | Q4 | 2026-11-09 | Exact pool contents (words, riddles, weapons) for each generator | Phase 3 | The PRD references a *Themed Puzzle Sets* document that isn't in the repo. **Ask the user for it** |
 | Q5 | 2026-11-09 | How a paused attempt that was mid-countdown behaves after a server restart | Phase 4 | Edge case of D15 |
