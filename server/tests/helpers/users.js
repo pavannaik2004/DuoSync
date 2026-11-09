@@ -13,4 +13,11 @@ async function createGuest(app, nickname = 'Visitor_9') {
   return { token: res.body.token, guest: res.body.guest, auth: `Bearer ${res.body.token}` };
 }
 
-module.exports = { createPlayer, createGuest };
+/** Creates a practice room as the given player or guest and returns its code. */
+async function createRoom(app, auth) {
+  const res = await request(app).post('/api/practice').set('Authorization', auth);
+  if (res.status !== 201) throw new Error(`createRoom failed: ${res.status} ${JSON.stringify(res.body)}`);
+  return res.body.code;
+}
+
+module.exports = { createPlayer, createGuest, createRoom };
