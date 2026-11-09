@@ -39,6 +39,16 @@ Status: **Decided** · **Deferred** (open, with the phase by which it must be se
 | D29 | 2026-11-09 | `safeNext` resolves `next` with `new URL()`, requires the same origin, and rejects control characters and backslashes; a top-level `ErrorBoundary` catches render errors | `/\t/evil.com` slipped through and blanked the page (final review); NFR-20 says never a blank page | Decided |
 | D30 | 2026-11-09 | The API client treats a 200 reply that isn't JSON as an error (`BAD_RESPONSE`) | A wrong `VITE_API_URL` on Vercel otherwise leaves an endless "Checking your session" spinner | Decided |
 | D31 | 2026-11-09 | Hosting: MongoDB Atlas M0, Render free web service (`duosync-api`, from `render.yaml`), Vercel for the client | Free tiers that fit the PRD; resolves Q2 | Decided |
+| D32 | 2026-11-09 | Guests can create and join practice rooms from Phase 2. A player is identified by the token subject (user id or `guest_<uuid>`) | PRAC-1 allows guests and it costs nothing extra; Phase 5 still adds expiry and polish | Decided |
+| D33 | 2026-11-09 | Cyber Heist fixed values are written in `server/src/content/cyberHeist.js` (PIN 9742, FIREWALL, 23-12-4, 8315, NODE) | The *Themed Puzzle Sets* document is missing (Q4). In Phase 3 these become the templates' fallback; replace them if the document differs | Decided |
+| D34 | 2026-11-09 | Practice attempts start in status `lobby`. `players[]` stores `{ id, kind, name, role, ready }`; `memberIds` and the challenge unique indexes arrive with challenges in Phase 3 | Practice has no entry step, and guests have no ObjectId | Decided |
+| D35 | 2026-11-09 | The extra hint (GAME-10) arrives in Phase 3; the content already carries the hint text | §11 lists "shared board and extra hints" under Phase 3 | Decided |
+| D36 | 2026-11-09 | No pause in Phase 2: a disconnect mid-attempt does not stop the timer; a reconnect gets a full snapshot. Pause, the 60 s grace and the pause budget come in Phase 4 | §11 puts "disconnect, pause and resync" in Phase 4 | Decided |
+| D37 | 2026-11-09 | An `AttemptRuntime` is created lazily on the first join or event, so ticking resumes after a restart once someone rejoins; a countdown found at creation goes back to `lobby` | Covers restarts in Phase 2 without the full boot-time rebuild planned for Phase 4 | Decided |
+| D38 | 2026-11-09 | Results are shown on `/play/:code` from socket state and never include answers. `GET /api/attempts/:id/result` and the rank come in Phase 4 | Practice is unranked; answers are revealed only per CHAL-10 later | Decided |
+| D39 | 2026-11-09 | Socket events reply through an ack: `{ ok: true, … }` or `{ error, message }`. Without an ack the server emits `error` with the same body | Tests and the client can await each action; same error shape as REST (D5) | Decided |
+| D40 | 2026-11-09 | Phase 2 renders 5 clue types (text, tokens, table, strip, symbols), the ones Cyber Heist needs; `grid` comes in Phase 3. A glyph legend is `symbols` with labels | Builds only what the fixed level set uses | Decided |
+| D41 | 2026-11-09 | `rankCompare` is written with the leaderboards in Phase 4, not in Phase 2 | Nothing in Phase 2 ranks attempts | Decided |
 
 ## Deferred
 

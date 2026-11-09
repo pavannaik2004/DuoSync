@@ -5,8 +5,8 @@ The single source of truth for project progress. **Read this before starting any
 ## Current state
 
 - **Phase:** 1 Foundation **complete** (gate passed on the hosted site). Phase 2 not started.
-- **Next:** write the Phase 2 plan (Core attempt); start it with the deferred minors below.
-- **Hosted URLs:** API `https://duosync-api.onrender.com` (Render, free tier; sleeps when idle). Client: Vercel, root `client` (URL not yet recorded). Repo: `https://github.com/pavannaik2004/DuoSync`
+- **Next:** Phase 2 plan written (`docs/superpowers/plans/2026-11-09-02-core-attempt.md`, 10 tasks); waiting for the user's review and choice of execution method. Task 1 covers the deferred minors below.
+- **Hosted URLs:** API `https://duosync-api.onrender.com` (Render, free tier; sleeps when idle). Client `https://duo-sync-lovat.vercel.app` (Vercel, root `client`). Repo: `https://github.com/pavannaik2004/DuoSync`
 - **Open blockers:** the *Themed Puzzle Sets* document for Phase 3 (Q4)
 - **Run locally:** `npm --prefix server run dev:memory` + `npm run dev:client` (no database needed)
 - **Tests:** `npm test` → 64 backend tests
@@ -75,3 +75,9 @@ Newest entry last. Format: `### YYYY-MM-DD — <title>`, then what was done, the
 - The user pushed to GitHub (`pavannaik2004/DuoSync`) and deployed: MongoDB Atlas, the API on Render (`https://duosync-api.onrender.com`) and the client on Vercel.
 - Checked: `/api/health` → 200 `{"status":"ok"}`; an unknown `/api/*` path → 404 JSON. The bare root shows Express's `Cannot GET /`, which is expected because the API serves only `/api`.
 - The user tested the whole flow on the hosted site and confirmed it works, so the Phase 1 gate has passed. DECISIONS Q2 is resolved.
+
+### 2026-11-09 — Phase 2 plan written
+
+- Recorded the Vercel URL. Wrote `docs/superpowers/plans/2026-11-09-02-core-attempt.md`: 10 tasks covering the Phase 1 follow-ups, answers and scoring, Cyber Heist content with models and player views, practice REST, Socket.io join and chat, lobby and timer, gameplay, the client lobby, the client game and results screens, and the docs and gate.
+- Decisions D32–D41 added (guests in practice, fixed Cyber Heist values, no pause until Phase 4, lazy runtimes, socket acks, 5 clue types now). Roadmap statuses updated.
+- No code yet.
