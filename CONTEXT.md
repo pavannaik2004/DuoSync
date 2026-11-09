@@ -4,13 +4,13 @@ The single source of truth for project progress. **Read this before starting any
 
 ## Current state
 
-- **Phase:** 1 Foundation **complete** (gate passed on the hosted site). Phase 2 not started.
-- **Next:** Phase 2 plan written (`docs/superpowers/plans/2026-11-09-02-core-attempt.md`, 10 tasks); waiting for the user's review and choice of execution method. Task 1 covers the deferred minors below.
+- **Phase:** 1 Foundation complete. 2 Core attempt: code complete on branch `phase-2-core-attempt` (final review pending); hosted gate pending.
+- **Next:** final review of the Phase 2 branch, merge to `main` (user's call), push so Render and Vercel redeploy, then the Phase 2 gate: two devices finish Cyber Heist at `/practice` and see the same score.
 - **Hosted URLs:** API `https://duosync-api.onrender.com` (Render, free tier; sleeps when idle). Client `https://duo-sync-lovat.vercel.app` (Vercel, root `client`). Repo: `https://github.com/pavannaik2004/DuoSync`
 - **Open blockers:** the *Themed Puzzle Sets* document for Phase 3 (Q4)
 - **Run locally:** `npm --prefix server run dev:memory` + `npm run dev:client` (no database needed)
-- **Tests:** `npm test` → 64 backend tests
-- **Deferred minors from the Phase 1 review** (do these early in Phase 2): a former captain can rename an archived team; an archived team page still shows the "Open seat" row; a guest's "Create an account" link drops `?next=`; no fetch timeout or "server waking up" hint on cold starts; the join-race test asserts only status codes
+- **Tests:** `npm test` → 161 backend tests (REST, scoring, views, Socket.io games)
+- **Deferred minors from the Phase 1 review:** all five fixed in Phase 2 Task 1.
 
 ## Key documents
 
@@ -25,7 +25,7 @@ The single source of truth for project progress. **Read this before starting any
 ## Phase checklist
 
 - [x] 1 Foundation: gate passed 2026-11-09 (two accounts formed a team on the hosted site)
-- [ ] 2 Core attempt (EL Phase I)
+- [ ] 2 Core attempt (EL Phase I): code done, hosted gate pending
 - [ ] 3 Challenges + level engine
 - [ ] 4 Competition + resilience (EL Phase II)
 - [ ] 5 Admin + organizers
@@ -81,3 +81,19 @@ Newest entry last. Format: `### YYYY-MM-DD — <title>`, then what was done, the
 - Recorded the Vercel URL. Wrote `docs/superpowers/plans/2026-11-09-02-core-attempt.md`: 10 tasks covering the Phase 1 follow-ups, answers and scoring, Cyber Heist content with models and player views, practice REST, Socket.io join and chat, lobby and timer, gameplay, the client lobby, the client game and results screens, and the docs and gate.
 - Decisions D32–D41 added (guests in practice, fixed Cyber Heist values, no pause until Phase 4, lazy runtimes, socket acks, 5 clue types now). Roadmap statuses updated.
 - No code yet.
+
+### 2026-11-09 — Phase 2 Core attempt built (Tasks 1–10)
+
+- Branch `phase-2-core-attempt` (from `main` d7ff67f).
+- **T1** Phase 1 follow-ups: an archived team can't be renamed; the archived team page has no open-seat row; a guest's signup/login links keep `?next=`; fetch timeout (60 s) and a "server waking up" hint after 5 s.
+- **T2** `answers.js` (normalization per §6.4) and `scoring.js` (§7.3 formula, bonus, stars, summary).
+- **T3** Cyber Heist fixed values (`server/src/content/`), `Attempt` and `Message` models, `attemptView.js` (the only path for attempt data; NFR-1 test).
+- **T4** Practice rooms: `POST /api/practice`, `GET /api/practice/:code`, atomic second-seat join. Guests allowed (D32).
+- **T5** Socket.io: JWT handshake, per-attempt rooms and runtime (queue, presence), team chat, join/leave system messages.
+- **T6** Lobby: claim/release roles, ready, 5 s countdown with cancel, start (levels copied in), 1 s tick, timer warnings, timeout, restart resume (D37).
+- **T7** Gameplay: answer checking with a 2 s per-player limit, atomic solve, board, level unlocks with own halves only, finish, quit.
+- **T8** Client: `/practice`, `/play/:code`, `useAttempt` + reducer, lobby with role cards and chat.
+- **T9** Client: attempt screen (timer as a class component, level bar, clue renderers for text/tokens/table/strip/symbols, answer box, board, phone tabs), results screen.
+- **T10** README: real-time section, event table, the CO1 answer-submission trace.
+- Verify: `npm test` 161/161; client lint clean; build 110 KB gzip JS. Browser checks (headless Edge, two isolated sessions, one at 360 px): lobby 13/13, full game 21/21, including a double submit that scored once, a refresh mid-level that restored the state, and 97 WebSocket frames with no answer or partner half.
+- Rulings are in the plan's ledger and summarized for the user at hand-off; no new DECISIONS entries beyond D32–D41.
