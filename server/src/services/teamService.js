@@ -88,7 +88,7 @@ async function joinTeam(userId, code) {
   const team = await Team.findOneAndUpdate(
     { inviteCode, archived: false, memberIds: { $ne: userId }, 'memberIds.1': { $exists: false } },
     { $push: { memberIds: userId } },
-    { new: true },
+    { returnDocument: 'after' },
   ).populate('memberIds', MEMBER_FIELDS);
   if (team) return toView(team, userId);
 
@@ -121,7 +121,7 @@ async function regenerateInvite(teamId, userId) {
   assertCaptain(team, userId);
   if (team.archived) throw notFound();
   const updated = await withFreshCode((inviteCode) =>
-    Team.findByIdAndUpdate(team._id, { inviteCode }, { new: true }));
+    Team.findByIdAndUpdate(team._id, { inviteCode }, { returnDocument: 'after' }));
   return { inviteCode: updated.inviteCode };
 }
 
