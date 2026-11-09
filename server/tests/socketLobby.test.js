@@ -170,6 +170,49 @@ test('role changes after the start are rejected (NOT_IN_LOBBY)', async () => {
   expect(await a.emitWithAck('lobby:releaseRole')).toMatchObject({ error: 'NOT_IN_LOBBY' });
 });
 
+test('a socket that disconnects while its join is still queued is not counted as online (review I1)', async () => {
+  const { a, alice, code, attempt } = await setupRoom();
+  const runtime = srv.io.runtimes.get(String((await attempt())._id));
+  const a2 = await connect(srv.url, alice.token);
+  runtime.enqueue(() => wait(300)); // keep the queue busy so the join waits
+  a2.emit('attempt:join', { practiceCode: code });
+  await wait(60);
+  a2.disconnect();
+  await wait(400);
+  const left = nextEvent(a, 'lobby:update').catch(() => null);
+  a.disconnect();
+  await left;
+  await wait(100);
+  expect(runtime.connectedIds()).not.toContain(alice.user.id);
+});
+
+test('a second tab joining as the countdown fires does not cancel the start (review I2)', async () => {
+  const { a, b, alice, code, attempt } = await setupRoom({ countdownMs: 300 });
+  const runtime = srv.io.runtimes.get(String((await attempt())._id));
+  const a2 = await connect(srv.url, alice.token);
+  await claim(a, 'A');
+  await claim(b, 'B');
+  await ready(a);
+  const started = nextEvent(a, 'attempt:snapshot', 3000);
+  await ready(b);
+  await wait(100);
+  runtime.enqueue(() => wait(400)); // busy when the countdown timer fires
+  a2.emit('attempt:join', { practiceCode: code }); // queued before the start job
+  expect((await started).status).toBe('in_progress');
+  expect((await attempt()).status).toBe('in_progress');
+});
+
+test('a player who leaves the lobby is no longer ready (review I3)', async () => {
+  const { a, b, attempt } = await setupRoom();
+  await claim(b, 'B');
+  await ready(b);
+  const update = nextEvent(a, 'lobby:update');
+  b.disconnect();
+  const bob = (await update).players.find((p) => p.name === 'bob');
+  expect(bob).toMatchObject({ connected: false, ready: false });
+  expect((await attempt()).players.find((p) => p.name === 'bob').ready).toBe(false);
+});
+
 test('after a restart, rejoining an in-progress attempt resumes the ticks (D37)', async () => {
   const { a, b, alice, code } = await setupRoom();
   await startGame(a, b);

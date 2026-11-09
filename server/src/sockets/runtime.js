@@ -16,6 +16,7 @@ class AttemptRuntime {
     this.sockets = new Map(); // playerId → Set<socket>
     this.timers = new Set();
     this.lastSubmitAt = new Map(); // playerId → ms, for the 2-second submit gap (§7.4)
+    this.resumed = false; // set once the first join has rebuilt timers from the database (D37)
   }
 
   /** Runs `fn` after every job queued before it. A failing job does not block the next. */

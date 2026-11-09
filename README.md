@@ -112,7 +112,7 @@ The client has one variable, `VITE_API_URL`: the API's base URL, with no trailin
 npm test          # Jest + Supertest + Socket.io client against an in-memory MongoDB
 ```
 
-There are 161 tests: REST routes, scoring and answer rules, the Cyber Heist level set, the player views (no answer or partner half ever leaves the server), and full Socket.io games with two connected players. The first run downloads a MongoDB binary (about 780 MB unpacked) into `server/node_modules/.cache`. Later runs take about a minute.
+There are 164 tests: REST routes, scoring and answer rules, the Cyber Heist level set, the player views (no answer or partner half ever leaves the server), and full Socket.io games with two connected players. The first run downloads a MongoDB binary (about 780 MB unpacked) into `server/node_modules/.cache`. Later runs take about a minute.
 
 ## Deploy
 

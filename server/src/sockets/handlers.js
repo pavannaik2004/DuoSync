@@ -77,10 +77,16 @@ function registerHandlers(socket, runtimes) {
     }
     const runtime = runtimes.get(attemptId);
     await runtime.enqueue(async () => {
+      // The socket may have dropped while this job waited; a dead socket must not count as online.
+      if (!socket.connected) return;
       socket.data.attemptId = attemptId;
       socket.join(roomOf(attemptId));
       const first = runtime.addSocket(identity.id, socket);
-      await flow.resume(runtime, await Attempt.findById(attemptId));
+      // Rebuild timers only for a runtime created after a restart (D37), never on later joins.
+      if (!runtime.resumed) {
+        runtime.resumed = true;
+        await flow.resume(runtime, await Attempt.findById(attemptId));
+      }
       const attempt = await Attempt.findById(attemptId);
       if (first && !Attempt.FINAL.includes(attempt.status)) {
         await flow.systemMessage(runtime, `${identity.name} joined`, { except: socket });
@@ -184,8 +190,8 @@ function registerHandlers(socket, runtimes) {
       if (!runtime.removeSocket(identity.id, socket)) return;
       let attempt = await Attempt.findById(runtime.attemptId);
       if (!attempt) return;
-      if (attempt.status === 'countdown') {
-        // A player who leaves during the countdown cancels it (LOBBY-3).
+      if (['lobby', 'countdown'].includes(attempt.status)) {
+        // A player who leaves the lobby is no longer ready, and a running countdown stops (LOBBY-3).
         attempt = await lobby.unready(runtime.attemptId, identity.id);
         flow.cancelCountdown(runtime);
       }

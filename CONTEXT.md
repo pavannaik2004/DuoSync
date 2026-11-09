@@ -4,13 +4,13 @@ The single source of truth for project progress. **Read this before starting any
 
 ## Current state
 
-- **Phase:** 1 Foundation complete. 2 Core attempt: code complete on branch `phase-2-core-attempt` (final review pending); hosted gate pending.
-- **Next:** final review of the Phase 2 branch, merge to `main` (user's call), push so Render and Vercel redeploy, then the Phase 2 gate: two devices finish Cyber Heist at `/practice` and see the same score.
+- **Phase:** 1 Foundation complete. 2 Core attempt: code complete and reviewed on branch `phase-2-core-attempt`; merge and hosted gate pending.
+- **Next:** merge to `main` (user's call), push so Render and Vercel redeploy, then the Phase 2 gate: two devices finish Cyber Heist at `/practice` and see the same score.
 - **Hosted URLs:** API `https://duosync-api.onrender.com` (Render, free tier; sleeps when idle). Client `https://duo-sync-lovat.vercel.app` (Vercel, root `client`). Repo: `https://github.com/pavannaik2004/DuoSync`
 - **Open blockers:** the *Themed Puzzle Sets* document for Phase 3 (Q4)
 - **Run locally:** `npm --prefix server run dev:memory` + `npm run dev:client` (no database needed)
-- **Tests:** `npm test` → 161 backend tests (REST, scoring, views, Socket.io games)
-- **Deferred minors from the Phase 1 review:** all five fixed in Phase 2 Task 1.
+- **Tests:** `npm test` → 164 backend tests (REST, scoring, views, Socket.io games)
+- **Deferred minors from the Phase 2 review** (do early in Phase 3): a socket already in one room can grab a seat in another (crafted client only); runtimes not dropped for attempts that end with nobody connected; a mid-game handshake failure leaves "Reconnecting…" showing; the answer flash can be skipped after a reconnect; Review Focus 2 tests cover chat only; `level:submit` before the start says ATTEMPT_OVER instead of NOT_STARTED; unused client `getPractice`
 
 ## Key documents
 
@@ -97,3 +97,10 @@ Newest entry last. Format: `### YYYY-MM-DD — <title>`, then what was done, the
 - **T10** README: real-time section, event table, the CO1 answer-submission trace.
 - Verify: `npm test` 161/161; client lint clean; build 110 KB gzip JS. Browser checks (headless Edge, two isolated sessions, one at 360 px): lobby 13/13, full game 21/21, including a double submit that scored once, a refresh mid-level that restored the state, and 97 WebSocket frames with no answer or partner half.
 - Rulings are in the plan's ledger and summarized for the user at hand-off; no new DECISIONS entries beyond D32–D41.
+
+### 2026-11-09 — Phase 2 final review and fixes
+
+- An independent review (Opus) of the whole branch found 0 Critical, 3 Important and 8 Minor issues.
+- Fixed, each reproduced by a failing test first: (1) a socket that dropped while its join was queued stayed "online" forever, so a countdown could start with a player offline; (2) a second tab joining just as the countdown fired cancelled the start; (3) a player who left the lobby stayed "ready", so both could be ready and nothing started.
+- Verify: `npm test` 164/164; browser checks lobby 13/13 and full game 21/21.
+- Seven minors deferred (listed under Current state).
