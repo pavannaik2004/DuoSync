@@ -104,3 +104,9 @@ Newest entry last. Format: `### YYYY-MM-DD — <title>`, then what was done, the
 - Fixed, each reproduced by a failing test first: (1) a socket that dropped while its join was queued stayed "online" forever, so a countdown could start with a player offline; (2) a second tab joining just as the countdown fired cancelled the start; (3) a player who left the lobby stayed "ready", so both could be ready and nothing started.
 - Verify: `npm test` 164/164; browser checks lobby 13/13 and full game 21/21.
 - Seven minors deferred (listed under Current state).
+
+### 2026-11-09 — Phase 2 merged into main
+
+- At the user's request, `phase-2-core-attempt` was merged into `main` locally (fast-forward), and the branch was deleted.
+- Verify on the merged `main`: `npm test` → 164/164.
+- Not pushed yet. Pushing `main` redeploys Render and Vercel; then run the Phase 2 gate.
