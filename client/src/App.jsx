@@ -7,14 +7,9 @@ import NotFound from './pages/NotFound';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import GuestEntry from './pages/GuestEntry';
-
-// Replaced by the real pages in the next tasks.
-function Placeholder() {
-  return <section className="page"><p>Coming soon.</p></section>;
-}
-const MyTeams = Placeholder;
-const TeamPage = Placeholder;
-const JoinTeam = Placeholder;
+import MyTeams from './pages/MyTeams';
+import TeamPage from './pages/TeamPage';
+import JoinTeam from './pages/JoinTeam';
 
 const players = ['user'];
 const anyone = ['user', 'guest'];

@@ -9,6 +9,11 @@ const FORM_MESSAGES = {
   INVALID_CREDENTIALS: 'Email or password is incorrect.',
   RATE_LIMITED: 'Too many attempts. Wait a minute, then try again.',
   NETWORK_ERROR: 'Cannot reach the server. Check your connection and try again.',
+  INVALID_INVITE_CODE: 'That invite code does not work. It may be mistyped, or the captain made a new one.',
+  TEAM_FULL: 'This team already has 2 players.',
+  ALREADY_MEMBER: 'You are already in this team. Find it under My teams.',
+  NOT_CAPTAIN: 'Only the team captain can do that.',
+  TEAM_CHANGED: 'The team changed while you were doing that. Reload and try again.',
 };
 
 /** Splits an ApiError into { fields: { name: message }, form: message }. */
