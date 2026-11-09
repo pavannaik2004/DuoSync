@@ -15,6 +15,7 @@ class AttemptRuntime {
     this.queue = Promise.resolve();
     this.sockets = new Map(); // playerId → Set<socket>
     this.timers = new Set();
+    this.lastSubmitAt = new Map(); // playerId → ms, for the 2-second submit gap (§7.4)
   }
 
   /** Runs `fn` after every job queued before it. A failing job does not block the next. */

@@ -8,11 +8,16 @@ const AppError = require('../utils/AppError');
 const { joinPractice } = require('../services/practiceService');
 const { postMessage } = require('../services/chatService');
 const lobby = require('../services/lobbyService');
+const { submitAnswer } = require('../services/gameService');
+const { WRONG_COST } = require('../services/scoring');
+const { getContent } = require('../content');
+const { boardView, scoreOf, levelBar, clueFor } = require('../services/attemptView');
 const flow = require('./flow');
-const { str, oneOf } = require('./validate');
+const { str, int, oneOf } = require('./validate');
 const { roomOf } = require('./runtime');
 
 const CHAT_MAX = 300; // CHAT-1
+const ANSWER_MAX = 40;
 
 function errorBody(err) {
   if (err instanceof AppError) return { error: err.code, message: err.message };
@@ -116,6 +121,60 @@ function registerHandlers(socket, runtimes) {
     const attempt = await lobby.unready(runtime.attemptId, identity.id);
     if (attempt.status === 'lobby') flow.cancelCountdown(runtime);
     flow.broadcastLobby(runtime, attempt);
+  })));
+
+  socket.on('level:submit', handle(socket, async ({ order, answer }) => {
+    const level = int(order, { field: 'Level', min: 1, max: 5 });
+    const text = str(answer, { field: 'Answer', max: ANSWER_MAX });
+    const { player } = await loadMembership(socket);
+    const runtime = runtimeOf();
+
+    // §7.4: one submission per player every 2 seconds; a rejected one costs nothing.
+    const now = Date.now();
+    const last = runtime.lastSubmitAt.get(identity.id) || 0;
+    if (now - last < runtime.options.submitGapMs) {
+      throw new AppError(429, 'RATE_LIMITED', 'Wait 2 seconds between answers');
+    }
+    runtime.lastSubmitAt.set(identity.id, now);
+
+    return runtime.enqueue(async () => {
+      const outcome = await submitAnswer(runtime.attemptId, player, { order: level, answer: text }, Date.now());
+      if (outcome.kind === 'ignored') return { ignored: true };
+      const { attempt } = outcome;
+      const { theme } = getContent(attempt.themeSlug);
+      const submittedBy = { id: player.id, name: player.name, role: player.role || null };
+
+      if (outcome.kind === 'wrong') {
+        runtime.emitToRoom('level:result', {
+          order: level, correct: false, submittedBy, text, deduction: WRONG_COST, wrongCount: outcome.wrongCount,
+        });
+        const roleName = player.role ? theme.roles[player.role].name : player.name;
+        await flow.systemMessage(runtime, `Wrong answer "${text}" from ${roleName} (−${WRONG_COST})`);
+        return null;
+      }
+
+      const solved = attempt.levels[level - 1];
+      runtime.emitToRoom('level:result', { order: level, correct: true, submittedBy, text, points: outcome.points });
+      runtime.emitToRoom('board:update', { board: boardView(attempt), score: scoreOf(attempt), levels: levelBar(attempt) });
+      await flow.systemMessage(runtime, `${solved.title} solved: +${outcome.points}`);
+      if (outcome.finished) {
+        await flow.finish(runtime, 'finished');
+      } else {
+        attempt.players.forEach((p) => {
+          const clue = clueFor(attempt, p.id);
+          if (clue) runtime.emitToPlayer(p.id, 'level:unlocked', clue);
+        });
+      }
+      return null;
+    });
+  }));
+
+  socket.on('attempt:quit', handle(socket, queued(async (runtime) => {
+    const attempt = await Attempt.findById(runtime.attemptId);
+    if (['lobby', 'countdown'].includes(attempt.status)) {
+      throw new AppError(409, 'NOT_STARTED', 'The game has not started yet');
+    }
+    if (!(await flow.finish(runtime, 'ended_early'))) throw new AppError(409, 'ATTEMPT_OVER', 'This game is over');
   })));
 
   socket.on('disconnect', () => {
