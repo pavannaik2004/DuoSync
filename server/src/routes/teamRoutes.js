@@ -11,13 +11,22 @@ const nameRules = [
     .withMessage('Team name must be 3-24 letters, digits, spaces, _ or -'),
 ];
 
+const codeRules = [
+  body('code').isString().withMessage('Invite code is required').bail()
+    .trim().isLength({ min: 1, max: 16 }).isAlphanumeric()
+    .withMessage('Invite codes contain only letters and digits'),
+];
+
 function createTeamRouter() {
   const router = express.Router();
   router.use(requirePlayer);
 
   router.post('/', validate(nameRules), teams.create);
   router.get('/mine', teams.mine);
+  router.post('/join', validate(codeRules), teams.join);
   router.get('/:id', teams.show);
+  router.patch('/:id', validate(nameRules), teams.rename);
+  router.post('/:id/invite-code', teams.newInviteCode);
 
   return router;
 }
