@@ -27,6 +27,7 @@ function createTeamRouter() {
   router.get('/:id', teams.show);
   router.patch('/:id', validate(nameRules), teams.rename);
   router.post('/:id/invite-code', teams.newInviteCode);
+  router.delete('/:id/members/:userId', teams.removeMember);
 
   return router;
 }

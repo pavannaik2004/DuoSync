@@ -125,4 +125,34 @@ async function regenerateInvite(teamId, userId) {
   return { inviteCode: updated.inviteCode };
 }
 
-module.exports = { toView, createTeam, listMine, getTeam, joinTeam, renameTeam, regenerateInvite };
+/**
+ * The captain removes the partner, or a member leaves (TEAM-4, TEAM-5).
+ * Captain leaving with a partner left → the partner becomes captain (DECISIONS D10).
+ * Last member leaving → archived, invite code removed, past results kept.
+ */
+async function removeMember(teamId, actorId, targetUserId) {
+  const team = await findTeam(teamId);
+  const actor = String(actorId);
+  const target = String(targetUserId);
+  const isSelf = actor === target;
+
+  if (!isSelf) assertCaptain(team, actor);
+  const memberIds = team.memberIds.map((m) => String(m._id));
+  if (!memberIds.includes(target)) throw new AppError(404, 'MEMBER_NOT_FOUND', 'That player is not in this team');
+  // TEAM-7: block while an attempt is in progress (Phase 3).
+
+  const remaining = memberIds.filter((id) => id !== target);
+  const update = remaining.length === 0
+    ? { $set: { memberIds: [], archived: true }, $unset: { inviteCode: 1 } }
+    : { $set: { memberIds: remaining, captainId: String(team.captainId) === target ? remaining[0] : team.captainId } };
+
+  // Only apply if membership is unchanged since we read it (optimistic check).
+  const result = await Team.updateOne({ _id: team._id, memberIds: { $size: memberIds.length, $all: memberIds } }, update);
+  if (result.modifiedCount !== 1) {
+    throw new AppError(409, 'TEAM_CHANGED', 'The team changed while you were doing that. Try again.');
+  }
+}
+
+module.exports = {
+  toView, createTeam, listMine, getTeam, joinTeam, renameTeam, regenerateInvite, removeMember,
+};

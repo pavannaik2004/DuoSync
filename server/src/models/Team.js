@@ -11,8 +11,9 @@ const teamSchema = new mongoose.Schema(
     memberIds: {
       type: [{ type: ObjectId, ref: 'User' }],
       validate: {
-        validator: (ids) => ids.length >= 1 && ids.length <= 2,
-        message: 'A team has 1 or 2 members',
+        // 0 members only once archived (TEAM-5); teamService enforces that.
+        validator: (ids) => ids.length <= 2,
+        message: 'A team has at most 2 members',
       },
     },
     // Setter uppercases codes (§10.1 Unit III). Removed when the team is archived.

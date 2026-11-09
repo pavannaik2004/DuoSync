@@ -24,4 +24,9 @@ async function newInviteCode(req, res) {
   res.json(await teamService.regenerateInvite(req.params.id, req.user._id));
 }
 
-module.exports = { create, mine, show, join, rename, newInviteCode };
+async function removeMember(req, res) {
+  await teamService.removeMember(req.params.id, req.user._id, req.params.userId);
+  res.status(204).end();
+}
+
+module.exports = { create, mine, show, join, rename, newInviteCode, removeMember };
