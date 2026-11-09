@@ -4,14 +4,14 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Landing from './pages/Landing';
 import Dashboard from './pages/Dashboard';
 import NotFound from './pages/NotFound';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import GuestEntry from './pages/GuestEntry';
 
 // Replaced by the real pages in the next tasks.
 function Placeholder() {
   return <section className="page"><p>Coming soon.</p></section>;
 }
-const Login = Placeholder;
-const Signup = Placeholder;
-const GuestEntry = Placeholder;
 const MyTeams = Placeholder;
 const TeamPage = Placeholder;
 const JoinTeam = Placeholder;
