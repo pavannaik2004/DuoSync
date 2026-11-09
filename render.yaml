@@ -1,0 +1,22 @@
+# Render blueprint for the DuoSync API (free web service, WebSockets supported).
+# MONGODB_URI and CLIENT_ORIGIN are entered in the Render dashboard on first deploy.
+services:
+  - type: web
+    name: duosync-api
+    runtime: node
+    plan: free
+    rootDir: server
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: MONGODB_URI
+        sync: false
+      - key: CLIENT_ORIGIN
+        sync: false

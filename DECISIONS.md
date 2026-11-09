@@ -28,6 +28,13 @@ Status: **Decided** · **Deferred** (open, with the phase by which it must be se
 | D18 | 2026-11-09 | `react-router-dom` package, declarative routes | Matches the syllabus/lab naming (Lab 10) | Decided |
 | D19 | 2026-11-09 | The login `?next=` parameter is accepted only for same-site paths (`/…`, not `//…`) | Prevents an open redirect | Decided |
 | D20 | 2026-11-09 | Commits carry no Claude co-author trailer | User instruction | Decided |
+| D21 | 2026-11-09 | The test DB helper passes `runtimeAdapters: { os }` to `mongoose.connect`, and `MONGOMS_DOWNLOAD_DIR` is pinned in `tests/setupEnv.js` | mongodb driver 7.8 loads `os` with a dynamic `import()`, which fails inside Jest and leaves an empty handshake; without the pin, runs from the repo root re-download about 780 MB. Test-only | Decided |
+| D22 | 2026-11-09 | `/api/auth/guest` shares the login/signup limiter (10/min per IP) | Same abuse surface: it issues tokens for free | Decided |
+| D23 | 2026-11-09 | Removing a member is an optimistic update on the exact member set; a conflict returns 409 `TEAM_CHANGED` | A join racing a leave can't corrupt the captain or archive state | Decided |
+| D24 | 2026-11-09 | `npm --prefix server run dev:memory` runs the API on an in-memory MongoDB | Lets the app run locally and in demos without Atlas | Decided |
+| D25 | 2026-11-09 | `render.yaml` sits at the repo root with `rootDir: server` | Render reads blueprints only from the repo root | Decided |
+| D26 | 2026-11-09 | The invite box shows only while a team has an open seat | A full team can't accept joins; the captain can still make a new code | Decided |
+| D27 | 2026-11-09 | Client helpers `useForm` (regex validation with server error mapping) and `useAsync` (loading, error, reload) | One pattern for 5 forms and every data page (UI-4) | Decided |
 
 ## Deferred
 
@@ -39,3 +46,4 @@ Status: **Decided** · **Deferred** (open, with the phase by which it must be se
 | Q4 | 2026-11-09 | Exact pool contents (words, riddles, weapons) for each generator | Phase 3 | The PRD references a *Themed Puzzle Sets* document that isn't in the repo. **Ask the user for it** |
 | Q5 | 2026-11-09 | How a paused attempt that was mid-countdown behaves after a server restart | Phase 4 | Edge case of D15 |
 | Q6 | 2026-11-09 | Sound assets: Web Audio synthesis or bundled files | Phase 6 | The PRD allows either |
+| Q7 | 2026-11-09 | NFR-6 allows 10 auth requests per minute per IP. In a class contest where 50 students share one college IP (NAT), signups would be throttled | Before the first class event (Phase 4/5) | `AUTH_RATE_LIMIT` is configurable: raise it for event days, or key the limit by IP + email |
