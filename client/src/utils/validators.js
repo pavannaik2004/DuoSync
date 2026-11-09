@@ -10,6 +10,7 @@ export const patterns = {
   PASSWORD: /^(?=.*[A-Za-z])(?=.*\d).{8,72}$/,
   TEAM_NAME: /^(?=.{3,24}$)[A-Za-z0-9_-]+(?: [A-Za-z0-9_-]+)*$/,
   INVITE_CODE: /^[A-Za-z0-9]{1,16}$/,
+  PRACTICE_CODE: /^[A-HJ-NP-Z2-9]{6}$/i,
 };
 
 const check = (pattern, empty, wrong) => (value) => {
@@ -34,4 +35,5 @@ export const validators = {
       : 'Use 3-24 letters, digits, single spaces, _ or -, with no space at the start or end.';
   },
   inviteCode: check(patterns.INVITE_CODE, 'Enter the invite code.', 'Invite codes contain only letters and digits.'),
+  practiceCode: check(patterns.PRACTICE_CODE, 'Enter the room code.', 'Room codes have 6 letters and digits, like K7QM2X.'),
 };

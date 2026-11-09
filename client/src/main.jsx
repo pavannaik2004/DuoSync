@@ -5,6 +5,7 @@ import { AuthProvider } from './context/AuthContext';
 import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
 import './styles/base.css';
+import './styles/game.css';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

@@ -10,6 +10,8 @@ import GuestEntry from './pages/GuestEntry';
 import MyTeams from './pages/MyTeams';
 import TeamPage from './pages/TeamPage';
 import JoinTeam from './pages/JoinTeam';
+import PracticeHome from './pages/PracticeHome';
+import PlayPage from './pages/PlayPage';
 
 const players = ['user'];
 const anyone = ['user', 'guest'];
@@ -27,6 +29,8 @@ export default function App() {
         <Route path="teams/join" element={<ProtectedRoute allow={players}><JoinTeam /></ProtectedRoute>} />
         <Route path="teams/join/:code" element={<ProtectedRoute allow={players}><JoinTeam /></ProtectedRoute>} />
         <Route path="teams/:id" element={<ProtectedRoute allow={players}><TeamPage /></ProtectedRoute>} />
+        <Route path="practice" element={<ProtectedRoute allow={anyone}><PracticeHome /></ProtectedRoute>} />
+        <Route path="play/:code" element={<ProtectedRoute allow={anyone}><PlayPage /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

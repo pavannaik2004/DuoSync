@@ -8,8 +8,11 @@ export default function Dashboard() {
     return (
       <section className="page narrow">
         <h1>Hi, {guest.nickname}</h1>
-        <p>Practice rooms open in an upcoming update. To join a team and play ranked challenges, create an account.</p>
-        <p><Link className="btn btn-primary" to="/signup">Create an account</Link></p>
+        <p>Guests can play practice games with any partner. To join a team and play ranked challenges, create an account.</p>
+        <p className="actions">
+          <Link className="btn btn-primary" to="/practice">Start a practice room</Link>
+          <Link className="btn" to="/signup">Create an account</Link>
+        </p>
       </section>
     );
   }
@@ -25,6 +28,10 @@ export default function Dashboard() {
         <Link className="tile tile-b" to="/teams/join">
           <h2>Join a team</h2>
           <p>Got an invite code from a friend? Enter it here.</p>
+        </Link>
+        <Link className="tile tile-a" to="/practice">
+          <h2>Practice</h2>
+          <p>Play Cyber Heist with any partner. Not ranked.</p>
         </Link>
       </div>
     </section>

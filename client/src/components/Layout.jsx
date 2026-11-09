@@ -21,12 +21,14 @@ export default function Layout() {
           {status === 'user' && (
             <>
               <NavLink to="/teams">My teams</NavLink>
+              <NavLink to="/practice">Practice</NavLink>
               <span className="who" title="Signed in">{user.username}</span>
               <button type="button" className="btn btn-ghost" onClick={handleLogout}>Log out</button>
             </>
           )}
           {status === 'guest' && (
             <>
+              <NavLink to="/practice">Practice</NavLink>
               <span className="who" title="Playing as guest">{guest.nickname} (guest)</span>
               <button type="button" className="btn btn-ghost" onClick={handleLogout}>Leave</button>
             </>
