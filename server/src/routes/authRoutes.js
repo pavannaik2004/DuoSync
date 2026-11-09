@@ -2,6 +2,7 @@ const express = require('express');
 const { body } = require('express-validator');
 const validate = require('../middleware/validate');
 const { createAuthLimiter } = require('../middleware/rateLimit');
+const { requireAuth } = require('../middleware/auth');
 const patterns = require('../utils/patterns');
 const auth = require('../controllers/authController');
 
@@ -22,12 +23,19 @@ const loginRules = [
   str('password', 'Password').notEmpty().withMessage('Password is required').isLength({ max: 72 }),
 ];
 
+const guestRules = [
+  str('nickname', 'Nickname').trim().matches(patterns.NICKNAME)
+    .withMessage('Nickname must be 3-20 letters, digits or underscores'),
+];
+
 function createAuthRouter({ authRateLimit }) {
   const router = express.Router();
   const limiter = createAuthLimiter(authRateLimit);
 
   router.post('/signup', limiter, validate(signupRules), auth.signup);
   router.post('/login', limiter, validate(loginRules), auth.login);
+  router.post('/guest', limiter, validate(guestRules), auth.guest);
+  router.get('/me', requireAuth, auth.me);
 
   return router;
 }

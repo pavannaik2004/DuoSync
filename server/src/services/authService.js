@@ -1,3 +1,5 @@
+const crypto = require('crypto');
+const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const AppError = require('../utils/AppError');
@@ -41,4 +43,18 @@ async function login({ email, password }) {
   return session(user);
 }
 
-module.exports = { signup, login };
+/** Guests are not stored; the token carries the guest id and nickname (§9.1). */
+function guest({ nickname }) {
+  const id = `guest_${crypto.randomUUID()}`;
+  return { token: signToken({ sub: id, kind: 'guest', nickname }), guest: { id, nickname } };
+}
+
+/** The signed-in identity behind req.auth. */
+async function me(auth) {
+  if (auth.kind === 'guest') return { kind: 'guest', guest: { id: auth.id, nickname: auth.nickname } };
+  const user = mongoose.isValidObjectId(auth.id) ? await User.findById(auth.id) : null;
+  if (!user) throw new AppError(401, 'AUTH_REQUIRED', 'Please log in again');
+  return { kind: 'user', user: user.toJSON() };
+}
+
+module.exports = { signup, login, guest, me };
