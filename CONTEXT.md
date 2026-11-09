@@ -4,7 +4,7 @@ The single source of truth for project progress. **Read this before starting any
 
 ## Current state
 
-- **Phase:** 1 Foundation. Code complete on branch `phase-1-foundation`; hosted deployment pending.
+- **Phase:** 1 Foundation. Code complete and merged into `main`; hosted deployment pending.
 - **Next:** deploy (README → Deploy; needs the user's Atlas, Render and Vercel accounts), then run the Phase 1 gate on the hosted URL. After that, write the Phase 2 plan.
 - **Hosted URLs:** none yet
 - **Open blockers:** deployment accounts (DECISIONS Q2); the *Themed Puzzle Sets* document for Phase 3 (Q4)
@@ -64,3 +64,8 @@ Newest entry last. Format: `### YYYY-MM-DD — <title>`, then what was done, the
 - Fixed, each reproduced first and then verified: (1) a crafted `?next=` with a tab or newline blanked the page → stricter `safeNext` + `ErrorBoundary`; (2) the `dev:memory` script was missing from `server/package.json`; (3) a 200 HTML reply (wrong `VITE_API_URL`) left an endless spinner → `BAD_RESPONSE` error; (4) CORS now accepts an origin list and ignores trailing slashes.
 - Verify: `npm test` 64/64; client lint clean; browser walk-through 21/21.
 - Five minors deferred; they are listed under Current state. Decisions D28–D30 added.
+
+### 2026-11-09 — Phase 1 merged into main
+
+- At the user's request, `phase-1-foundation` was merged into `main` locally (fast-forward to 27b0713), and the branch was deleted. No remote is configured yet.
+- Verify on the merged `main`: `npm test` → 64/64 pass.
