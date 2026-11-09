@@ -35,6 +35,9 @@ Status: **Decided** · **Deferred** (open, with the phase by which it must be se
 | D25 | 2026-11-09 | `render.yaml` sits at the repo root with `rootDir: server` | Render reads blueprints only from the repo root | Decided |
 | D26 | 2026-11-09 | The invite box shows only while a team has an open seat | A full team can't accept joins; the captain can still make a new code | Decided |
 | D27 | 2026-11-09 | Client helpers `useForm` (regex validation with server error mapping) and `useAsync` (loading, error, reload) | One pattern for 5 forms and every data page (UI-4) | Decided |
+| D28 | 2026-11-09 | `CLIENT_ORIGIN` takes a comma-separated list; trailing slashes are ignored | A trailing slash or a Vercel preview URL otherwise fails with an opaque CORS error (final review) | Decided |
+| D29 | 2026-11-09 | `safeNext` resolves `next` with `new URL()`, requires the same origin, and rejects control characters and backslashes; a top-level `ErrorBoundary` catches render errors | `/\t/evil.com` slipped through and blanked the page (final review); NFR-20 says never a blank page | Decided |
+| D30 | 2026-11-09 | The API client treats a 200 reply that isn't JSON as an error (`BAD_RESPONSE`) | A wrong `VITE_API_URL` on Vercel otherwise leaves an endless "Checking your session" spinner | Decided |
 
 ## Deferred
 

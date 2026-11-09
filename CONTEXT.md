@@ -9,7 +9,8 @@ The single source of truth for project progress. **Read this before starting any
 - **Hosted URLs:** none yet
 - **Open blockers:** deployment accounts (DECISIONS Q2); the *Themed Puzzle Sets* document for Phase 3 (Q4)
 - **Run locally:** `npm --prefix server run dev:memory` + `npm run dev:client` (no database needed)
-- **Tests:** `npm test` → 61 backend tests
+- **Tests:** `npm test` → 64 backend tests
+- **Deferred minors from the Phase 1 review** (do these early in Phase 2): a former captain can rename an archived team; an archived team page still shows the "Open seat" row; a guest's "Create an account" link drops `?next=`; no fetch timeout or "server waking up" hint on cold starts; the join-race test asserts only status codes
 
 ## Key documents
 
@@ -56,3 +57,10 @@ Newest entry last. Format: `### YYYY-MM-DD — <title>`, then what was done, the
 - Verify: `npm test` → 61/61 pass. Client lint clean, build 89.6 KB gzip JS. A headless-Edge walk-through of the real UI passed 21/21 checks, including 360 px with no horizontal scroll and the invite link from a logged-out browser.
 - Problems fixed along the way: mongodb driver 7.8 inside Jest (D21); Mongoose 9 deprecation of `{ new: true }` (now `returnDocument: 'after'`); the landing hero overlapping its tagline.
 - Decisions D21–D27 and question Q7 added to DECISIONS.md.
+
+### 2026-11-09 — Phase 1 final review and fixes
+
+- An independent review of the whole branch found 0 Critical and 3 Important issues, plus 6 Minor ones (one upgraded to Important).
+- Fixed, each reproduced first and then verified: (1) a crafted `?next=` with a tab or newline blanked the page → stricter `safeNext` + `ErrorBoundary`; (2) the `dev:memory` script was missing from `server/package.json`; (3) a 200 HTML reply (wrong `VITE_API_URL`) left an endless spinner → `BAD_RESPONSE` error; (4) CORS now accepts an origin list and ignores trailing slashes.
+- Verify: `npm test` 64/64; client lint clean; browser walk-through 21/21.
+- Five minors deferred; they are listed under Current state. Decisions D28–D30 added.
