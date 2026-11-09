@@ -104,6 +104,7 @@ async function joinTeam(userId, code) {
 async function renameTeam(teamId, userId, name) {
   const team = await findTeam(teamId);
   assertCaptain(team, userId);
+  if (team.archived) throw notFound(); // the former captain of an archived team
   await assertNameFree(name, team._id);
   team.name = name;
   try {

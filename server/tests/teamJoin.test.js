@@ -53,7 +53,12 @@ test('concurrent joins for the last slot: exactly one wins', async () => {
   const carol = await createPlayer(app, 'carol');
   const [r1, r2] = await Promise.all([join(bob.auth, team.inviteCode), join(carol.auth, team.inviteCode)]);
   expect([r1.status, r2.status].sort()).toEqual([200, 409]);
-  expect((await Team.findById(team.id)).memberIds).toHaveLength(2);
+  const [winner, loser] = r1.status === 200 ? [bob, carol] : [carol, bob];
+  expect((r1.status === 200 ? r2 : r1).body.error).toBe('TEAM_FULL');
+  const ids = (await Team.findById(team.id)).memberIds.map(String);
+  expect(ids).toHaveLength(2);
+  expect(ids).toEqual(expect.arrayContaining([alice.user.id, winner.user.id]));
+  expect(ids).not.toContain(loser.user.id);
 });
 
 test('captain renames; the partner gets 403 NOT_CAPTAIN; a duplicate name → 409', async () => {

@@ -198,6 +198,7 @@ a { color: var(--role-a); }
 }
 .status p { margin: 0; }
 .status-error p { color: var(--text); }
+.status .status-hint { font-size: 0.9rem; }
 .status-icon {
   display: inline-grid;
   place-items: center;

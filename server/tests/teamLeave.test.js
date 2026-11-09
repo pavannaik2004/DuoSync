@@ -89,3 +89,11 @@ test('an archived team keeps its name reserved', async () => {
   expect(res.status).toBe(409);
   expect(res.body.error).toBe('TEAM_NAME_TAKEN');
 });
+
+test('a former captain cannot rename an archived team (404)', async () => {
+  await remove(bob.auth, team.id, bob.user.id);
+  await remove(alice.auth, team.id, alice.user.id);
+  const res = await request(app).patch(`/api/teams/${team.id}`).set('Authorization', alice.auth).send({ name: 'Ghost Crew' });
+  expect(res.status).toBe(404);
+  expect(res.body.error).toBe('TEAM_NOT_FOUND');
+});

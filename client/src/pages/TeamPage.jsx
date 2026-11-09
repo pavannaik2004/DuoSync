@@ -12,7 +12,7 @@ import { getTeam, newInviteCode, removeMember, renameTeam } from '../api/teams';
 import { splitApiError } from '../utils/formErrors';
 import { validators } from '../utils/validators';
 
-function MemberList({ members, captainId }) {
+function MemberList({ members, captainId, archived }) {
   return (
     <ul className="member-list">
       {members.map((m) => (
@@ -24,7 +24,7 @@ function MemberList({ members, captainId }) {
           {m.id === captainId && <span className="badge">Captain</span>}
         </li>
       ))}
-      {members.length < 2 && (
+      {!archived && members.length < 2 && (
         <li className="seat-open">
           <span className="avatar avatar-empty" aria-hidden="true">?</span>
           <span>Open seat: send the invite link below</span>
@@ -37,6 +37,7 @@ function MemberList({ members, captainId }) {
 MemberList.propTypes = {
   members: PropTypes.arrayOf(memberShape).isRequired,
   captainId: PropTypes.string.isRequired,
+  archived: PropTypes.bool.isRequired,
 };
 
 function InviteBox({ code }) {
@@ -128,7 +129,7 @@ export default function TeamPage() {
       <h1>{t.name}</h1>
       {t.archived && <p className="form-note">This team is archived. Its past results are kept.</p>}
 
-      <MemberList members={t.members} captainId={t.captainId} />
+      <MemberList members={t.members} captainId={t.captainId} archived={t.archived} />
 
       {isMember && t.inviteCode && t.members.length < 2 && (
         <>

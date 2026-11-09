@@ -1,5 +1,9 @@
 const TOKEN_KEY = 'duosync.token';
 const BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+const TIMEOUT_MS = 60000; // a sleeping free-tier server can take most of a minute to wake
+
+/** The API origin ('' means same origin). The socket connects here too. */
+export const API_BASE = BASE;
 
 let onUnauthorized = () => {};
 
@@ -50,8 +54,12 @@ export async function api(path, { method = 'GET', body } = {}) {
       method,
       headers,
       body: body === undefined ? undefined : JSON.stringify(body),
+      signal: AbortSignal.timeout(TIMEOUT_MS),
     });
-  } catch {
+  } catch (err) {
+    if (err && err.name === 'TimeoutError') {
+      throw new ApiError(0, 'TIMEOUT', 'The server took too long to answer. Try again.');
+    }
     throw new ApiError(0, 'NETWORK_ERROR', 'Cannot reach the server. Check your connection and try again.');
   }
 

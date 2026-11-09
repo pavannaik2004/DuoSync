@@ -26,11 +26,15 @@ export default function ProtectedRoute({ allow, children }) {
     return <Navigate to={`/login?next=${next}`} replace />;
   }
   if (!allow.includes(status)) {
+    const next = encodeURIComponent(location.pathname + location.search);
     return (
       <section className="page narrow">
         <h1>Players only</h1>
         <p>Guests can play practice games. Teams and challenges need an account.</p>
-        <p><Link className="btn btn-primary" to="/signup">Create an account</Link></p>
+        <p className="actions">
+          <Link className="btn btn-primary" to={`/signup?next=${next}`}>Create an account</Link>
+          <Link className="btn" to={`/login?next=${next}`}>Log in</Link>
+        </p>
       </section>
     );
   }
