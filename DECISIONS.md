@@ -73,7 +73,7 @@ Status: **Decided** · **Deferred** (open, with the phase by which it must be se
 | D63 | 2026-11-10 | If a level set cannot be built when a game starts (theme deactivated, generation error), the room returns to the lobby with everyone unready and a system message. The error is logged | A start failure must not strand a countdown or leave a half-started attempt | Decided |
 | D64 | 2026-11-10 | A partner join whose entry update modifies nothing is a conflict: it is rolled back and answers 409 `TEAM_CHANGED`. A failed rollback write is logged | Silent success would leave the team and its entries disagreeing | Decided |
 | D65 | 2026-11-10 | `generateLevelSet` lives in `server/src/generators/levelSet.js` and is not re-exported from `generators/index.js` | `validate.js` requires `index.js`, so a re-export would be a require cycle | Decided |
-| D66 | 2026-11-10 | A hint's -25 shows in the running score only when the level is solved. The reveal chat line states the cost | §7.3 computes level points at the solve, so there is no earlier score to charge | Decided |
+| D66 | 2026-11-10 | The server applies the -25 hint cost when the level is solved (§7.3 computes level points at the solve); the running score shows it from then on, and the reveal chat line states the cost at once | §7.3 computes level points at the solve, so there is no earlier score to charge | Decided |
 
 ## Deferred
 

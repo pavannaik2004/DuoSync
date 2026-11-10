@@ -196,7 +196,7 @@ Newest entry last. Format: `### YYYY-MM-DD — <title>`, then what was done, the
 ### 2026-11-10 — Phase 3 Challenges + level engine built (Tasks 1–12; Task 13 docs)
 
 - Branch `phase-3-challenges-engine` (from `main` 3914b07). Per-task entries above give the details of Tasks 2–5, 7–9 and 12; this entry sums up the phase.
-- **T1** Phase 2 deferred minors fixed (seat grab across rooms, idle runtimes dropped, `NOT_STARTED`, reconnect banner).
+- **T1** All seven Phase 2 deferred minors fixed (commit 16633f6): a socket in one room can no longer grab a seat in another; idle runtimes are dropped for attempts that end with nobody connected; a mid-game handshake failure shows an error banner with Retry/Log in instead of "Reconnecting…"; the answer flash survives a reconnect (the reducer keeps `lastResult` across a snapshot); the socketLobby `test.each` now covers `lobby:claimRole`, `lobby:ready`, `lobby:cancel`, `level:submit` and `attempt:quit` (NOT_IN_ATTEMPT), not just chat; `level:submit` before the start answers `NOT_STARTED`; the unused client `getPractice` is removed.
 - **T2–T5** The level engine in `server/src/generators/`: seeded RNG, validator, per-mechanic solvers, generators for all 11 mechanics with theme variants, finale planning and `generateLevelSet` (20 retries per level, whole-fallback on failure).
 - **T6** Themes and level templates in MongoDB (`Theme`, `LevelTemplate`), theme snapshots, `ensureSeeded()` at boot, `seed.js` (themes plus admin from `SEED_ADMIN_*`), fresh practice values and the practice theme picker's API (`GET /api/themes`). A failed start returns the room to the lobby (D63).
 - **T7** `Challenge` model and REST (create, view by code, edit before `startsAt`, delete).
