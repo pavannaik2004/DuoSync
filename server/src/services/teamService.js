@@ -99,26 +99,40 @@ async function assertPartnerFree(teamId, userId) {
   if (clash) throw partnerInChallenge();
 }
 
-/** D56: the new partner joins the team's not-started entries; on a clash the join is undone. */
+/**
+ * D56: the new partner joins the team's not-started entries. On a clash or an entry that
+ * could not take them, the entry updates are undone first, then the team join.
+ */
 async function addToEntries(team, userId) {
   const entries = await Attempt.find({ teamId: team._id, status: { $in: NOT_STARTED } }, { _id: 1 });
   if (entries.length === 0) return;
   const user = await User.findById(userId, { username: 1 });
   const done = [];
+  let failure = null;
   try {
     for (const entry of entries) {
       const res = await Attempt.updateOne(
         { _id: entry._id, status: { $in: NOT_STARTED }, 'players.1': { $exists: false } },
         { $push: { memberIds: userId, players: { id: String(userId), kind: 'user', name: user.username } } },
       );
-      if (res.modifiedCount === 1) done.push(entry._id);
+      if (res.modifiedCount === 1) {
+        done.push(entry._id);
+      } else if (await Attempt.exists({ _id: entry._id, status: { $in: NOT_STARTED } })) {
+        // Still not started but it took no one: the team changed under us.
+        throw new AppError(409, 'TEAM_CHANGED', 'The team changed while you were doing that. Try again.');
+      }
     }
+    return;
   } catch (err) {
-    await Team.updateOne({ _id: team._id }, { $pull: { memberIds: userId } });
-    await Attempt.updateMany({ _id: { $in: done } }, { $pull: { memberIds: userId, players: { id: String(userId) } } });
-    if (err.code === 11000) throw partnerInChallenge();
-    throw err;
+    failure = err.code === 11000 ? partnerInChallenge() : err;
   }
+  try {
+    await Attempt.updateMany({ _id: { $in: done } }, { $pull: { memberIds: userId, players: { id: String(userId) } } });
+    await Team.updateOne({ _id: team._id }, { $pull: { memberIds: userId } });
+  } catch (rollbackErr) {
+    console.error(`joinTeam rollback failed for team ${team._id}, user ${userId}:`, rollbackErr);
+  }
+  throw failure;
 }
 
 async function joinTeam(userId, code) {
@@ -213,5 +227,5 @@ async function syncEntries(teamId, targetId, archived) {
 }
 
 module.exports = {
-  toView, createTeam, listMine, getTeam, joinTeam, renameTeam, regenerateInvite, removeMember,
+  toView, createTeam, listMine, getTeam, joinTeam, renameTeam, regenerateInvite, removeMember, addToEntries,
 };

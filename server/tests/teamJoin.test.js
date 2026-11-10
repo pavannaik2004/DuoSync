@@ -161,3 +161,33 @@ test('CHAL-6: a new partner already in that challenge with another team → 409 
   expect((await Attempt.findById(attemptId)).players).toHaveLength(1);
   expect(await Attempt.countDocuments()).toBe(before);
 });
+
+test('the 11000 rollback: a clash after the pre-check undoes the join and the entry updates', async () => {
+  const { addToEntries } = require('../src/services/teamService');
+  const ch = await openChallenge(alice);
+  const attemptId = await soloEntry(ch);
+  const carol = await createPlayer(app, 'carol');
+  const dave = await createPlayer(app, 'dave');
+  const other = (await request(app).post('/api/teams').set('Authorization', carol.auth).send({ name: 'Other' })).body;
+  await join(dave.auth, other.inviteCode);
+  await enter(carol.auth, ch.id, other.id);
+  // The join already happened when the clash is found.
+  await Team.updateOne({ _id: team.id }, { $push: { memberIds: carol.user.id } });
+  const doc = await Team.findById(team.id);
+  await expect(addToEntries(doc, carol.user.id)).rejects.toMatchObject({ status: 409, code: 'PARTNER_IN_CHALLENGE' });
+  expect((await Team.findById(team.id)).memberIds.map(String)).toEqual([alice.user.id]);
+  const mine = await Attempt.findById(attemptId);
+  expect(mine.memberIds.map(String)).toEqual([alice.user.id]);
+  expect(mine.players.map((p) => p.id)).toEqual([alice.user.id]);
+});
+
+test('an entry that cannot take the new partner → 409 TEAM_CHANGED and the join is undone', async () => {
+  const ch = await openChallenge(alice);
+  const attemptId = await soloEntry(ch);
+  await Attempt.updateOne({ _id: attemptId }, { $push: { players: { id: 'x', kind: 'user', name: 'ghost' } } });
+  const carol = await createPlayer(app, 'carol');
+  const res = await join(carol.auth, team.inviteCode);
+  expect([res.status, res.body.error]).toEqual([409, 'TEAM_CHANGED']);
+  expect((await Team.findById(team.id)).memberIds.map(String)).toEqual([alice.user.id]);
+  expect((await Attempt.findById(attemptId)).memberIds.map(String)).toEqual([alice.user.id]);
+});
