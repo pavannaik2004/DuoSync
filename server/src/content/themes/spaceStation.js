@@ -28,7 +28,7 @@ const templates = [
     title: 'Oxygen Valves',
     mechanic: 'ordering',
     timeEstimateSec: 120,
-    params: { items: 4, valueRange: [60, 220], distinct: true, direction: ['asc', 'desc'], output: 'item ids as one code' },
+    params: { directionWords: { asc: 'from the lowest pressure to the highest', desc: 'from the highest pressure to the lowest' }, copy: { captionA: 'Valve pressure readings', columns: ['Valve', 'Pressure (kPa)'], ruleLine: 'Emergency procedure: open the valves {direction}.' }, items: 4, valueRange: [60, 220], distinct: true, direction: ['asc', 'desc'], output: 'item ids as one code' },
     hint: 'Compare the pressures, then read the valve numbers in the order Mission Control asks for.',
     rewardRule: 'digit',
     fallback: {
@@ -62,7 +62,7 @@ const templates = [
     title: 'Star Map',
     mechanic: 'grid-lookup',
     timeEstimateSec: 120,
-    params: { rows: 4, cols: 4, colLabels: 'distinct letters', rowLabels: 'distinct digits 1–9' },
+    params: { mark: 'star', copy: { captionA: 'The star window. One star is flashing: the rescue beacon. (Top of the grid is the top of the window.)', captionB: 'Star chart labels. Enter the column letter, then the row number.' }, rows: 4, cols: 4, colLabels: 'distinct letters', rowLabels: 'distinct digits 1–9' },
     hint: 'Describe where the beacon is by counting rows and columns from one corner.',
     rewardRule: 'digit',
     fallback: {
@@ -98,7 +98,7 @@ const templates = [
     title: 'Power Routing',
     mechanic: 'decode-key',
     timeEstimateSec: 120,
-    params: { keys: 4, distinctDigits: true, colors: ['red', 'blue', 'green', 'yellow', 'orange', 'purple'], shuffleOrder: true },
+    params: { labels: 'colors', copy: { captionA: 'Loose cables and the port each one reaches.', captionB: 'Wiring plan: connect the cables in this order. The code is their port numbers.' }, keys: 4, distinctDigits: true, colors: ['red', 'blue', 'green', 'yellow', 'orange', 'purple'], shuffleOrder: true },
     hint: "Follow Mission Control's cable order and read each cable's port number.",
     rewardRule: 'digit',
     fallback: {
@@ -138,7 +138,7 @@ const templates = [
     title: 'Distress Signal',
     mechanic: 'morse',
     timeEstimateSec: 150,
-    params: { pool: 'morseWords' },
+    params: { copy: { introA: 'The radio repeats this signal. Letters are separated by spaces.' }, pool: 'morseWords' },
     hint: 'Each group of dots and dashes is one letter. Read them left to right.',
     rewardRule: 'digit',
     fallback: {

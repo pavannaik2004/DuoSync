@@ -29,7 +29,7 @@ const templates = [
     title: 'Torn Parchment',
     mechanic: 'split-riddle',
     timeEstimateSec: 120,
-    params: { pool: 'riddles', firstLetterFor: 'answer.5' },
+    params: { copy: { introA: 'The top half of the parchment reads:', introB: "The bottom half is in the captain's log:" }, pool: 'riddles', firstLetterFor: 'answer.5' },
     hint: 'Read both halves aloud as one riddle.',
     rewardRule: 'answer',
     fallback: {
@@ -50,7 +50,7 @@ const templates = [
     title: 'Island Walk',
     mechanic: 'grid-navigation',
     timeEstimateSec: 150,
-    params: { rows: 5, cols: 5, pool: 'landmarks', landmarks: 7, moves: 3, stayOnMap: true, endOnLandmark: true, firstLetterFor: 'answer.5' },
+    params: { unit: ['pace', 'paces'], copy: { introA: 'Scratched on a coconut shell:', startLine: 'Start at the {landmark}.', moveLine: 'Walk {count} {unit} {direction}.' }, rows: 5, cols: 5, pool: 'landmarks', landmarks: 7, moves: 3, stayOnMap: true, endOnLandmark: true, firstLetterFor: 'answer.5' },
     hint: 'North is the top of the chart. Trace each move one square at a time.',
     rewardRule: 'answer',
     fallback: {

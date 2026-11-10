@@ -29,7 +29,7 @@ const templates = [
     title: 'Whiteout Walk',
     mechanic: 'grid-navigation',
     timeEstimateSec: 150,
-    params: { rows: 5, cols: 5, pool: 'landmarks', landmarks: 7, moves: 3, stayOnMap: true, endOnLandmark: true },
+    params: { unit: ['step', 'steps'], copy: { introA: 'You can barely see your own boots. Your compass notes say:', startLine: 'Start at the {landmark}.', moveLine: 'Walk {count} {unit} {direction}.' }, rows: 5, cols: 5, pool: 'landmarks', landmarks: 7, moves: 3, stayOnMap: true, endOnLandmark: true },
     hint: 'North is the top of the map. Trace each move one square at a time.',
     rewardRule: 'digit',
     fallback: {
@@ -74,7 +74,7 @@ const templates = [
     title: 'Radio Static',
     mechanic: 'morse',
     timeEstimateSec: 150,
-    params: { pool: 'morseWords' },
+    params: { copy: { introA: 'Through the static, a weak beeping. Letters are separated by spaces:' }, pool: 'morseWords' },
     hint: 'Each group of beeps is one letter. Read them left to right.',
     rewardRule: 'digit',
     fallback: {

@@ -139,3 +139,10 @@ Newest entry last. Format: `### YYYY-MM-DD — <title>`, then what was done, the
 - Added `server/src/generators/`: `rng.js` (mulberry32 seeded by FNV-1a), `validate.js` (`validateClue`, `revealsAnswer`, `validateLevel`), `util.js`, one module per mechanic exporting `solve`, and `index.js` (`GENERATORS`).
 - Fallbacks now carry a server-only `solution` (Cyber 3; Detective 1–3; Space 1; Pirate 4; Haunted 2, 4; Tomb 3; Alchemist 1, 3; Polar 3, 4). `content/index.js` already leaves it out of `levels`. Detective 4 clue A is now the pool's DAGGER wound; Detective 5 `carryOver.shiftFrom` is the number 3.
 - `themedPuzzleSets.test.js` uses the production validator instead of test-local solvers. New `rng.test.js`, `validate.test.js`. Verify: `npm test` → 299/299 (317 − 40 old solver tests + 22 new).
+
+### 2026-11-10 — Phase 3 Task 3: generators for decode-key, caesar, morse, riddles, grids and ordering
+
+- Added `generate` to `decodeKey`, `caesar`, `morse`, `splitRiddle`, `gridLookup`, `gridNavigation` and `ordering`, plus `generators/pick.js` (`pickAnswer`, `rewardFor`, `fill`, `fixedText`, `spells`, `buildLevel`, `distinctInts`).
+- `pickAnswer` takes an optional 5th argument, the level's fixed text, and skips pool entries that the captions or intros would spell out (D49). Example: the Morse chart's "Signal" column rules out SIGNAL as an answer.
+- Added `params.copy` (and `unit`, `mark`, `labels`, `directionWords`) to 19 templates in all 8 themes. Strip captions may use `{places}` ("place"/"places"). Detective 5 `carryOver` gained `suspectsFrom: 2` (the level whose uncleared suspects supply the killer).
+- Tests: `server/tests/generators/basic.test.js` (200 seeds per template). `npm test` → 330/330.

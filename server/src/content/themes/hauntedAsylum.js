@@ -29,7 +29,7 @@ const templates = [
     title: 'Flickering Lights',
     mechanic: 'morse',
     timeEstimateSec: 150,
-    params: { pool: 'morseWords' },
+    params: { copy: { introA: 'The ward lights flicker short (.) and long (-), with a pause between letters:' }, pool: 'morseWords' },
     hint: 'A short flicker is a dot and a long one is a dash. Each group is one letter.',
     rewardRule: 'letter',
     fallback: {
@@ -97,7 +97,7 @@ const templates = [
     title: 'Whispers in the Walls',
     mechanic: 'split-riddle',
     timeEstimateSec: 120,
-    params: { pool: 'riddles' },
+    params: { copy: { introA: 'The walls whisper the first half:', introB: "Written in a patient's diary:" }, pool: 'riddles' },
     hint: 'Put the two halves together and say them as one riddle.',
     rewardRule: 'letter',
     fallback: {
@@ -115,7 +115,7 @@ const templates = [
     title: 'Portrait Hall',
     mechanic: 'ordering',
     timeEstimateSec: 120,
-    params: { items: 4, valueRange: [1840, 1920], distinct: true, direction: ['desc', 'asc'], output: 'plaque numbers as one code' },
+    params: { directionWords: { desc: 'from the newest portrait to the oldest', asc: 'from the oldest portrait to the newest' }, copy: { captionA: 'The portraits whose eyes follow you, with the year painted on each frame', columns: ['Plaque', 'Year'], ruleLine: 'From the portrait register: "The ghosts walk the hall {direction}."' }, items: 4, valueRange: [1840, 1920], distinct: true, direction: ['desc', 'asc'], output: 'plaque numbers as one code' },
     hint: 'Sort the portraits by year first, then read off their plaque numbers.',
     rewardRule: 'letter',
     fallback: {

@@ -68,7 +68,7 @@ const templates = [
     title: 'Rune Lock',
     mechanic: 'caesar',
     timeEstimateSec: 150,
-    params: { pool: 'caesarWords', shift: [2, 9], direction: 'forward' },
+    params: { copy: { introA: 'Letters glowing on the locked ingredient cabinet:', stripCaption: 'The rune key: move every letter forward by {shift} {places}.' }, pool: 'caesarWords', shift: [2, 9], direction: 'forward' },
     hint: 'Find each carved rune-letter in the top row of the key. The letter under it is the true one.',
     rewardRule: 'letter',
     fallback: {
@@ -86,7 +86,7 @@ const templates = [
     title: 'Alchemy Scales',
     mechanic: 'ordering',
     timeEstimateSec: 120,
-    params: { items: 4, valueRange: [40, 400], distinct: true, direction: ['desc', 'asc'], output: 'jar numbers as one code' },
+    params: { directionWords: { desc: 'from the heaviest to the lightest', asc: 'from the lightest to the heaviest' }, copy: { captionA: 'Ingredient jars on the scales', columns: ['Jar', 'Weight (g)'], ruleLine: 'Recipe, step three: add the ingredients {direction}.' }, items: 4, valueRange: [40, 400], distinct: true, direction: ['desc', 'asc'], output: 'jar numbers as one code' },
     hint: 'Weigh first, then read off the jar numbers in order.',
     rewardRule: 'letter',
     fallback: {
@@ -120,7 +120,7 @@ const templates = [
     title: 'Spellbook Index',
     mechanic: 'grid-lookup',
     timeEstimateSec: 120,
-    params: { rows: 4, cols: 4, colLabels: 'distinct letters', rowLabels: 'distinct digits 1–9' },
+    params: { mark: 'rune', copy: { captionA: 'The spellbook falls open on a page of runes. One rune is glowing. (Top of the grid is the top of the page.)', captionB: 'The grimoire index. Enter the column letter, then the row number.' }, rows: 4, cols: 4, colLabels: 'distinct letters', rowLabels: 'distinct digits 1–9' },
     hint: 'Describe where the glowing rune is by counting rows and columns from one corner.',
     rewardRule: 'letter',
     fallback: {

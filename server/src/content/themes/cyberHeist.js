@@ -27,7 +27,7 @@ const templates = [
     title: 'Access PIN',
     mechanic: 'decode-key',
     timeEstimateSec: 120,
-    params: { keys: 4, distinctDigits: true, colors: ['red', 'blue', 'green', 'yellow'], shuffleOrder: true },
+    params: { labels: 'colors', copy: { captionA: 'The keypad shows four lit keys.', captionB: 'Key the colours in this order.' }, keys: 4, distinctDigits: true, colors: ['red', 'blue', 'green', 'yellow'], shuffleOrder: true },
     hint: "Read each colour in the Decoder's order and take its digit from the Hacker's keypad.",
     rewardRule: 'letter',
     fallback: {
@@ -67,7 +67,7 @@ const templates = [
     title: 'Firewall',
     mechanic: 'caesar',
     timeEstimateSec: 150,
-    params: { pool: 'caesarWords', shift: [1, 5], direction: 'back' },
+    params: { copy: { introA: 'Intercepted password from the security gateway:', stripCaption: 'Shift every letter back by {shift} {places}.' }, pool: 'caesarWords', shift: [1, 5], direction: 'back' },
     hint: 'Find each intercepted letter in the top row of the strip. The letter under it is the real one.',
     rewardRule: 'letter',
     fallback: {

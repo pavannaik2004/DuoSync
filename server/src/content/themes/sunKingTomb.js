@@ -65,7 +65,7 @@ const templates = [
     title: 'Canopic Jars',
     mechanic: 'decode-key',
     timeEstimateSec: 120,
-    params: { keys: 4, distinctDigits: true, labels: ['FALCON', 'JACKAL', 'BABOON', 'HUMAN'], colors: ['red', 'blue', 'green', 'yellow'], shuffleOrder: true },
+    params: { copy: { captionA: 'Four jars, each with a guardian head and a numeral painted on it.', captionB: 'Dig notes: the priests sealed the jars in this order.' }, keys: 4, distinctDigits: true, labels: ['FALCON', 'JACKAL', 'BABOON', 'HUMAN'], colors: ['red', 'blue', 'green', 'yellow'], shuffleOrder: true },
     hint: "Take the jars in the Scholar's order and read the numeral painted on each.",
     rewardRule: 'digit',
     fallback: {
@@ -140,7 +140,7 @@ const templates = [
     title: 'Pressure Plates',
     mechanic: 'grid-navigation',
     timeEstimateSec: 150,
-    params: { rows: 5, cols: 5, pool: 'landmarks', landmarks: 7, moves: 3, stayOnMap: true, endOnLandmark: true },
+    params: { unit: ['tile', 'tiles'], copy: { introA: 'Painted on the wall of the corridor:', startLine: 'Start on the {landmark}.', moveLine: 'Step {count} {unit} {direction}.' }, rows: 5, cols: 5, pool: 'landmarks', landmarks: 7, moves: 3, stayOnMap: true, endOnLandmark: true },
     hint: 'North is the top of the floor plan. Count one tile per step.',
     rewardRule: 'digit',
     fallback: {

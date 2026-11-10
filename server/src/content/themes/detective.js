@@ -182,7 +182,7 @@ const templates = [
     title: 'Dying Message',
     mechanic: 'caesar',
     timeEstimateSec: 150,
-    params: { carryOver: { shiftFrom: 3, killerFrom: 'uncleared suspects of level 2' }, direction: 'back' },
+    params: { copy: { introA: "Scratched into the floorboards beside Lord Blackwood's hand:", stripCaption: "Lord Blackwood's private cipher: every letter was moved forward by the killer's shoe size. Count back to read it." }, carryOver: { shiftFrom: 3, suspectsFrom: 2, killerFrom: 'uncleared suspects of level 2' }, direction: 'back' },
     hint: 'The shift is the shoe size from the Footprint, on your case board.',
     rewardRule: null,
     fallback: {
