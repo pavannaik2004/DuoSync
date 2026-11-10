@@ -8,8 +8,11 @@ const challenges = require('../controllers/challengeController');
 const nameRule = (chain) => chain.isString().withMessage('Challenge name is required').bail()
   .matches(patterns.CHALLENGE_NAME)
   .withMessage("Challenge name must be 3-40 letters, digits, spaces or _ ' ! ? -");
+// NFR-18: an explicit Z or ±hh:mm offset is required, so a time is never read as server-local.
+const OFFSET = /(Z|[+-]\d{2}:?\d{2})$/i;
 const dateRule = (chain, label) => chain.isString().bail().isISO8601({ strict: true })
-  .withMessage(`${label} must be an ISO-8601 date`);
+  .bail().matches(OFFSET)
+  .withMessage(`${label} must be an ISO-8601 date with a Z or UTC offset`);
 const maxTeamsRule = (chain) => chain.isInt({ min: 2, max: 500 })
   .withMessage('Max teams must be a whole number from 2 to 500').toInt();
 

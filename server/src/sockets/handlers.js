@@ -95,6 +95,11 @@ function registerHandlers(socket, runtimes) {
     await runtime.enqueue(async () => {
       // The socket may have dropped while this job waited; a dead socket must not count as online.
       if (!socket.connected) return;
+      // A removal can land between openAttempt and this job; re-check before entering the room.
+      const current = await Attempt.findById(attemptId, { players: 1 });
+      if (!current || !current.players.some((p) => p.id === identity.id)) {
+        throw new AppError(403, 'NOT_IN_ATTEMPT', 'You are not on this team');
+      }
       socket.data.attemptId = attemptId;
       socket.join(roomOf(attemptId));
       const first = runtime.addSocket(identity.id, socket);

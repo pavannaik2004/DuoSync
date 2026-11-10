@@ -14,6 +14,8 @@ import { patterns, validators } from '../utils/validators';
 import { formatCountdown, formatLocal, toLocalInput, toUtcIso, windowProblem } from '../utils/time';
 import challengeMessage from '../utils/challengeErrors';
 
+const FINAL_STATUSES = ['finished', 'timed_out', 'ended_early'];
+
 const STATUS_TEXT = {
   upcoming: 'Not open yet',
   open: 'Open now',
@@ -223,7 +225,13 @@ function ChallengeDetails({ challenge, reload }) {
           <p>
             Your team <strong>{myEntry.teamName}</strong> has entered.
           </p>
-          <Link className="btn btn-primary" to={`/challenge/${challenge.code}/play`}>Open team lobby</Link>
+          {myEntry.status === 'entered' && challenge.status === 'closed' ? (
+            <p className="form-note">The window closed before your team started.</p>
+          ) : (
+            <Link className="btn btn-primary" to={`/challenge/${challenge.code}/play`}>
+              {FINAL_STATUSES.includes(myEntry.status) ? 'View results' : 'Open team lobby'}
+            </Link>
+          )}
         </div>
       )}
       {!myEntry && open && <EnterForm challenge={challenge} onEntered={reload} />}

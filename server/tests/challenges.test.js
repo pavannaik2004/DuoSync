@@ -182,7 +182,7 @@ test('the view counts entries and shows my team entry', async () => {
   const alice = await createPlayer(app, 'alice');
   const { body: made } = await create(alice.auth);
   const team = await request(app).post('/api/teams').set('Authorization', alice.auth).send({ name: 'Foxes' });
-  const attempt = await Attempt.create({ challengeId: made.id, teamId: team.body.id, themeSlug: 'cyber-heist' });
+  const attempt = await Attempt.create({ challengeId: made.id, teamId: team.body.id, memberIds: [alice.user.id], themeSlug: 'cyber-heist' });
   const page = await view(alice.auth, made.code);
   expect(page.body.teamsEntered).toBe(1);
   expect(page.body.myEntry).toEqual({ attemptId: String(attempt._id), teamId: team.body.id, teamName: 'Foxes', status: 'entered' });
@@ -195,4 +195,19 @@ test('status is upcoming, then open, then closed as the clock passes the window'
   expect(statusOf(c, c.endsAt.getTime() - 1, false)).toBe('open');
   expect(statusOf(c, c.endsAt.getTime(), true)).toBe('closing');
   expect(statusOf(c, c.endsAt.getTime(), false)).toBe('closed');
+});
+
+test('final review 4: a datetime without an explicit Z or offset is 400 VALIDATION_ERROR; Z and offsets are accepted', async () => {
+  const alice = await createPlayer(app, 'alice');
+  const t = Date.now() + 2 * DAY; // far enough that a server-local misparse still lands in the future
+  const naive = (ms) => new Date(ms).toISOString().slice(0, 19);
+  const res = await create(alice.auth, { startsAt: naive(t), endsAt: new Date(t + 2 * HOUR).toISOString() });
+  expect(res.status).toBe(400);
+  expect(res.body.error).toBe('VALIDATION_ERROR');
+  expect((await create(alice.auth, { startsAt: new Date(t).toISOString(), endsAt: naive(t + 2 * HOUR) })).status).toBe(400);
+  expect((await create(alice.auth, { startsAt: naive(t) + '+00:00', endsAt: naive(t + 2 * HOUR) + 'Z' })).status).toBe(201);
+  const made = await create(alice.auth);
+  const patch = (o) => request(app).patch(`/api/challenges/${made.body.id}`).set('Authorization', alice.auth).send(o);
+  expect((await patch({ endsAt: naive(t + 3 * HOUR) })).status).toBe(400);
+  expect((await patch({ endsAt: naive(t + 3 * HOUR) + 'Z' })).status).toBe(204);
 });

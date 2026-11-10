@@ -81,6 +81,9 @@ export default function Lobby({ state, actions }) {
         </header>
 
         {players.length < 2 && state.practiceCode && <InviteBox code={state.practiceCode} />}
+        {players.length < 2 && !state.practiceCode && (
+          <p className="form-note">Your team needs 2 members to start. Ask your captain to invite a new partner.</p>
+        )}
 
         <h2 className="visually-hidden">Roles</h2>
         <div className="role-grid">

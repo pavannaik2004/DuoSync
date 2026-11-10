@@ -193,3 +193,21 @@ test('Task 8 Review Focus 4 + NFR-4: a removed partner is evicted from the room,
   expect(saved.status).toBe('lobby');
   expect(saved.players).toHaveLength(1);
 });
+
+test('final review 2: a removal that lands between openAttempt and the queued join keeps the player out of the room', async () => {
+  await server();
+  const creator = await createPlayer(srv.app, 'ownerx');
+  const challenge = await createOpenChallenge(srv.app, creator.auth, {});
+  const team = await enterTeam(srv.app, challenge.id, ['alice', 'bob']);
+  const b = await connect(srv.url, team.p2.token);
+  const runtime = srv.io.runtimes.get(team.attemptId);
+  let release;
+  const gate = new Promise((resolve) => { release = resolve; });
+  runtime.enqueue(() => gate); // holds the queue while the join passes openAttempt
+  const ack = joinById(b, team.attemptId);
+  await new Promise((resolve) => setTimeout(resolve, 200));
+  await Attempt.updateOne({ _id: team.attemptId }, { $pull: { memberIds: team.p2.user.id, players: { id: team.p2.user.id } } });
+  release();
+  expect(await ack).toMatchObject({ error: 'NOT_IN_ATTEMPT' });
+  expect(runtime.sockets.get(team.p2.user.id)?.size || 0).toBe(0);
+});

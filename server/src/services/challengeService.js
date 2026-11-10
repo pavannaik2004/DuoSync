@@ -78,18 +78,16 @@ async function getChallengeByCode(code, user, now) {
   const challenge = await Challenge.findOne({ code: code.toUpperCase() });
   if (!challenge) throw notFound();
 
-  const [teamsEntered, running, teams] = await Promise.all([
+  const [teamsEntered, running, attempt] = await Promise.all([
     Attempt.countDocuments({ challengeId: challenge._id }),
     Attempt.exists({ challengeId: challenge._id, status: { $in: RUNNING } }),
-    Team.find({ memberIds: user._id, archived: false }, { name: 1 }),
+    // Through the attempt, not the viewer's current teams: the result outlives leaving or archiving the team.
+    Attempt.findOne({ challengeId: challenge._id, memberIds: user._id }),
   ]);
   let myEntry = null;
-  if (teams.length > 0) {
-    const attempt = await Attempt.findOne({ challengeId: challenge._id, teamId: { $in: teams.map((t) => t._id) } });
-    if (attempt) {
-      const team = teams.find((t) => String(t._id) === String(attempt.teamId));
-      myEntry = { attemptId: String(attempt._id), teamId: String(team._id), teamName: team.name, status: attempt.status };
-    }
+  if (attempt) {
+    const team = await Team.findById(attempt.teamId, { name: 1 });
+    myEntry = { attemptId: String(attempt._id), teamId: String(attempt.teamId), teamName: team ? team.name : null, status: attempt.status };
   }
   return challengeView(challenge, {
     status: statusOf(challenge, now, Boolean(running)),
@@ -167,6 +165,14 @@ async function enterChallenge(challengeId, user, { teamId }, now) {
       theme: challenge.theme,
       timerMinutes: challenge.theme.timerMinutes,
     });
+    // A removal can land between the team read and the create; drop an entry that no longer matches.
+    const fresh = await Team.findById(team._id, { memberIds: 1 });
+    const same = fresh && fresh.memberIds.length === attempt.memberIds.length
+      && fresh.memberIds.every((m) => attempt.memberIds.some((x) => String(x) === String(m)));
+    if (!same) {
+      await Attempt.deleteOne({ _id: attempt._id });
+      throw new AppError(409, 'TEAM_CHANGED', 'The team changed while you were entering. Try again.');
+    }
     return { attemptId: String(attempt._id) };
   } catch (err) {
     if (err.code !== 11000) throw err;

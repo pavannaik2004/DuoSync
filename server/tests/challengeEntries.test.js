@@ -112,3 +112,28 @@ test('an unknown challenge → 404 CHALLENGE_NOT_FOUND', async () => {
   const res = await enter(alice.auth, '64b000000000000000000000', team.id);
   expect([res.status, res.body.error]).toEqual([404, 'CHALLENGE_NOT_FOUND']);
 });
+
+test('final review 1: a player who left after the team finished still sees myEntry with the result', async () => {
+  const team = await mkTeam(alice, 'Night Owls', bob);
+  const ch = await openChallenge(alice);
+  const res = await enter(alice.auth, ch.id, team.id);
+  await Attempt.updateOne({ _id: res.body.attemptId }, { status: 'finished' });
+  expect((await request(app).delete(`/api/teams/${team.id}/members/${bob.user.id}`).set('Authorization', bob.auth)).status).toBe(204);
+  const page = await request(app).get(`/api/challenges/${ch.code}`).set('Authorization', bob.auth);
+  expect(page.body.myEntry).toMatchObject({ attemptId: res.body.attemptId, status: 'finished', teamName: 'Night Owls' });
+});
+
+test('final review 3: a member removed between the team read and the entry is not left in the entry (409 TEAM_CHANGED)', async () => {
+  const Team = require('../src/models/Team');
+  const team = await mkTeam(alice, 'Night Owls', bob);
+  const ch = await openChallenge(alice, { maxTeams: 10 });
+  const original = Attempt.countDocuments;
+  const spy = jest.spyOn(Attempt, 'countDocuments').mockImplementation(function patched(...args) {
+    spy.mockRestore(); // only the first call (the max-teams check) interleaves
+    return Team.updateOne({ _id: team.id }, { $set: { memberIds: [alice.user.id] } }).then(() => original.apply(Attempt, args));
+  });
+  const res = await enter(alice.auth, ch.id, team.id);
+  expect(res.status).toBe(409);
+  expect(res.body.error).toBe('TEAM_CHANGED');
+  expect(await Attempt.countDocuments({ challengeId: ch.id })).toBe(0);
+});

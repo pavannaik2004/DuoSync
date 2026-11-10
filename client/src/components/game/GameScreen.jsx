@@ -81,7 +81,7 @@ export default function GameScreen({ state, actions }) {
                 <ClueView clue={clue.clue} />
               </div>
               <p className="form-note">Your teammate sees a different half. Describe yours in the chat.</p>
-              {clue.hint && <HintPanel hint={clue.hint} onReveal={() => actions.revealHint(clue.order)} />}
+              {clue.hint && <HintPanel key={clue.order} hint={clue.hint} onReveal={() => actions.revealHint(clue.order)} />}
               <AnswerBox key={clue.order} order={clue.order} onSubmit={(answer) => actions.submit(clue.order, answer)} />
             </>
           ) : (

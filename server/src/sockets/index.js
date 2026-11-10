@@ -54,7 +54,7 @@ function attachSockets(httpServer, { clientOrigins, ...rest } = {}) {
         if (!attempt) return;
         await flow.systemMessage(runtime, `${name || 'A player'} left the team`);
         flow.broadcastLobby(runtime, attempt);
-      }).catch(() => {});
+      }).catch((err) => console.error('attempt:removed eviction failed', err));
     });
   };
   attemptEvents.on('members-removed', onRemoved);
