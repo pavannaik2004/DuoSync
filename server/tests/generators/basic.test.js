@@ -180,3 +180,9 @@ test('Detective Dying Message: the killer is an uncleared suspect, shifted by th
     expect(level.clueB.data.numbered).toBe(true);
   }
 });
+
+test('rewardFor throws when a letter or digit level has no planned reward', () => {
+  const { templates } = getContent('cyber-heist');
+  expect(() => rewardFor(templates[0], 'ANY', { plan: { rewards: {}, startsWith: {} } })).toThrow(/No planned reward/);
+  expect(rewardFor(templates[0], 'ANY', { plan: STUB_PLAN })).toBe('A');
+});

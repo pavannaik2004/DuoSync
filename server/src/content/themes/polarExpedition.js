@@ -166,7 +166,7 @@ const templates = [
     title: 'Rescue Flare',
     mechanic: 'fragment-finale',
     timeEstimateSec: 90,
-    params: { rewards: 'distinct digits 1–9', use: 'reward' },
+    params: { rewards: 'distinct digits 1–9', use: 'reward', copy: { introA: "Tune the rescue radio to the digits from these, in this order:", introB: "Frequency digits logged so far:", entry: "{title} gave {value}." } },
     hint: 'The frequency digits are also on your board.',
     rewardRule: null,
     fallback: {
@@ -198,7 +198,7 @@ const templates = [
 ];
 
 const pools = {
-  morseWords: ['SNOW', 'BLIZZARD', 'RESCUE', 'HUSKY', 'FROST', 'GLACIER', 'AURORA', 'SLED', 'ICEBERG', 'TUNDRA'],
+  morseWords: ['SNOW', 'BLIZZARD', 'RESCUE', 'HUSKY', 'FROST', 'GLACIER', 'AURORA', 'SLED', 'ICEBERG', 'TUNDRA', 'ARCTIC', 'SLEDGE', 'PARKA', 'SUMMIT', 'CAMP', 'TENT', 'SEAL', 'WALRUS', 'PENGUIN', 'COMPASS'],
   /** Whiteout Walk landmarks. */
   landmarks: ['FLAGPOLE', 'CAIRN', 'HUT', 'RIDGE', 'IGLOO', 'DEPOT', 'CREVASSE', 'BEACON'],
 };

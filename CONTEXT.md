@@ -154,3 +154,10 @@ Newest entry last. Format: `### YYYY-MM-DD — <title>`, then what was done, the
 - `arithmetic.solve` now finds the correction only as a standalone number, so a delta of 10 is not matched inside the example `1050`. Tomb 3 accepts the answer without its leading zero (`515`).
 - Detective 5 carry-over (done in Task 3) verified and tested over 300 seeds with a per-seed chain of levels 1-5. The whole-set test is `test.todo` until `generateLevelSet` (Task 5).
 - Tests: `server/tests/generators/variants.test.js`, `detective.test.js`. `npm test` -> 382 pass, 1 todo.
+
+### 2026-11-10 — Phase 3 Task 5: finale plan and generateLevelSet
+
+- `fragmentFinale.js` gained `plan` (letters, distinct digits, Pirate first letters checked against the level pools; words that a clue or a level answer would show are skipped) and `generate`. New `generators/levelSet.js`: `generateLevelSet(content, seed)` plans with `${seed}:plan`, retries each level 20 times with `${seed}:${order}:${retry}`, validates, and falls back to the whole fixed set with a `console.warn` (D54). `index.js` does not export it (validate.js requires index, so that would be circular); require `generators/levelSet` directly.
+- Finale templates in 7 themes gained `params.copy` (`introA`, `introB`, `entry`). `rewardFor` now throws for a missing planned letter/digit reward.
+- Pools grew so two seeds differ in 4 of 5 levels: more Morse words (Space, Haunted, Polar), riddles (Pirate +10, Haunted +12); Detective Footprint wording has 3x3 variants (`introA`/`measureA` are lists).
+- Detective whole-set test enabled. `npm test` -> 416 pass.

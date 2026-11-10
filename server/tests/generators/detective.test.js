@@ -2,12 +2,13 @@ const { getContent, } = require('../../src/content');
 const { createRng } = require('../../src/generators/rng');
 const { validateLevel } = require('../../src/generators/validate');
 const { GENERATORS } = require('../../src/generators');
+const { generateLevelSet } = require('../../src/generators/levelSet');
 const { shiftWord } = require('../../src/content/catalog');
 
 const PLAN = { rewards: { 1: 'A', 2: 'B', 3: 'C', 4: 'D' }, startsWith: {} };
 const SEEDS = 300;
 
-/** The five Detective levels for one seed, each generated with the earlier ones as context (Task 5's generateLevelSet does this for real). */
+/** The five Detective levels for one seed, each generated with the earlier ones as context (generateLevelSet does this for real). */
 function detectiveSet(seed) {
   const { templates, pools } = getContent('detective');
   const levels = [];
@@ -68,5 +69,20 @@ test('a shift of the shoe size (5-10) decodes level 5 and the Footprint answer i
   }
 });
 
-// Needs generateLevelSet (Task 5): the same rules over a whole generated set, including the retry and fallback paths.
-test.todo('the §6.5 consistency rules hold over 300 seeds of generateLevelSet(detective, seed)');
+test('the §6.5 consistency rules hold over 300 seeds of generateLevelSet(detective, seed)', () => {
+  const content = getContent('detective');
+  for (let s = 0; s < SEEDS; s += 1) {
+    const set = generateLevelSet(content, `set${s}`);
+    expect([s, set.usedFallback]).toEqual([s, false]);
+    const { levels } = set;
+    const suspects = levels[1].clueA.data.rows.map((r) => r[0]);
+    expect(suspects).toContain(levels[4].answer);
+    expect(levels[4].answer).not.toBe(levels[1].answer);
+    expect(shiftWord(levels[4].clueA.data.paragraphs.at(-1), -Number(levels[2].answer))).toBe(levels[4].answer);
+    expect(levels[0].reward).toMatch(/^Murder at \d{1,2}:\d{2} PM$/);
+    expect(levels[2].reward).toBe(`Shoe size ${levels[2].answer}`);
+    expect(levels[3].reward).toBe(`Weapon: ${levels[3].answer}`);
+    expect(levels[4].reward).toBeNull();
+    for (const l of levels) expect(l).not.toHaveProperty('solution');
+  }
+});

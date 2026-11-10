@@ -156,7 +156,7 @@ const templates = [
     title: 'The Elixir',
     mechanic: 'fragment-finale',
     timeEstimateSec: 90,
-    params: { pool: 'finaleWords', rewards: 'letters', use: 'reward' },
+    params: { pool: 'finaleWords', rewards: 'letters', use: 'reward', copy: { introA: "The cauldron lid bears four empty rune slots. Fill them in this order:", introB: "Runes gathered so far:", entry: "{title}: {value}." } },
     hint: 'The runes are also on your board.',
     rewardRule: null,
     fallback: {

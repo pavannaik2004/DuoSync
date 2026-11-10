@@ -103,7 +103,7 @@ const templates = [
     title: 'Footprint',
     mechanic: 'rule-filter',
     timeEstimateSec: 90,
-    params: { variant: 'shoe-size', copy: { introA: 'A muddy footprint leads from the study window to the body.', measureA: 'Heel to toe, it measures {cm} cm.', reward: 'Shoe size {answer}' }, printLengthCm: [22, 27], sizeChart: { 22: 5, 23: 6, 24: 7, 25: 8, 26: 9, 27: 10 }, belongsTo: 'killer' },
+    params: { variant: 'shoe-size', copy: { introA: ['A muddy footprint leads from the study window to the body.', 'A single muddy print is pressed into the study carpet.', 'Beside the body, a boot print is baked into the mud.'], measureA: ['Heel to toe, it measures {cm} cm.', 'Measured heel to toe, it is {cm} cm long.', 'The tape reads {cm} cm from heel to toe.'], reward: 'Shoe size {answer}' }, printLengthCm: [22, 27], sizeChart: { 22: 5, 23: 6, 24: 7, 25: 8, 26: 9, 27: 10 }, belongsTo: 'killer' },
     hint: 'Find the row of the chart whose print length matches the print exactly.',
     rewardRule: 'caseNote',
     fallback: {

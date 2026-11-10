@@ -185,7 +185,7 @@ const templates = [
     title: 'Mask Chamber',
     mechanic: 'fragment-finale',
     timeEstimateSec: 90,
-    params: { rewards: 'distinct digits 1–9', use: 'reward' },
+    params: { rewards: 'distinct digits 1–9', use: 'reward', copy: { introA: "The mask's sarcophagus has a four-dial lock. Carved beneath it:", introB: "Sacred digits noted so far:", entry: "{title} gave {value}." } },
     hint: 'The sacred digits are also on your board.',
     rewardRule: null,
     fallback: {

@@ -145,7 +145,7 @@ function shoeSize({ template, params, rng, context }) {
     context,
     answerKind: 'code',
     answer,
-    clueA: text(copy.introA, fill(copy.measureA, { cm })),
+    clueA: text(rng.pick(copy.introA), fill(rng.pick(copy.measureA), { cm })),
     clueB: table(template, 'B', copy, lengths.map((len) => [`${len} cm`, String(params.sizeChart[len])])),
     explanation: `A ${cm} cm print is shoe size ${answer} on the chart.`,
     solution: { table: 'B', where: [{ col: 0, op: 'eq', value: `${cm} cm` }], pick: 1, sort: null, join: false },

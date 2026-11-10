@@ -149,7 +149,7 @@ const templates = [
     title: 'The Séance',
     mechanic: 'fragment-finale',
     timeEstimateSec: 90,
-    params: { pool: 'finaleWords', rewards: 'letters', use: 'reward' },
+    params: { pool: 'finaleWords', rewards: 'letters', use: 'reward', copy: { introA: "The candles flare. Speak the spirit letters in the order she gave them:", introB: "Letters the spirit has given so far:", entry: "{title}: {value}." } },
     hint: 'The spirit letters are also on your board.',
     rewardRule: null,
     fallback: {
@@ -181,7 +181,7 @@ const templates = [
 ];
 
 const pools = {
-  morseWords: ['GHOST', 'NURSE', 'ATTIC', 'CELLAR', 'LANTERN', 'SHADOW', 'WARDEN', 'CANDLE', 'MIRROR', 'CHAPEL'],
+  morseWords: ['GHOST', 'NURSE', 'ATTIC', 'CELLAR', 'LANTERN', 'SHADOW', 'WARDEN', 'CANDLE', 'MIRROR', 'CHAPEL', 'GRAVE', 'WHISPER', 'CRYPT', 'COFFIN', 'SPIRIT', 'DUNGEON', 'PHANTOM', 'SCREAM', 'CURSE', 'WIDOW'],
   riddles: [
     { partA: 'I follow you all day long,', partB: 'but vanish the moment the lights go out. What am I?', answer: 'SHADOW', acceptedAnswers: [] },
     { partA: 'Speak to me and I will answer,', partB: 'yet no one is there when you turn around. What am I?', answer: 'ECHO', acceptedAnswers: [] },
@@ -191,6 +191,18 @@ const pools = {
     { partA: 'Every night I show you a face,', partB: 'but the face is never mine. What am I?', answer: 'MIRROR', acceptedAnswers: [] },
     { partA: 'I am tall when I am young and short when I am old;', partB: 'I glow in every dark corridor. What am I?', answer: 'CANDLE', acceptedAnswers: [] },
     { partA: 'I creak at night, though nobody walks on me;', partB: 'I lead up to the room nobody enters. What am I?', answer: 'STAIRS', acceptedAnswers: ['STAIR'] },
+    { partA: "I walk the halls though I have no feet;", partB: "you cannot touch me, yet I make you shiver. What am I?", answer: 'GHOST', acceptedAnswers: [] },
+    { partA: "I show you the world but keep you in,", partB: "a cold pane between you and the moon. What am I?", answer: 'WINDOW', acceptedAnswers: [] },
+    { partA: "I am small and made of iron,", partB: "yet every locked door in the ward fears me. What am I?", answer: 'KEY', acceptedAnswers: [] },
+    { partA: "I have a face with painted eyes,", partB: "I sit in the nursery, and still I watch you. What am I?", answer: 'DOLL', acceptedAnswers: [] },
+    { partA: "I swing open without a hand to move me,", partB: "and I bar the way to what lies behind. What am I?", answer: 'DOOR', acceptedAnswers: [] },
+    { partA: "I creep in over the ground without a sound,", partB: "and I hide the whole asylum from the road. What am I?", answer: 'FOG', acceptedAnswers: [] },
+    { partA: "I ring but have no voice,", partB: "and when I toll at midnight the patients wake. What am I?", answer: 'BELL', acceptedAnswers: [] },
+    { partA: "I glow but I have no flame,", partB: "and I watch the courtyard from the sky each night. What am I?", answer: 'MOON', acceptedAnswers: [] },
+    { partA: "I am soft and I hold your head,", partB: "yet the patient who last used me never woke. What am I?", answer: 'PILLOW', acceptedAnswers: [] },
+    { partA: "You see me only when your eyes are closed,", partB: "and some of me never lets you go. What am I?", answer: 'DREAM', acceptedAnswers: [] },
+    { partA: "I hang on the wall and my eyes follow you,", partB: "though the one I show died long ago. What am I?", answer: 'PORTRAIT', acceptedAnswers: [] },
+    { partA: "I tap on the glass but never come in,", partB: "and I fall from the sky to drum on the roof. What am I?", answer: 'RAIN', acceptedAnswers: [] },
   ],
   /** The Séance: the spirit's name (4 letters). */
   finaleWords: ['EDNA', 'CORA', 'ROSE', 'ELSA', 'MAUD', 'NELL', 'IRIS', 'LILA'],

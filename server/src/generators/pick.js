@@ -41,7 +41,8 @@ function rewardFor(template, answer, context, values = {}) {
   const rule = template.rewardRule;
   if (rule === 'letter' || rule === 'digit') {
     const reward = context && context.plan && context.plan.rewards && context.plan.rewards[template.order];
-    return reward === undefined ? null : reward;
+    if (reward === undefined) throw new Error(`No planned reward for level ${template.order} (${rule})`);
+    return reward;
   }
   if (rule === 'answer') return answer;
   if (rule === 'caseNote') return fill(template.params.copy.reward, { answer, ...values });
@@ -88,4 +89,4 @@ function leaks(template, answer, kind, ...clues) {
     .some((text) => normalizeAnswer(text, kind).includes(target));
 }
 
-module.exports = { attempt, leaks, pickAnswer, fixedText, spells, fill, rewardFor, fallbackCaption, buildLevel, distinctInts };
+module.exports = { squash, attempt, leaks, pickAnswer, fixedText, spells, fill, rewardFor, fallbackCaption, buildLevel, distinctInts };

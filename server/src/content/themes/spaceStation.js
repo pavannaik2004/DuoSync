@@ -159,7 +159,7 @@ const templates = [
     title: 'Escape Pod Launch',
     mechanic: 'fragment-finale',
     timeEstimateSec: 90,
-    params: { rewards: 'distinct digits 1–9', use: 'reward' },
+    params: { rewards: 'distinct digits 1–9', use: 'reward', copy: { introA: "The pod launch code is the digits from these systems, in this order:", introB: "Digits logged so far:", entry: "{title} gave {value}." } },
     hint: 'The launch digits are also on your team board.',
     rewardRule: null,
     fallback: {
@@ -192,7 +192,7 @@ const templates = [
 
 const pools = {
   /** Distress Signal (EARTH, HELP, MAYDAY…). */
-  morseWords: ['EARTH', 'HELP', 'MAYDAY', 'RESCUE', 'ORBIT', 'DANGER', 'SIGNAL', 'COMET', 'OXYGEN', 'ROCKET'],
+  morseWords: ['EARTH', 'HELP', 'MAYDAY', 'RESCUE', 'ORBIT', 'DANGER', 'SIGNAL', 'COMET', 'OXYGEN', 'ROCKET', 'GALAXY', 'PLANET', 'LAUNCH', 'METEOR', 'SATURN', 'ENGINE', 'SHIELD', 'MARS', 'VENUS', 'ALIEN'],
 };
 
 module.exports = { theme, templates, pools };

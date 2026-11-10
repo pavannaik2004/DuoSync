@@ -163,7 +163,7 @@ const templates = [
     title: 'Vault Finale',
     mechanic: 'fragment-finale',
     timeEstimateSec: 90,
-    params: { pool: 'finaleWords', rewards: 'letters', use: 'reward' },
+    params: { pool: 'finaleWords', rewards: 'letters', use: 'reward', copy: { introA: "The vault opens with the four fragments, read in this order:", introB: "Fragments recovered so far:", entry: "{title} gave {value}." } },
     hint: 'The fragments are also on your team board.',
     rewardRule: null,
     fallback: {
