@@ -167,3 +167,8 @@ Newest entry last. Format: `### YYYY-MM-DD — <title>`, then what was done, the
 - New `models/Challenge.js` (uppercasing `code` setter, theme snapshot, window, `maxTeams`, `seed`, generated `levels`, `usedFallback`) and `models/levelFields.js` (generated fields shared with `Attempt`, which adds the progress fields). `generators/levelSet.js` now exports `newSeed()`, also used by `lobbyService`.
 - `challengeService` (create with a once-generated level set and 5-try code retry, view by code, edit before `startsAt` per D61, delete unless entered, `statusOf` per D57) and `challengeView.js` (the only challenge payload builder; no levels/seed). Routes `/api/challenges` (POST, GET /:code, PATCH /:id, DELETE /:id), all `requirePlayer`.
 - `CHALLENGE_NAME` and `CHALLENGE_CODE` added to `patterns.js` and the client `validators.js`. `npm test` -> 445 pass.
+
+### 2026-11-10 — Phase 3 Task 8: Challenge entries, TEAM-7, partner replacement
+
+- `Attempt.memberIds` plus unique partial indexes `{challengeId,teamId}` and `{challengeId,memberIds}` (NFR-7); `startDb()` runs `Attempt.syncIndexes()`. `POST /api/challenges/:id/entries` -> `enterChallenge` (11000 -> ALREADY_ENTERED or MEMBER_IN_CHALLENGE).
+- `removeMember` refuses with TEAM_IN_ATTEMPT while the team is playing and syncs entered/lobby attempts (pull, or delete on archive); `joinTeam` adds the new partner with a PARTNER_IN_CHALLENGE pre-check and rollback; `startAttempt` requires players with roles A and B. `npm test` -> 458 pass.
