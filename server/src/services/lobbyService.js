@@ -4,6 +4,7 @@
  * queue, so two changes never interleave.
  */
 const Attempt = require('../models/Attempt');
+const Challenge = require('../models/Challenge');
 const AppError = require('../utils/AppError');
 const { loadThemeContent } = require('./themeService');
 const { generateLevelSet, newSeed } = require('../generators/levelSet');
@@ -88,7 +89,7 @@ async function unready(attemptId, playerId) {
   return attempt;
 }
 
-/** GAME-1: copies the level set into the attempt and starts the timer. Null if the countdown was cancelled. */
+/** GAME-1: copies the level set into the attempt and starts the timer. Null if the countdown was cancelled; `{ refused }` if a challenge window closed. */
 async function startAttempt(attemptId, { now, timerMs, levelSetFor = freshLevelSet }) {
   const attempt = await load(attemptId);
   if (attempt.status !== 'countdown') return null;
@@ -100,7 +101,20 @@ async function startAttempt(attemptId, { now, timerMs, levelSetFor = freshLevelS
     await attempt.save();
     return null;
   }
-  const levels = await levelSetFor(await loadThemeContent(attempt.themeSlug));
+  let levels;
+  if (attempt.challengeId) {
+    const challenge = await Challenge.findById(attempt.challengeId);
+    if (!challenge || now < challenge.startsAt.getTime() || now >= challenge.endsAt.getTime()) {
+      attempt.status = 'lobby'; // the window closed during the countdown
+      attempt.countdownEndsAt = null;
+      attempt.players.forEach((p) => { p.ready = false; });
+      await attempt.save();
+      return { refused: 'CHALLENGE_CLOSED' };
+    }
+    levels = challenge.levels.map((l) => (l.toObject ? l.toObject() : l)); // GAME-1: the challenge's own set
+  } else {
+    levels = await levelSetFor(await loadThemeContent(attempt.themeSlug));
+  }
   attempt.levels = levels.map((level, i) => ({ ...level, unlockedAt: i === 0 ? new Date(now) : null }));
   attempt.startedAt = new Date(now);
   attempt.endsAt = new Date(now + (timerMs || attempt.timerMinutes * 60 * 1000));

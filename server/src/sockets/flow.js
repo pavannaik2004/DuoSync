@@ -111,6 +111,11 @@ function startCountdown(runtime) {
         return;
       }
       if (!attempt) return;
+      if (attempt.refused) {
+        await systemMessage(runtime, 'The challenge window has closed. This attempt can no longer start.');
+        broadcastLobby(runtime, await Attempt.findById(runtime.attemptId));
+        return;
+      }
       await systemMessage(runtime, 'Attempt started');
       await snapshotAll(runtime, await Attempt.findById(attempt._id));
       startTicking(runtime, attempt.endsAt);

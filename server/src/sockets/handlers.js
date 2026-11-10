@@ -5,6 +5,7 @@
  */
 const Attempt = require('../models/Attempt');
 const AppError = require('../utils/AppError');
+const { openAttempt } = require('../services/challengeAttemptService');
 const { joinPractice, findPractice } = require('../services/practiceService');
 const { postMessage } = require('../services/chatService');
 const lobby = require('../services/lobbyService');
@@ -67,15 +68,29 @@ function registerHandlers(socket, runtimes) {
     return runtime.enqueue(() => fn(runtime, player));
   };
 
-  socket.on('attempt:join', handle(socket, async ({ practiceCode }) => {
+  /** Resolves the attempt to join: a practice room by code, or a challenge attempt by id (D58). */
+  async function resolveJoin({ practiceCode, attemptId }) {
+    if ((practiceCode === undefined) === (attemptId === undefined)) {
+      throw new AppError(400, 'VALIDATION_ERROR', 'Send either a room code or an attempt id');
+    }
+    if (attemptId !== undefined) {
+      const id = str(attemptId, { field: 'Attempt id', max: 64 });
+      if (socket.data.attemptId && socket.data.attemptId !== id) {
+        throw new AppError(409, 'ALREADY_IN_ATTEMPT', 'This connection is already in another game');
+      }
+      return String((await openAttempt(id, identity, Date.now()))._id);
+    }
     const code = str(practiceCode, { field: 'Room code', max: 16 });
     // Compare rooms before joinPractice takes a seat, so a refused join leaves no player behind.
     const room = await findPractice(code);
     if (socket.data.attemptId && socket.data.attemptId !== String(room._id)) {
       throw new AppError(409, 'ALREADY_IN_ATTEMPT', 'This connection is already in another game');
     }
-    const joined = await joinPractice(code, identity);
-    const attemptId = String(joined._id);
+    return String((await joinPractice(code, identity))._id);
+  }
+
+  socket.on('attempt:join', handle(socket, async (payload) => {
+    const attemptId = await resolveJoin(payload);
     const runtime = runtimes.get(attemptId);
     await runtime.enqueue(async () => {
       // The socket may have dropped while this job waited; a dead socket must not count as online.

@@ -172,3 +172,9 @@ Newest entry last. Format: `### YYYY-MM-DD — <title>`, then what was done, the
 
 - `Attempt.memberIds` plus unique partial indexes `{challengeId,teamId}` and `{challengeId,memberIds}` (NFR-7); `startDb()` runs `Attempt.syncIndexes()`. `POST /api/challenges/:id/entries` -> `enterChallenge` (11000 -> ALREADY_ENTERED or MEMBER_IN_CHALLENGE).
 - `removeMember` refuses with TEAM_IN_ATTEMPT while the team is playing and syncs entered/lobby attempts (pull, or delete on archive); `joinTeam` adds the new partner with a PARTNER_IN_CHALLENGE pre-check and rollback; `startAttempt` requires players with roles A and B. `npm test` -> 458 pass.
+
+### 2026-11-10 — Phase 3 Task 9: challenge attempts over sockets
+
+- New `services/challengeAttemptService.openAttempt(attemptId, identity, now)`: guest -> GUEST_NOT_ALLOWED, bad/unknown id -> ATTEMPT_NOT_FOUND, non-member -> NOT_IN_ATTEMPT, `entered` -> NOT_OPEN (ISO start in the message) / CHALLENGE_CLOSED / atomic move to `lobby`; other statuses returned as is.
+- `attempt:join` takes exactly one of `{ practiceCode }` / `{ attemptId }` (else VALIDATION_ERROR). `lobbyService.startAttempt` copies `challenge.levels` for challenge attempts and returns `{ refused: 'CHALLENGE_CLOSED' }` (back to lobby, unready) outside the window; `flow.startCountdown` posts the closed-window system message and broadcasts the lobby. The timer is the full theme timer, so it may run past `endsAt` (CHAL-7).
+- Test helpers: `startedChallengeAttempt`, `createOpenChallenge`, `enterTeam` in `tests/helpers/rooms.js`. `socketChallenge.test.js` (8 tests, incl. the Gate and Task 8 Review Focus 4). `npm test` -> 471 pass.
