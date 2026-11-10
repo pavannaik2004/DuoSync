@@ -5,7 +5,7 @@ The single source of truth for project progress. **Read this before starting any
 ## Current state
 
 - **Phase:** 1 Foundation complete. 2 Core attempt merged into `main`; hosted gate pending. Phase 3 prep: Themed Puzzle Sets merged into `main`.
-- **Next:** push `main` so Render and Vercel redeploy and run the Phase 2 gate (two devices finish Cyber Heist at `/practice` with the same score); write the Phase 3 plan against `docs/themed-puzzle-sets.md`.
+- **Next:** push `main` so Render and Vercel redeploy and run the Phase 2 gate (two devices finish Cyber Heist at `/practice` with the same score); review the Phase 3 plan (`docs/superpowers/plans/2026-11-10-03-challenges-engine.md`) and choose how to execute it.
 - **Hosted URLs:** API `https://duosync-api.onrender.com` (Render, free tier; sleeps when idle). Client `https://duo-sync-lovat.vercel.app` (Vercel, root `client`). Repo: `https://github.com/pavannaik2004/DuoSync`
 - **Open blockers:** none. The Themed Puzzle Sets are in `docs/themed-puzzle-sets.md` (8 themes)
 - **Run locally:** `npm --prefix server run dev:memory` + `npm run dev:client` (no database needed)
@@ -127,3 +127,9 @@ Newest entry last. Format: `### YYYY-MM-DD — <title>`, then what was done, the
 - At the user's request, `phase-3-puzzle-sets` was merged into `main` locally (fast-forward to b4d63de), and the branch was deleted.
 - Verify on the merged `main`: `npm test` → 309/309.
 - Not pushed yet.
+
+### 2026-11-10 — Phase 3 plan written
+
+- Wrote `docs/superpowers/plans/2026-11-10-03-challenges-engine.md`: 13 tasks in 3 parts. Part A, the level engine: Phase 2 deferred minors, RNG and validator with per-mechanic solvers, the 11 generators, finale planning and `generateLevelSet`, themes in MongoDB with seeding and fresh practice values. Part B, challenges: model and REST, entries with TEAM-7 and CHAL-6, socket play with window checks, extra hints. Part C, the client: grid and glyph renderers, hints, theme picker, challenge pages. Then docs and the gate.
+- Proposes decisions D50–D61 (written into DECISIONS.md in Task 13).
+- No code yet.
