@@ -1,12 +1,14 @@
 const Attempt = require('../src/models/Attempt');
 const cyberHeist = require('../src/content').getContent('cyber-heist');
 const { startDb, clearDb, stopDb } = require('./helpers/db');
+const { seedThemes } = require('./helpers/themes');
 const { createPlayer, createRoom } = require('./helpers/users');
 const { startSocketServer, connect, nextEvent, collect, join, wait } = require('./helpers/sockets');
 
 let srv;
 
 beforeAll(startDb);
+beforeEach(seedThemes); // clearDb wipes the themes too
 afterAll(stopDb);
 afterEach(async () => {
   if (srv) await srv.close();

@@ -45,4 +45,4 @@ function fillText(text, levels) {
   });
 }
 
-module.exports = { getContent, listThemes, fillText };
+module.exports = { getContent, listThemes, fillText, fallbackLevel };

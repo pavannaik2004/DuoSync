@@ -30,6 +30,7 @@ const levelSchema = new mongoose.Schema(
     hint: { type: String, default: null },
     explanation: { type: String, default: null },
     unlockedAt: { type: Date, default: null },
+    hintRevealedAt: { type: Date, default: null },
     solvedAt: { type: Date, default: null },
     solvedBy: { type: String, default: null },
     activeMs: { type: Number, default: 0 },
@@ -45,6 +46,7 @@ const attemptSchema = new mongoose.Schema(
     teamId: { type: ObjectId, ref: 'Team', default: null },
     practiceCode: { type: String, set: upper }, // setter uppercases codes (§10.1 Unit III)
     themeSlug: { type: String, required: true },
+    theme: { type: Mixed, default: null }, // snapshot of the theme at creation (D51)
     timerMinutes: { type: Number, default: 15 },
     players: {
       type: [playerSchema],

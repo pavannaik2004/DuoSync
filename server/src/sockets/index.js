@@ -13,6 +13,7 @@ const DEFAULTS = {
   tickMs: 1000, // TIME-1
   submitGapMs: 2000, // §7.4
   timerMs: null, // overrides the theme timer; tests only
+  levelSetFor: undefined, // (themeContent) => levels; default is a fresh generated set (D60)
 };
 
 function attachSockets(httpServer, { clientOrigins, ...rest } = {}) {

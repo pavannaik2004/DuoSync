@@ -8,6 +8,11 @@ const { getContent, fillText } = require('../content');
 const { summarize, starsFor } = require('./scoring');
 
 const iso = (date) => (date ? new Date(date).toISOString() : null);
+/** The theme as it was when the attempt was created; Phase 2 attempts have no snapshot (D51). */
+function themeOf(attempt) {
+  return attempt.theme && attempt.theme.slug ? attempt.theme : getContent(attempt.themeSlug).theme;
+}
+
 const isFinal = (attempt) => FINAL.includes(attempt.status);
 
 function currentIndex(attempt) {
@@ -75,7 +80,7 @@ function scoreOf(attempt) {
 /** Results breakdown (SCORE-2). Null until the attempt is final. Never includes answers (D38). */
 function resultView(attempt) {
   if (!isFinal(attempt)) return null;
-  const { theme } = getContent(attempt.themeSlug);
+  const theme = themeOf(attempt);
   const summary = summarize(attempt.levels, { remainingMs: 0 });
   const bonus = summary.levelsCleared === attempt.levels.length && attempt.levels.length > 0 ? attempt.bonus || 0 : 0;
   const total = summary.levelPoints + bonus;
@@ -97,7 +102,7 @@ function resultView(attempt) {
 
 /** Full state for one player: snapshot on join, start and reconnect. */
 function toPlayerView(attempt, playerId, { connectedIds = [], messages = [], now = Date.now() } = {}) {
-  const { theme } = getContent(attempt.themeSlug);
+  const theme = themeOf(attempt);
   const me = attempt.players.find((p) => p.id === playerId);
   return {
     id: String(attempt._id),
@@ -120,5 +125,5 @@ function toPlayerView(attempt, playerId, { connectedIds = [], messages = [], now
 }
 
 module.exports = {
-  toPlayerView, lobbyView, levelBar, messageView, clueFor, boardView, scoreOf, resultView,
+  themeOf, toPlayerView, lobbyView, levelBar, messageView, clueFor, boardView, scoreOf, resultView,
 };

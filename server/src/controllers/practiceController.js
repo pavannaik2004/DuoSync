@@ -2,7 +2,7 @@ const practiceService = require('../services/practiceService');
 const { resolveIdentity } = require('../services/identityService');
 
 async function create(req, res) {
-  res.status(201).json(await practiceService.createPractice(await resolveIdentity(req.auth)));
+  res.status(201).json(await practiceService.createPractice(await resolveIdentity(req.auth), req.body && req.body.theme));
 }
 
 async function show(req, res) {

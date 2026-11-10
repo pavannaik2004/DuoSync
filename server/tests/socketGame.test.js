@@ -1,6 +1,7 @@
 const Attempt = require('../src/models/Attempt');
 const cyberHeist = require('../src/content').getContent('cyber-heist');
 const { startDb, clearDb, stopDb } = require('./helpers/db');
+const { seedThemes } = require('./helpers/themes');
 const { connect, nextEvent, join, wait } = require('./helpers/sockets');
 const { startedRoom, ask, submit } = require('./helpers/rooms');
 
@@ -8,6 +9,7 @@ const ANSWERS = ['9742', 'FIREWALL', '23-12-4', '8315', 'NODE'];
 let room;
 
 beforeAll(startDb);
+beforeEach(seedThemes); // clearDb wipes the themes too
 afterAll(stopDb);
 afterEach(async () => {
   if (room) await room.srv.close();
@@ -199,4 +201,19 @@ test('level:submit before the start says NOT_STARTED', async () => {
   const a = await connect(srv.url, alice.token);
   await join(a, code);
   expect(await submit(a, 1, '9742')).toMatchObject({ error: 'NOT_STARTED' });
+});
+
+test('with the default levelSetFor, two practice games of one theme get different levels (PRAC-2)', async () => {
+  room = await startedRoom({ levelSetFor: undefined });
+  const first = (await Attempt.findById(room.attemptId)).toObject();
+  await room.srv.close();
+  await clearDb();
+  await seedThemes();
+  room = await startedRoom({ levelSetFor: undefined });
+  const second = (await Attempt.findById(room.attemptId)).toObject();
+  expect(first.levels).toHaveLength(5);
+  expect(second.levels).toHaveLength(5);
+  const clues = (attempt) => JSON.stringify(attempt.levels.map((l) => [l.clueA, l.clueB, l.answer]));
+  expect(clues(first)).not.toBe(clues(second));
+  first.levels.forEach((l) => expect(l.solution).toBeUndefined());
 });

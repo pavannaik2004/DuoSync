@@ -14,8 +14,8 @@ async function createGuest(app, nickname = 'Visitor_9') {
 }
 
 /** Creates a practice room as the given player or guest and returns its code. */
-async function createRoom(app, auth) {
-  const res = await request(app).post('/api/practice').set('Authorization', auth);
+async function createRoom(app, auth, theme) {
+  const res = await request(app).post('/api/practice').set('Authorization', auth).send(theme ? { theme } : {});
   if (res.status !== 201) throw new Error(`createRoom failed: ${res.status} ${JSON.stringify(res.body)}`);
   return res.body.code;
 }

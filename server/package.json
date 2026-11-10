@@ -7,6 +7,7 @@
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "test": "jest --runInBand",
+    "seed": "node scripts/seed.js",
     "dev:memory": "node scripts/devMemoryDb.js"
   },
   "license": "UNLICENSED",

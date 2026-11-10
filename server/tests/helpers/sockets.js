@@ -9,7 +9,7 @@ const openClients = new Set();
 async function startSocketServer(options = {}) {
   const app = createApp({ authRateLimit: 1000 });
   const server = http.createServer(app);
-  const io = attachSockets(server, { clientOrigins: ['http://localhost'], ...options });
+  const io = attachSockets(server, { clientOrigins: ['http://localhost'], levelSetFor: (c) => c.fallbackLevels, ...options });
   await new Promise((resolve) => server.listen(0, resolve));
   const url = `http://localhost:${server.address().port}`;
   return {

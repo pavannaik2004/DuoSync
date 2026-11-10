@@ -2,22 +2,24 @@ const Attempt = require('../models/Attempt');
 const AppError = require('../utils/AppError');
 const patterns = require('../utils/patterns');
 const { generateCode } = require('./codeService');
-const { getContent } = require('../content');
+const { loadThemeContent } = require('./themeService');
+const { themeOf } = require('./attemptView');
 
 const CODE_LENGTH = 6; // PRAC-1
-const THEME = 'cyber-heist'; // Phase 2 plays Cyber Heist only
+const DEFAULT_THEME = 'cyber-heist';
 
 const notFound = () => new AppError(404, 'PRACTICE_NOT_FOUND', 'No practice room has that code');
 const asPlayer = (identity) => ({ id: identity.id, kind: identity.kind, name: identity.name, role: null, ready: false });
 
 /** PRAC-1: any player or guest opens a room; they are its first player. */
-async function createPractice(identity) {
-  const { theme } = getContent(THEME);
+async function createPractice(identity, themeSlug = DEFAULT_THEME) {
+  const { theme } = await loadThemeContent(themeSlug);
   for (let attempt = 0; attempt < 5; attempt += 1) {
     try {
       const room = await Attempt.create({
         practiceCode: generateCode(CODE_LENGTH),
         themeSlug: theme.slug,
+        theme,
         timerMinutes: theme.timerMinutes,
         status: 'lobby',
         players: [asPlayer(identity)],
@@ -44,7 +46,7 @@ async function findPractice(code) {
 
 async function getPracticePreview(code, identity) {
   const room = await findPractice(code);
-  const { theme } = getContent(room.themeSlug);
+  const theme = themeOf(room);
   return {
     code: room.practiceCode,
     status: room.status,

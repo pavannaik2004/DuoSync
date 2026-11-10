@@ -3,9 +3,14 @@
  * loads the attempt, changes it and saves it. Callers run them inside the attempt's
  * queue, so two changes never interleave.
  */
+const crypto = require('crypto');
 const Attempt = require('../models/Attempt');
 const AppError = require('../utils/AppError');
-const { getContent } = require('../content');
+const { loadThemeContent } = require('./themeService');
+const { generateLevelSet } = require('../generators/levelSet');
+
+/** PRAC-2: a new seed every game, so two games of one theme differ. */
+const freshLevelSet = (content) => generateLevelSet(content, crypto.randomBytes(8).toString('hex')).levels;
 
 async function load(attemptId) {
   const attempt = await Attempt.findById(attemptId);
@@ -85,10 +90,10 @@ async function unready(attemptId, playerId) {
 }
 
 /** GAME-1: copies the level set into the attempt and starts the timer. Null if the countdown was cancelled. */
-async function startAttempt(attemptId, { now, timerMs }) {
+async function startAttempt(attemptId, { now, timerMs, levelSetFor = freshLevelSet }) {
   const attempt = await load(attemptId);
   if (attempt.status !== 'countdown') return null;
-  const { levels } = getContent(attempt.themeSlug);
+  const levels = await levelSetFor(await loadThemeContent(attempt.themeSlug));
   attempt.levels = levels.map((level, i) => ({ ...level, unlockedAt: i === 0 ? new Date(now) : null }));
   attempt.startedAt = new Date(now);
   attempt.endsAt = new Date(now + (timerMs || attempt.timerMinutes * 60 * 1000));

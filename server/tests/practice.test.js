@@ -3,12 +3,14 @@ const { createApp } = require('../src/app');
 const Attempt = require('../src/models/Attempt');
 const { joinPractice } = require('../src/services/practiceService');
 const { startDb, clearDb, stopDb } = require('./helpers/db');
+const { seedThemes } = require('./helpers/themes');
 const { createPlayer, createGuest, createRoom } = require('./helpers/users');
 
 const app = createApp({ authRateLimit: 1000 });
 const CODE = /^[A-HJ-NP-Z2-9]{6}$/;
 
 beforeAll(startDb);
+beforeEach(seedThemes); // clearDb wipes the themes too
 afterEach(clearDb);
 afterAll(stopDb);
 
@@ -101,4 +103,28 @@ describe('joinPractice', () => {
     await expect(joinPractice(code, identity('bob-id', 'bob'))).rejects.toMatchObject({ code: 'ALREADY_STARTED' });
     await expect(joinPractice('ZZZZZZ', identity('bob-id', 'bob'))).rejects.toMatchObject({ code: 'PRACTICE_NOT_FOUND' });
   });
+});
+
+test('POST /api/practice { theme: "pirate" } makes a Pirate room with an 18-minute timer and a snapshot', async () => {
+  const alice = await createPlayer(app, 'alice');
+  const res = await request(app).post('/api/practice').set('Authorization', alice.auth).send({ theme: 'pirate' });
+  expect(res.status).toBe(201);
+  const saved = await Attempt.findOne({ practiceCode: res.body.code });
+  expect(saved).toMatchObject({ themeSlug: 'pirate', timerMinutes: 18 });
+  expect(saved.theme).toMatchObject({ slug: 'pirate', timerMinutes: 18, styleKey: 'pirate' });
+  expect(saved.theme.roles.A.name).toBe('Deckhand');
+  const shown = await preview(alice.auth, res.body.code);
+  expect(shown.body.theme).toMatchObject({ slug: 'pirate', timerMinutes: 18, roles: { A: { name: 'Deckhand' } } });
+});
+
+test('POST /api/practice { theme: "nope" } -> 404 THEME_NOT_FOUND; { theme: {} } -> 400 VALIDATION_ERROR', async () => {
+  const alice = await createPlayer(app, 'alice');
+  const missing = await request(app).post('/api/practice').set('Authorization', alice.auth).send({ theme: 'nope' });
+  expect(missing.status).toBe(404);
+  expect(missing.body.error).toBe('THEME_NOT_FOUND');
+  const bad = await request(app).post('/api/practice').set('Authorization', alice.auth).send({ theme: {} });
+  expect(bad.status).toBe(400);
+  expect(bad.body.error).toBe('VALIDATION_ERROR');
+  const shape = await request(app).post('/api/practice').set('Authorization', alice.auth).send({ theme: 'Bad Slug' });
+  expect(shape.status).toBe(400);
 });

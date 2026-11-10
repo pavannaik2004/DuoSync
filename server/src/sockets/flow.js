@@ -93,7 +93,7 @@ function startCountdown(runtime) {
   runtime.countdownTimer = runtime.later(() => {
     runtime.countdownTimer = null;
     runtime.enqueue(async () => {
-      const attempt = await lobby.startAttempt(runtime.attemptId, { now: Date.now(), timerMs: runtime.options.timerMs });
+      const attempt = await lobby.startAttempt(runtime.attemptId, { now: Date.now(), timerMs: runtime.options.timerMs, levelSetFor: runtime.options.levelSetFor });
       if (!attempt) return;
       await systemMessage(runtime, 'Attempt started');
       await snapshotAll(runtime, await Attempt.findById(attempt._id));

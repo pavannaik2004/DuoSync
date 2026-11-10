@@ -10,8 +10,7 @@ const { postMessage } = require('../services/chatService');
 const lobby = require('../services/lobbyService');
 const { submitAnswer } = require('../services/gameService');
 const { WRONG_COST } = require('../services/scoring');
-const { getContent } = require('../content');
-const { boardView, scoreOf, levelBar, clueFor } = require('../services/attemptView');
+const { boardView, scoreOf, levelBar, clueFor, themeOf } = require('../services/attemptView');
 const flow = require('./flow');
 const { str, int, oneOf } = require('./validate');
 const { roomOf } = require('./runtime');
@@ -149,7 +148,7 @@ function registerHandlers(socket, runtimes) {
       const outcome = await submitAnswer(runtime.attemptId, player, { order: level, answer: text }, Date.now());
       if (outcome.kind === 'ignored') return { ignored: true };
       const { attempt } = outcome;
-      const { theme } = getContent(attempt.themeSlug);
+      const theme = themeOf(attempt);
       const submittedBy = { id: player.id, name: player.name, role: player.role || null };
 
       if (outcome.kind === 'wrong') {

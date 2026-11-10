@@ -1,5 +1,6 @@
 const Attempt = require('../src/models/Attempt');
 const { startDb, clearDb, stopDb } = require('./helpers/db');
+const { seedThemes } = require('./helpers/themes');
 const { createPlayer, createRoom } = require('./helpers/users');
 const { startSocketServer, connect, nextEvent, collect, join } = require('./helpers/sockets');
 
@@ -11,6 +12,7 @@ let a;
 let b;
 
 beforeAll(startDb);
+beforeEach(seedThemes); // clearDb wipes the themes too
 afterAll(stopDb);
 
 beforeEach(async () => {
