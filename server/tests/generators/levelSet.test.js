@@ -56,6 +56,22 @@ test('a template whose generator always fails gives the fallback set and usedFal
   warn.mockRestore();
 });
 
+test('a generator that throws gives the fallback and the warning names the error', () => {
+  const { GENERATORS } = require('../../src/generators');
+  const c = content('cyber-heist');
+  const spy = jest.spyOn(GENERATORS.caesar, 'generate').mockImplementation(() => { throw new TypeError('boom-from-caesar'); });
+  const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+  try {
+    const set = generateLevelSet(c, 'err1');
+    expect(set.usedFallback).toBe(true);
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0][0]).toContain('boom-from-caesar');
+  } finally {
+    spy.mockRestore();
+    warn.mockRestore();
+  }
+});
+
 describe('finale plan', () => {
   const planFor = (slug, seed) => {
     const { templates, pools } = content(slug);
@@ -63,26 +79,39 @@ describe('finale plan', () => {
     return plan({ templates, params: finale.params, pools, rng: createRng(`${seed}:plan`) });
   };
 
-  test.each(['space-station', 'sun-king-tomb', 'polar-expedition'])('%s: four distinct digits 1-9; the finale answer is them in finale order', (slug) => {
+  /** Levels 1-4 rewards read in the order clue A names the titles. */
+  const readInClueOrder = (levels) => {
+    const text = levels[4].clueA.data.paragraphs.join(' ');
+    return levels.slice(0, 4).sort((x, y) => text.indexOf(x.title) - text.indexOf(y.title)).map((l) => l.reward).join('');
+  };
+
+  test.each(['space-station', 'sun-king-tomb', 'polar-expedition'])('%s: four distinct digits 1-9; the generated finale answer is the plan answer', (slug) => {
     for (let s = 0; s < 50; s += 1) {
-      const p = planFor(slug, s);
+      const p = planFor(slug, `dg${s}`);
       const digits = [1, 2, 3, 4].map((o) => p.rewards[o]);
       expect(digits.every((d) => /^[1-9]$/.test(d))).toBe(true);
       expect(new Set(digits).size).toBe(4);
       expect([...p.order].sort()).toEqual([1, 2, 3, 4]);
       expect(p.answer).toBe(p.order.map((o) => p.rewards[o]).join(''));
       const set = generateLevelSet(content(slug), `dg${s}`);
+      expect(set.usedFallback).toBe(false);
       expect(set.levels[4].answerKind).toBe('code');
-      expect(set.levels[4].answer).toMatch(/^[1-9]{4}$/);
-      expect(set.levels.slice(0, 4).map((l) => l.reward)).toEqual([1, 2, 3, 4].map((o) => planFor(slug, `dg${s}`).rewards[o]));
+      expect(set.levels.slice(0, 4).map((l) => l.reward)).toEqual([1, 2, 3, 4].map((o) => p.rewards[o]));
+      expect(set.levels[4].answer).toBe(p.answer);
+      expect(set.levels[4].answer).toBe(readInClueOrder(set.levels));
     }
   });
 
-  test('letter finales: a pool word spread over the levels in finale order', () => {
+  test.each(['cyber-heist', 'haunted-asylum', 'alchemist-tower'])('%s: letter finale: the generated answer is the plan word, the rewards in clue A order', (slug) => {
     for (let s = 0; s < 30; s += 1) {
-      const p = planFor('cyber-heist', s);
-      expect(content('cyber-heist').pools.finaleWords).toContain(p.answer);
+      const p = planFor(slug, `lt${s}`);
+      expect(content(slug).pools.finaleWords).toContain(p.answer);
       expect(p.order.map((o) => p.rewards[o]).join('')).toBe(p.answer);
+      const set = generateLevelSet(content(slug), `lt${s}`);
+      expect(set.usedFallback).toBe(false);
+      expect(set.levels.slice(0, 4).map((l) => l.reward)).toEqual([1, 2, 3, 4].map((o) => p.rewards[o]));
+      expect(set.levels[4].answer).toBe(p.answer);
+      expect(set.levels[4].answer).toBe(readInClueOrder(set.levels));
     }
   });
 

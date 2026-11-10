@@ -76,6 +76,7 @@ function generate({ template, params, rng, context }) {
   const sequence = context.plan.order.map((o) => byOrder[o]);
   must(sequence.every(Boolean), 'The finale plan names a level that was not generated');
   const answer = sequence.map((l) => (firstLetter ? l.reward[0] : l.reward)).join('');
+  must(context.plan.answer === undefined || context.plan.answer === answer, 'The finale answer differs from the plan');
   const clueA = { type: 'text', data: { paragraphs: clueAParagraphs(copy, sequence.map((l) => l.title)) } };
   return attempt('fragment-finale', () => {
     const entries = rng.shuffle(earlier).map((l) => fill(copy.entry, { title: l.title, value: l.reward }));

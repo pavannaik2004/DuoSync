@@ -27,32 +27,36 @@ function generateLevelSet(content, seed) {
   const ordered = [...templates].sort((a, b) => a.order - b.order);
   const finale = ordered.find((t) => t.mechanic === 'fragment-finale');
   const slug = (content.theme && content.theme.slug) || 'unknown';
-  const fail = (template) => {
-    console.warn(`Level generation fell back to the fixed set: theme ${slug}, level ${template.order}, seed ${seed}`);
+  const fail = (template, error) => {
+    const reason = error ? `: ${error.message}` : '';
+    console.warn(`Level generation fell back to the fixed set: theme ${slug}, level ${template.order}, seed ${seed}${reason}`);
     return { levels: fallbackSet(ordered), seed, usedFallback: true };
   };
   let thePlan;
   try {
     thePlan = finalePlan({ templates: ordered, params: finale ? finale.params : {}, pools, rng: createRng(`${seed}:plan`) });
   } catch (err) {
-    return fail(finale || ordered[0]);
+    return fail(finale || ordered[0], err);
   }
   const built = [];
   for (const template of ordered) {
     const generator = GENERATORS[template.mechanic];
     let level = null;
+    let lastError = null;
     for (let retry = 0; retry < RETRIES && !level; retry += 1) {
       const context = { levels: [...built], pools, params: template.params, plan: thePlan };
       try {
         const rng = createRng(`${seed}:${template.order}:${retry}`);
         const candidate = generator.generate({ template, params: template.params, pools, rng, context });
         const full = { order: template.order, title: template.title, hint: template.hint, ...candidate };
-        if (validateLevel(full, { mechanic: template.mechanic, context }).length === 0) level = full;
+        const errors = validateLevel(full, { mechanic: template.mechanic, context });
+        if (errors.length === 0) level = full;
+        else lastError = new Error(`invalid level: ${errors.join('; ')}`);
       } catch (err) {
-        // a generator may give up on a layout; the next retry uses a new rng
+        lastError = err; // the next retry uses a new rng; the last error is reported if all fail
       }
     }
-    if (!level) return fail(template);
+    if (!level) return fail(template, lastError);
     built.push(level);
   }
   return { levels: built.map((level, i) => shape(ordered[i], level)), seed, usedFallback: false };
