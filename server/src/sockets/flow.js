@@ -19,6 +19,7 @@ async function sendSnapshot(runtime, attempt, playerId, target) {
   const view = toPlayerView(attempt, playerId, {
     connectedIds: runtime.connectedIds(),
     messages: await recentMessages(attempt._id),
+    hintDelayMs: runtime.options.hintDelayMs,
   });
   target.emit('attempt:snapshot', view);
 }
@@ -39,7 +40,7 @@ function broadcastLobby(runtime, attempt) {
 async function snapshotAll(runtime, attempt) {
   const messages = await recentMessages(attempt._id);
   attempt.players.forEach((p) => {
-    runtime.emitToPlayer(p.id, 'attempt:snapshot', toPlayerView(attempt, p.id, { connectedIds: runtime.connectedIds(), messages }));
+    runtime.emitToPlayer(p.id, 'attempt:snapshot', toPlayerView(attempt, p.id, { connectedIds: runtime.connectedIds(), messages, hintDelayMs: runtime.options.hintDelayMs }));
   });
 }
 
@@ -57,6 +58,8 @@ function stopTicking(runtime) {
 async function finish(runtime, status) {
   const attempt = await endAttempt(runtime.attemptId, status, Date.now());
   stopTicking(runtime);
+  runtime.clear(runtime.hintTimer);
+  runtime.hintTimer = null;
   if (!attempt) return null;
   await systemMessage(runtime, 'Attempt ended');
   runtime.emitToRoom('attempt:ended', { status: attempt.status, result: resultView(attempt) });
@@ -85,6 +88,33 @@ function startTicking(runtime, endsAt) {
       runtime.enqueue(() => finish(runtime, 'timed_out')).catch(() => {});
     }
   }, runtime.options.tickMs);
+}
+
+/**
+ * GAME-10: tells both players when the current level's hint unlocks (hintDelayMs after the level
+ * opened, by wall time, D59). Call after the start, after each unlock and on resume; it replaces
+ * any earlier timer. `quiet` skips the announcement when the delay has already passed (a resume).
+ */
+function scheduleHint(runtime, attempt, { quiet = false } = {}) {
+  runtime.clear(runtime.hintTimer);
+  runtime.hintTimer = null;
+  if (attempt.status !== 'in_progress') return;
+  const level = attempt.levels.find((l) => !l.solvedAt);
+  if (!level || !level.hint || level.hintRevealedAt || !level.unlockedAt) return;
+  const wait = new Date(level.unlockedAt).getTime() + runtime.options.hintDelayMs - Date.now();
+  if (wait <= 0 && quiet) return;
+  const { order } = level;
+  runtime.hintTimer = runtime.later(() => {
+    runtime.hintTimer = null;
+    runtime.enqueue(async () => {
+      const current = await Attempt.findById(runtime.attemptId);
+      if (!current || current.status !== 'in_progress') return;
+      const now = current.levels.find((l) => !l.solvedAt);
+      if (!now || now.order !== order || now.hintRevealedAt) return;
+      runtime.emitToRoom('hint:available', { order });
+      await systemMessage(runtime, `Hint ready for ${now.title}`);
+    }).catch(() => {});
+  }, Math.max(0, wait));
 }
 
 /** The level set could not be built: back to the lobby, everyone unready, and both players are told why. */
@@ -119,6 +149,7 @@ function startCountdown(runtime) {
       await systemMessage(runtime, 'Attempt started');
       await snapshotAll(runtime, await Attempt.findById(attempt._id));
       startTicking(runtime, attempt.endsAt);
+      scheduleHint(runtime, await Attempt.findById(attempt._id));
     }).catch(() => {});
   }, runtime.options.countdownMs);
 }
@@ -132,6 +163,7 @@ async function resume(runtime, attempt) {
   if (attempt.status === 'in_progress' && !runtime.tickTimer) {
     if (new Date(attempt.endsAt).getTime() <= Date.now()) return finish(runtime, 'timed_out');
     startTicking(runtime, attempt.endsAt);
+    scheduleHint(runtime, attempt, { quiet: true });
   }
   if (attempt.status === 'countdown' && !runtime.countdownTimer) return lobby.resetCountdown(attempt._id);
   return null;
@@ -139,5 +171,5 @@ async function resume(runtime, attempt) {
 
 module.exports = {
   sendSnapshot, systemMessage, broadcastLobby, snapshotAll, startCountdown, cancelCountdown,
-  startTicking, stopTicking, finish, resume,
+  startTicking, stopTicking, finish, resume, scheduleHint,
 };

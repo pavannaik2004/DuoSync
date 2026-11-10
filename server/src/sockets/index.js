@@ -15,6 +15,7 @@ const DEFAULTS = {
   countdownMs: 5000, // LOBBY-3
   tickMs: 1000, // TIME-1
   submitGapMs: 2000, // §7.4
+  hintDelayMs: 90000, // GAME-10
   timerMs: null, // overrides the theme timer; tests only
   levelSetFor: undefined, // (themeContent) => levels; default is a fresh generated set (D60)
 };

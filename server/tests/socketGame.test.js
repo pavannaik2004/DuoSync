@@ -98,8 +98,8 @@ test('level:unlocked gives each player only their own half', async () => {
   const unlocked = Promise.all([nextEvent(room.a, 'level:unlocked'), nextEvent(room.b, 'level:unlocked')]);
   await solveUpTo(1);
   const [ua, ub] = await unlocked;
-  expect(ua).toEqual({ order: 2, title: 'Firewall', clue: cyberHeist.levels[1].clueA });
-  expect(ub).toEqual({ order: 2, title: 'Firewall', clue: cyberHeist.levels[1].clueB });
+  expect(ua).toEqual({ order: 2, title: 'Firewall', clue: cyberHeist.levels[1].clueA, hint: { ready: false, text: null } });
+  expect(ub).toEqual({ order: 2, title: 'Firewall', clue: cyberHeist.levels[1].clueB, hint: { ready: false, text: null } });
   expect(JSON.stringify(ua)).not.toContain('Shift every letter back');
 });
 
@@ -163,7 +163,7 @@ test('a reconnect mid-attempt gets the snapshot: same role, own current clue, sc
   await join(again, room.code);
   const snap = await snapshot;
   expect(snap).toMatchObject({ status: 'in_progress', me: { role: 'A' }, score: 100 });
-  expect(snap.clue).toEqual({ order: 2, title: 'Firewall', clue: cyberHeist.levels[1].clueA });
+  expect(snap.clue).toEqual({ order: 2, title: 'Firewall', clue: cyberHeist.levels[1].clueA, hint: { ready: false, text: null } });
   expect(snap.chat.some((m) => m.text === 'Access PIN solved: +100')).toBe(true);
 });
 
@@ -175,7 +175,7 @@ test('NFR-1: nothing player A receives during a full run contains a B half or an
   await solveUpTo(5);
   await ended;
   const json = JSON.stringify([room.snapA, ...received]);
-  for (const banned of ['"answer"', 'acceptedAnswers', 'explanation', '"hint"', 'clueB', 'answerKind']) {
+  for (const banned of ['"answer"', 'acceptedAnswers', 'explanation', '"hint":"', 'clueB', 'answerKind']) {
     expect(json).not.toContain(banned);
   }
   for (const level of cyberHeist.levels) expect(json).not.toContain(JSON.stringify(level.clueB.data));

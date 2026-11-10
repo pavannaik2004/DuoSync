@@ -60,13 +60,23 @@ function messageView(msg) {
   };
 }
 
-/** The player's own role's half of the current level, or null. */
-function clueFor(attempt, playerId) {
+const HINT_DELAY_MS = 90000; // GAME-10
+
+/** The player's own role's half of the current level, plus whether its hint is ready, or null. */
+function clueFor(attempt, playerId, { now = Date.now(), hintDelayMs = HINT_DELAY_MS } = {}) {
   const player = attempt.players.find((p) => p.id === playerId);
   const index = currentIndex(attempt);
   if (!player || !player.role || index === -1) return null;
   const level = attempt.levels[index];
-  return { order: level.order, title: level.title, clue: player.role === 'A' ? level.clueA : level.clueB };
+  // The hint text goes out only once revealed (NFR-1).
+  const revealed = Boolean(level.hintRevealedAt);
+  const ready = Boolean(level.hint) && (revealed || now - new Date(level.unlockedAt).getTime() >= hintDelayMs);
+  return {
+    order: level.order,
+    title: level.title,
+    clue: player.role === 'A' ? level.clueA : level.clueB,
+    hint: { ready, text: revealed ? level.hint : null },
+  };
 }
 
 function boardView(attempt) {
@@ -101,7 +111,7 @@ function resultView(attempt) {
 }
 
 /** Full state for one player: snapshot on join, start and reconnect. */
-function toPlayerView(attempt, playerId, { connectedIds = [], messages = [], now = Date.now() } = {}) {
+function toPlayerView(attempt, playerId, { connectedIds = [], messages = [], now = Date.now(), hintDelayMs } = {}) {
   const theme = themeOf(attempt);
   const me = attempt.players.find((p) => p.id === playerId);
   return {
@@ -116,7 +126,7 @@ function toPlayerView(attempt, playerId, { connectedIds = [], messages = [], now
     endsAt: iso(attempt.endsAt),
     remainingMs: attempt.endsAt ? Math.max(0, new Date(attempt.endsAt).getTime() - now) : null,
     levels: levelBar(attempt),
-    clue: clueFor(attempt, playerId),
+    clue: clueFor(attempt, playerId, { now, hintDelayMs }),
     board: boardView(attempt),
     score: scoreOf(attempt),
     chat: messages.map(messageView),

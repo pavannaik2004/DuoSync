@@ -43,4 +43,4 @@ function summarize(levels, { remainingMs }) {
   return { levelPoints: levelTotal, levelsCleared, wrongAnswers, bonus, total, stars: starsFor({ total, levelsCleared }) };
 }
 
-module.exports = { levelPoints, completionBonus, starsFor, summarize, WRONG_COST };
+module.exports = { levelPoints, completionBonus, starsFor, summarize, WRONG_COST, HINT_COST };

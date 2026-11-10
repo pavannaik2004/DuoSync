@@ -9,8 +9,8 @@ const { openAttempt } = require('../services/challengeAttemptService');
 const { joinPractice, findPractice } = require('../services/practiceService');
 const { postMessage } = require('../services/chatService');
 const lobby = require('../services/lobbyService');
-const { submitAnswer } = require('../services/gameService');
-const { WRONG_COST } = require('../services/scoring');
+const { submitAnswer, revealHint } = require('../services/gameService');
+const { WRONG_COST, HINT_COST } = require('../services/scoring');
 const { boardView, scoreOf, levelBar, clueFor, themeOf } = require('../services/attemptView');
 const flow = require('./flow');
 const { str, int, oneOf } = require('./validate');
@@ -183,12 +183,27 @@ function registerHandlers(socket, runtimes) {
         await flow.finish(runtime, 'finished');
       } else {
         attempt.players.forEach((p) => {
-          const clue = clueFor(attempt, p.id);
+          const clue = clueFor(attempt, p.id, { hintDelayMs: runtime.options.hintDelayMs });
           if (clue) runtime.emitToPlayer(p.id, 'level:unlocked', clue);
         });
+        flow.scheduleHint(runtime, attempt);
       }
       return null;
     });
+  }));
+
+  socket.on('hint:reveal', handle(socket, async ({ order }) => {
+    const level = int(order, { field: 'Level', min: 1, max: 5 });
+    return queued(async (runtime, player) => {
+      const outcome = await revealHint(runtime.attemptId, player, { order: level }, Date.now(), { hintDelayMs: runtime.options.hintDelayMs });
+      if (outcome.kind === 'ignored') return { ignored: true };
+      const roleName = player.role ? themeOf(outcome.attempt).roles[player.role].name : player.name;
+      runtime.emitToRoom('hint:revealed', {
+        order: level, hint: outcome.hint, revealedBy: { id: player.id, name: player.name, role: player.role || null },
+      });
+      await flow.systemMessage(runtime, `${roleName} revealed the hint (−${HINT_COST})`);
+      return null;
+    })();
   }));
 
   socket.on('attempt:quit', handle(socket, queued(async (runtime) => {

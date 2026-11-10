@@ -72,7 +72,7 @@ test('a teammate opens the lobby: entered → lobby; snapshot has the theme snap
   expect(snap.theme.slug).toBe('cyber-heist');
   expect(snap.theme.name).toBe(saved.theme.name);
   const json = JSON.stringify(snap);
-  for (const banned of ['"answer"', 'acceptedAnswers', 'explanation', '"hint"', 'clueB', 'seed']) expect(json).not.toContain(banned);
+  for (const banned of ['"answer"', 'acceptedAnswers', 'explanation', '"hint":"', 'clueB', 'seed']) expect(json).not.toContain(banned);
 });
 
 test('a non-member socket → NOT_IN_ATTEMPT; a guest → GUEST_NOT_ALLOWED; both attemptId and practiceCode → VALIDATION_ERROR', async () => {

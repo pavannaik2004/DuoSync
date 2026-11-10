@@ -32,13 +32,13 @@ function inProgress() {
 test('player A sees only their own half and no answers', () => {
   const attempt = inProgress();
   const json = JSON.stringify(toPlayerView(attempt, 'ann', { now }));
-  for (const banned of ['"answer"', 'acceptedAnswers', 'explanation', '"hint"', 'clueA', 'clueB', 'answerKind']) {
+  for (const banned of ['"answer"', 'acceptedAnswers', 'explanation', 'clueA', 'clueB', 'answerKind']) {
     expect(json).not.toContain(banned);
   }
   for (const l of cyberHeist.levels) expect(json).not.toContain(normalizeAnswer(l.answer, l.answerKind));
   expect(json).not.toContain('Shift every letter back'); // B's half of level 2
   expect(toPlayerView(attempt, 'ann', { now }).clue)
-    .toEqual({ order: 2, title: 'Firewall', clue: cyberHeist.levels[1].clueA });
+    .toEqual({ order: 2, title: 'Firewall', clue: cyberHeist.levels[1].clueA, hint: { ready: true, text: null } });
   expect(toPlayerView(attempt, 'ben', { now }).clue.clue).toEqual(cyberHeist.levels[1].clueB);
 });
 
@@ -118,4 +118,26 @@ test('themeOf falls back to the content module for a Phase 2 attempt without a s
   expect(themeOf(old)).toBe(cyberHeist.theme);
   const view = toPlayerView(old, 'ann', { now });
   expect(view.theme).toMatchObject({ slug: 'cyber-heist', name: cyberHeist.theme.name, roles: cyberHeist.theme.roles });
+});
+
+test('an unrevealed hint never appears in any payload', () => {
+  const attempt = inProgress();
+  const hint = attempt.levels[1].hint;
+  expect(hint).toBeTruthy();
+  const late = now + minutes(5); // ready, but not revealed
+  const view = toPlayerView(attempt, 'ann', { now: late });
+  expect(view.clue.hint).toEqual({ ready: true, text: null });
+  expect(JSON.stringify(view)).not.toContain(hint);
+  attempt.levels[1].hintRevealedAt = new Date(now);
+  const after = toPlayerView(attempt, 'ben', { now: late });
+  expect(after.clue.hint).toEqual({ ready: true, text: hint });
+});
+
+test('the hint is not ready before the delay, nor for a level without a hint', () => {
+  const attempt = inProgress();
+  attempt.levels[1].unlockedAt = new Date(now - 89000);
+  expect(toPlayerView(attempt, 'ann', { now }).clue.hint.ready).toBe(false); // delay is 90 s
+  expect(toPlayerView(attempt, 'ann', { now: now + 1000 }).clue.hint.ready).toBe(true);
+  attempt.levels[1].hint = null;
+  expect(toPlayerView(attempt, 'ann', { now: now + minutes(5) }).clue.hint).toEqual({ ready: false, text: null });
 });

@@ -39,7 +39,7 @@ async function submitAnswer(attemptId, player, { order, answer }, now) {
   }
 
   const activeMs = now - new Date(level.unlockedAt).getTime();
-  const points = levelPoints({ activeMs, wrongCount: level.wrongCount, hintUsed: false }); // hints arrive in Phase 3
+  const points = levelPoints({ activeMs, wrongCount: level.wrongCount, hintUsed: Boolean(level.hintRevealedAt) });
   const set = {
     [`levels.${i}.solvedAt`]: new Date(now),
     [`levels.${i}.solvedBy`]: player.id,
@@ -54,6 +54,36 @@ async function submitAnswer(attemptId, player, { order, answer }, now) {
   const updated = await Attempt.findOneAndUpdate(unsolved, update, { returnDocument: 'after' });
   if (!updated) return { kind: 'ignored' };
   return { kind: 'solved', order, points, finished, attempt: updated };
+}
+
+/**
+ * Reveals the current level's hint for the whole team (GAME-10). Returns
+ * { kind: 'revealed', order, hint, attempt } or { kind: 'ignored' } (not the current level,
+ * or already revealed). The update is conditional on the hint being unrevealed and the
+ * level unsolved, so two simultaneous reveals cost the 25 points once (NFR-9).
+ */
+async function revealHint(attemptId, player, { order }, now, { hintDelayMs = 90000 } = {}) {
+  const attempt = await Attempt.findById(attemptId);
+  if (attempt && ['lobby', 'countdown'].includes(attempt.status)) {
+    throw new AppError(409, 'NOT_STARTED', 'The game has not started yet');
+  }
+  if (!attempt || attempt.status !== 'in_progress' || now >= new Date(attempt.endsAt).getTime()) throw over();
+
+  const i = attempt.levels.findIndex((l) => !l.solvedAt);
+  if (i === -1 || attempt.levels[i].order !== order) return { kind: 'ignored' };
+  const level = attempt.levels[i];
+  if (level.hintRevealedAt) return { kind: 'ignored' };
+  if (!level.hint) throw new AppError(409, 'NO_HINT', 'This level has no hint');
+  if (now - new Date(level.unlockedAt).getTime() < hintDelayMs) {
+    throw new AppError(409, 'HINT_NOT_READY', 'The hint is not ready yet');
+  }
+  const updated = await Attempt.findOneAndUpdate(
+    { _id: attempt._id, status: 'in_progress', [`levels.${i}.solvedAt`]: null, [`levels.${i}.hintRevealedAt`]: null },
+    { $set: { [`levels.${i}.hintRevealedAt`]: new Date(now) } },
+    { returnDocument: 'after' },
+  );
+  if (!updated) return { kind: 'ignored' };
+  return { kind: 'revealed', order, hint: level.hint, attempt: updated };
 }
 
 /**
@@ -77,4 +107,4 @@ async function endAttempt(attemptId, status, now) {
   return attempt;
 }
 
-module.exports = { submitAnswer, endAttempt };
+module.exports = { submitAnswer, revealHint, endAttempt };

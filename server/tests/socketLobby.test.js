@@ -83,7 +83,7 @@ test('both ready → countdown → snapshot with level 1 and each player\'s own 
 
   const [snapA, snapB] = await snaps;
   expect(snapA.status).toBe('in_progress');
-  expect(snapA.clue).toEqual({ order: 1, title: 'Access PIN', clue: cyberHeist.levels[0].clueA });
+  expect(snapA.clue).toEqual({ order: 1, title: 'Access PIN', clue: cyberHeist.levels[0].clueA, hint: { ready: false, text: null } });
   expect(snapB.clue.clue).toEqual(cyberHeist.levels[0].clueB);
   expect(snapA.remainingMs).toBeGreaterThan(14 * 60 * 1000);
   expect(snapA.levels.map((l) => l.state)).toEqual(['current', 'locked', 'locked', 'locked', 'locked']);
