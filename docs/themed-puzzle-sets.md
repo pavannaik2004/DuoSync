@@ -26,7 +26,7 @@ There are **8 themes**: the 4 the PRD names, plus 4 more in other genres. The ex
 
 The modules are the machine copy of this document. **Full clue data and full pools are in the modules**. This document summarises them. If you change one, change the other, and run `npm test`.
 
-Until the Phase 3 level engine lands, a game plays a theme's fallback values (`getContent(slug).levels`). In Phase 3 the theme is seeded into the database, and each template's generator produces fresh values from `params` and `pools`; the `fallback` is used only when every retry fails (§6.1 step 4).
+Each theme is seeded into MongoDB (`npm --prefix server run seed`, or `ensureSeeded()` at boot). Each template's generator (`server/src/generators/`) produces fresh values from `params` and `pools`, and `generateLevelSet` validates them; the `fallback` set is used only when a level still fails after 20 retries (§6.1 step 4, D54). The fallbacks also carry a server-only `solution` so they pass the same validator (D52).
 
 **Template fields** (ADMIN-3): `order`, `title`, `mechanic`, `params` (ranges and pool names), `hint`, `rewardRule`, `timeEstimateSec`, `fallback` (`clueA`, `clueB`, `answer`, `acceptedAnswers`, `answerKind`, `reward`, `explanation`).
 
@@ -60,9 +60,9 @@ All 6 display types (§6.3) take structured data. `caption` is optional on every
 | `grid` | `{ rows, cols, colLabels?, rowLabels?, cells: [{ r, c, mark?, label? }] }` | `r` and `c` count from 0, starting at the top left. North is up. Each cell position appears once |
 | `strip` | `{ shift, direction: 'back' \| 'forward' }` or `{ numbered: true }` | With no shift it is a plain, numbered alphabet; the shift comes from elsewhere (Dying Message, D46) |
 
-**Glyphs** (`SYMBOL_SHAPES`, 16): triangle, circle, square, diamond, hexagon, star, moon, cross, heart, wave, eye, key, crown, sun, anchor, bolt. The first 6 are drawn today; Phase 3 adds the other 10 to `client/src/components/clues/Glyph.jsx` (D45). Letter legends need up to 6 letters plus 2 decoys.
+**Glyphs** (`SYMBOL_SHAPES`, 16): triangle, circle, square, diamond, hexagon, star, moon, cross, heart, wave, eye, key, crown, sun, anchor, bolt. `client/src/components/clues/Glyph.jsx` draws all 16 (D45). Letter legends need up to 6 letters plus 2 decoys.
 
-**Token colours** (`TOKEN_COLORS`, 6): red, blue, green, yellow, orange, purple. Phase 3 adds orange and purple to `game.css`.
+**Token colours** (`TOKEN_COLORS`, 6): red, blue, green, yellow, orange, purple. `game.css` styles all 6.
 
 **Morse:** international Morse for A–Z and 0–9, in `catalog.MORSE`. Role B's chart is always the full A–Z table (`morseChart()`).
 
@@ -150,7 +150,7 @@ Style notes are for UI-2 (Phase 6, `client/src/styles/themes/<styleKey>.css`). F
 | 4 | Distress Signal | Morse | Word from `morseWords` | Each group of dots and dashes is one letter. Read them left to right. | `MAYDAY` → 5 |
 | 5 | Escape Pod Launch | Fragment Finale | Distinct digit rewards 1–9 for 1–4, finale order | The launch digits are also on your team board. | `5793` |
 
-**Pools:** `morseWords` (10): EARTH, HELP, MAYDAY, RESCUE, ORBIT, DANGER, SIGNAL, COMET, OXYGEN, ROCKET.
+**Pools:** `morseWords` (20): EARTH, HELP, MAYDAY, RESCUE, ORBIT, DANGER, SIGNAL, COMET, OXYGEN, ROCKET, GALAXY, PLANET, LAUNCH, METEOR, SATURN, ENGINE, SHIELD, MARS, VENUS, ALIEN.
 
 ### 4.4 Pirate – Blackbeard's Lost Treasure (18 min) · `pirate`
 
@@ -162,7 +162,7 @@ Style notes are for UI-2 (Phase 6, `client/src/styles/themes/<styleKey>.css`). F
 
 | # | Puzzle | Mechanic | Randomized each game (`params`) | Hint | Fallback |
 | --- | --- | --- | --- | --- | --- |
-| 1 | Torn Parchment | Split Riddle | Riddle from `riddles` (10) | Read both halves aloud as one riddle. | `MAP` (also `CHART`) → MAP |
+| 1 | Torn Parchment | Split Riddle | Riddle from `riddles` (20) | Read both halves aloud as one riddle. | `MAP` (also `CHART`) → MAP |
 | 2 | Island Walk | Grid Navigation | 7 landmarks on the 5 × 5 grid, start point, 3 moves that stay on the map and end on a landmark | North is the top of the chart. Trace each move one square at a time. | `SKULL` → SKULL |
 | 3 | Pirate Code | Describe and Match | Word from `codeWords`, symbol legend, 2 decoys | The same symbol always stands for the same letter. | `PARROT` → PARROT |
 | 4 | Cursed Chest | Rule Filter | 5 items from `chestItems` with random colours and kinds; the rule variant leaves exactly 1 | The rule has two conditions. Only one item meets both. | `AMULET` → AMULET |
@@ -170,7 +170,7 @@ Style notes are for UI-2 (Phase 6, `client/src/styles/themes/<styleKey>.css`). F
 
 **Finale rule.** The generator picks the finale word first, then a permutation that assigns each letter to one of levels 1–4. Each level then draws an answer from its own pool that starts with that letter. The pools are written so that **every finale word can be spelled**: the test tries all 24 assignments for each word.
 
-**Pools:** `riddles` (10, answers MAP, NEEDLE, RIVER, BOTTLE, STEPS, FIRE, COIN, BREATH, ANCHOR, EIGHT) · `landmarks` (9): PALM, SKULL, WELL, VOLCANO, LAGOON, DUNE, WRECK, EAGLE, CAVE · `codeWords` (11): CANNON, PARROT, SAILOR, MAST, OCEAN, DECK, ROPE, ANCHOR, VOYAGE, GALLEON, COMPASS · `chestItems` (10): AMULET, GOBLET, PEARL, CROWN, MEDAL, EMERALD, DIAMOND, OPAL, SILVER, RUBY · `finaleWords` (7): CAVE, COVE, CODE, MAPS, ROPE, WAVE, SAND.
+**Pools:** `riddles` (20, answers MAP, NEEDLE, RIVER, BOTTLE, STEPS, FIRE, COIN, BREATH, ANCHOR, EIGHT, SAIL, WHALE, OAR, CASK, PLANK, VOYAGE, DOUBLOON, ISLAND, RUM, TIDE) · `landmarks` (9): PALM, SKULL, WELL, VOLCANO, LAGOON, DUNE, WRECK, EAGLE, CAVE · `codeWords` (11): CANNON, PARROT, SAILOR, MAST, OCEAN, DECK, ROPE, ANCHOR, VOYAGE, GALLEON, COMPASS · `chestItems` (10): AMULET, GOBLET, PEARL, CROWN, MEDAL, EMERALD, DIAMOND, OPAL, SILVER, RUBY · `finaleWords` (7): CAVE, COVE, CODE, MAPS, ROPE, WAVE, SAND.
 
 ### 4.5 Haunted Asylum – The Ward 13 Séance (20 min) · `haunted` · *new*
 
@@ -184,11 +184,11 @@ Style notes are for UI-2 (Phase 6, `client/src/styles/themes/<styleKey>.css`). F
 | --- | --- | --- | --- | --- | --- |
 | 1 | Flickering Lights | Morse | Word from `morseWords` | A short flicker is a dot and a long one is a dash. Each group is one letter. | `ATTIC` → D |
 | 2 | Patient Files | Rule Filter (halves swapped: the whisper is the rule, the files are the table) | 6 beds, admission month, discharged, by a window; 3 conditions leave exactly 1 bed | Check every part of the whisper against each file. Only one bed fits them all. | `17` → A |
-| 3 | Whispers in the Walls | Split Riddle | Riddle from `riddles` (8) | Put the two halves together and say them as one riddle. | `ECHO` → E |
+| 3 | Whispers in the Walls | Split Riddle | Riddle from `riddles` (20) | Put the two halves together and say them as one riddle. | `ECHO` → E |
 | 4 | Portrait Hall | Ordering | 4 portraits with years 1840–1920, newest-first or oldest-first | Sort the portraits by year first, then read off their plaque numbers. | `8635` → N |
 | 5 | The Séance | Fragment Finale | Spirit name from `finaleWords`; its letters are the rewards of 1–4 | The spirit letters are also on your board. | `EDNA` |
 
-**Pools:** `morseWords` (10): GHOST, NURSE, ATTIC, CELLAR, LANTERN, SHADOW, WARDEN, CANDLE, MIRROR, CHAPEL · `riddles` (8, answers SHADOW, ECHO, DARKNESS, CLOCK, SILENCE, MIRROR, CANDLE, STAIRS) · `finaleWords` (8): EDNA, CORA, ROSE, ELSA, MAUD, NELL, IRIS, LILA.
+**Pools:** `morseWords` (20): GHOST, NURSE, ATTIC, CELLAR, LANTERN, SHADOW, WARDEN, CANDLE, MIRROR, CHAPEL, GRAVE, WHISPER, CRYPT, COFFIN, SPIRIT, DUNGEON, PHANTOM, SCREAM, CURSE, WIDOW · `riddles` (20, answers SHADOW, ECHO, DARKNESS, CLOCK, SILENCE, MIRROR, CANDLE, STAIRS, GHOST, WINDOW, KEY, DOLL, DOOR, FOG, BELL, MOON, PILLOW, DREAM, PORTRAIT, RAIN) · `finaleWords` (8): EDNA, CORA, ROSE, ELSA, MAUD, NELL, IRIS, LILA.
 
 ### 4.6 Tomb of the Sun King – The Golden Mask (18 min) · `tomb` · *new*
 
@@ -242,7 +242,7 @@ Style notes are for UI-2 (Phase 6, `client/src/styles/themes/<styleKey>.css`). F
 | 4 | Fuel Gauge | Arithmetic Split | Reading 200–480 L (steps of 5), gauge 15–60 L too high | A gauge that reads too high shows more fuel than there really is. | `295` → 1 |
 | 5 | Rescue Flare | Fragment Finale | Distinct digit rewards 1–9, finale order | The frequency digits are also on your board. | `1368` |
 
-**Pools:** `morseWords` (10): SNOW, BLIZZARD, RESCUE, HUSKY, FROST, GLACIER, AURORA, SLED, ICEBERG, TUNDRA · `landmarks` (8): FLAGPOLE, CAIRN, HUT, RIDGE, IGLOO, DEPOT, CREVASSE, BEACON.
+**Pools:** `morseWords` (20): SNOW, BLIZZARD, RESCUE, HUSKY, FROST, GLACIER, AURORA, SLED, ICEBERG, TUNDRA, ARCTIC, SLEDGE, PARKA, SUMMIT, CAMP, TENT, SEAL, WALRUS, PENGUIN, COMPASS · `landmarks` (8): FLAGPOLE, CAIRN, HUT, RIDGE, IGLOO, DEPOT, CREVASSE, BEACON.
 
 ## 5. Pool rules (checked by the tests)
 
@@ -259,11 +259,20 @@ Style notes are for UI-2 (Phase 6, `client/src/styles/themes/<styleKey>.css`). F
 
 A fallback answer that comes from a pool must be in that pool.
 
-## 6. What Phase 3 must add for these sets
+## 6. What Phase 3 added for these sets
 
-- The `grid` clue renderer (Star Map, Spellbook Index, Island Walk, Pressure Plates, Whiteout Walk).
-- 10 more glyphs in `Glyph.jsx`, so all 16 `SYMBOL_SHAPES` can be drawn.
-- `orange` and `purple` token colours in `game.css`.
-- The numbered strip (`strip` with `numbered: true`) for the Dying Message.
-- Generators for the 11 mechanics, reading `params` and `pools` from these templates, with the Detective consistency rules (§4.2) and the Pirate first-letter finale (§4.4).
-- A theme picker for practice rooms (PRAC-1), once the renderers above exist.
+All of this is delivered on the `phase-3-challenges-engine` branch (hosted gate pending).
+
+- [x] The `grid` clue renderer (Star Map, Spellbook Index, Island Walk, Pressure Plates, Whiteout Walk).
+- [x] 10 more glyphs in `Glyph.jsx`, so all 16 `SYMBOL_SHAPES` can be drawn.
+- [x] `orange` and `purple` token colours in `game.css`.
+- [x] The numbered strip (`strip` with `numbered: true`) for the Dying Message.
+- [x] Generators for the 11 mechanics, reading `params` and `pools` from these templates, with the Detective consistency rules (§4.2) and the Pirate first-letter finale (§4.4).
+- [x] A theme picker for practice rooms (PRAC-1).
+
+### 6.1 Template text parameters
+
+- **`params.copy`** (D55): theme-specific strings with `{placeholders}`, such as `introA`, `measureA`, `reward`, `stripCaption`. A value may be a list; the generator picks one wording per level (Detective Footprint has 3 intros × 3 measure lines). A caption that is not in `copy` is taken from the fallback clue of the same half.
+- **`{places}`**: in a Caesar `stripCaption`, becomes "place" when the shift is 1 and "places" otherwise.
+- **`params.variant`**: picks one of a mechanic's builders. Rule Filter has 7, Describe Match has 3 and Arithmetic has 3.
+- **Pool sizes grew in Phase 3** so two seeds differ in at least 4 of 5 levels: Morse words (Space, Haunted, Polar: 20 each) and riddles (Pirate, Haunted: 20 each). The pool minimums in §5 are unchanged.

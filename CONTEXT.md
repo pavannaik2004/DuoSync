@@ -4,13 +4,19 @@ The single source of truth for project progress. **Read this before starting any
 
 ## Current state
 
-- **Phase:** 1 Foundation complete. 2 Core attempt merged into `main`; hosted gate pending. Phase 3 prep: Themed Puzzle Sets merged into `main`.
-- **Next:** push `main` so Render and Vercel redeploy and run the Phase 2 gate (two devices finish Cyber Heist at `/practice` with the same score); review the Phase 3 plan (`docs/superpowers/plans/2026-11-10-03-challenges-engine.md`) and choose how to execute it.
+- **Phase:** 1 Foundation complete. 2 Core attempt merged into `main`; hosted gate pending. 3 Challenges + level engine built on branch `phase-3-challenges-engine` (Tasks 1–13 docs); not merged, not deployed, hosted gate pending.
+- **Next (needs the user):** (1) merge the branch and push `main` so Render and Vercel redeploy; (2) set `SEED_ADMIN_*` on Render and run `npm run seed` once from the Render shell (or rely on `ensureSeeded`, which seeds themes but no admin); check `GET /api/themes` returns 8; (3) run the Phase 2 gate (two devices finish Cyber Heist at `/practice`) and the Phase 3 gate: two teams on two networks play the same challenge and their clue halves match level by level, and a second challenge of the same theme shows different values; record both results here.
 - **Hosted URLs:** API `https://duosync-api.onrender.com` (Render, free tier; sleeps when idle). Client `https://duo-sync-lovat.vercel.app` (Vercel, root `client`). Repo: `https://github.com/pavannaik2004/DuoSync`
-- **Open blockers:** none. The Themed Puzzle Sets are in `docs/themed-puzzle-sets.md` (8 themes)
+- **Open blockers:** none for the code. The Phase 2 and Phase 3 hosted gates need the user's deploy.
 - **Run locally:** `npm --prefix server run dev:memory` + `npm run dev:client` (no database needed)
-- **Tests:** `npm test` → 309 backend tests (REST, scoring, views, Socket.io games, theme content)
-- **Deferred minors from the Phase 2 review** (do early in Phase 3): a socket already in one room can grab a seat in another (crafted client only); runtimes not dropped for attempts that end with nobody connected; a mid-game handshake failure leaves "Reconnecting…" showing; the answer flash can be skipped after a reconnect; Review Focus 2 tests cover chat only; `level:submit` before the start says ATTEMPT_OVER instead of NOT_STARTED; unused client `getPractice`
+- **Tests:** `npm test` → 479 backend tests (REST, scoring, views, generators, challenges, Socket.io games, theme content). Client lint clean; build 116.5 KB gzip JS.
+- **Deferred minors** (none blocks the gate; grouped, details in `.superpowers/sdd/2026-11-10-03-challenges-engine/progress.md`):
+  - *Races and atomicity (low odds):* `ensureSeeded` check-then-insert can double-insert if two instances boot together and does not repair a partial seed; the TEAM-7 check and the `maxTeams` check are not atomic with their writes (D61); `addToEntries` re-check and `syncEntries` are separate reads/writes; `failStart` has no guard around its own DB calls.
+  - *Silent failures:* a few `.catch(() => {})` in the socket layer (`onRemoved` enqueue, steps after `startAttempt`); after a restart the quiet `scheduleHint` never emits `hint:available` if the delay already passed (the snapshot still shows ready).
+  - *Generator guards:* `pick([])`, `int(min>max)`, `distinctInts` on a too-small range and the ordering 50-try loop have no guards; `pickAnswer`'s avoid-substring can over-filter a pool; weapon register uniqueness checks only the chosen mark; time helpers duplicated in `arithmetic.js` and `ruleFilter.js`; `levelSet` reads `error.message` without checking for non-Errors.
+  - *Validation:* strict `isISO8601` accepts a datetime with no offset (NFR-18: require Z or an offset); `attemptId` longer than 64 characters says VALIDATION_ERROR, not ATTEMPT_NOT_FOUND; a team in the lobby when a window closes still sits through the countdown before being refused; `seed.js` hardcodes bcrypt cost and `seedAdmin` is untested; `seedThemes` overwrite never removes extra templates (Phase 5).
+  - *Test gaps:* several tests are weak or fragile (fixed `wait(700)`, vacuous `leaks` on empty payloads, no proof of the retry-key advance, no CHAL-7 ticking-after-window test, TEAM-7 in countdown/paused untested, validator rejection cases only check non-empty errors).
+  - *Client polish:* `GridClue` keys collide on duplicate labels; `HintPanel` error persists into the next level; grid cells with mark and label announce only the mark, empty cells are `role=img`, `.grid-label` is 11 px below 480 px; `PracticeHome` has no retry when `listThemes` fails; `ChallengePlay` effect re-runs every second and `ChallengePage` runs two 1 s intervals; max-teams validator duplicated; delete button shown when teams have entered; Dashboard "Open a challenge" tile is a div; a join-ack error can replace the "Reconnecting…" text.
 
 ## Key documents
 
@@ -19,6 +25,7 @@ The single source of truth for project progress. **Read this before starting any
 | `PRD Collaborative Digital Escape Room.md` | The spec |
 | `docs/superpowers/plans/2026-11-09-00-roadmap.md` | Phase list and cross-phase architecture |
 | `docs/superpowers/plans/2026-11-09-01-foundation.md` | Phase 1 task plan |
+| `docs/superpowers/plans/2026-11-10-03-challenges-engine.md` | Phase 3 task plan (13 tasks) |
 | `docs/themed-puzzle-sets.md` | The 8 themes: stories, roles, styles, level designs, pools, fallback values |
 | `DECISIONS.md` | Decisions made where the PRD was silent, and decisions deferred |
 | `README.md` | Setup, tests, deploy, MVC map |
@@ -27,7 +34,7 @@ The single source of truth for project progress. **Read this before starting any
 
 - [x] 1 Foundation: gate passed 2026-11-09 (two accounts formed a team on the hosted site)
 - [ ] 2 Core attempt (EL Phase I): code done, hosted gate pending
-- [ ] 3 Challenges + level engine
+- [ ] 3 Challenges + level engine (EL Phase I scope): code done, hosted gate pending
 - [ ] 4 Competition + resilience (EL Phase II)
 - [ ] 5 Admin + organizers
 - [ ] 6 Polish + hardening
@@ -185,3 +192,18 @@ Newest entry last. Format: `### YYYY-MM-DD — <title>`, then what was done, the
 - `components/game/AttemptScreen.jsx` holds the lobby/game/results/removed switch; `PlayPage` and `ChallengePlay` both use it.
 - Fix found in the smoke test: `Lobby` crashed for a challenge attempt with one player left (`practiceCode` is null, so the invite box did `null.split`). It now shows "Challenge lobby" and no invite box for challenges.
 - Verified with headless Chrome over CDP at 360 px (not committed). Lint clean; JS 116.5 KB gzip.
+
+### 2026-11-10 — Phase 3 Challenges + level engine built (Tasks 1–12; Task 13 docs)
+
+- Branch `phase-3-challenges-engine` (from `main` 3914b07). Per-task entries above give the details of Tasks 2–5, 7–9 and 12; this entry sums up the phase.
+- **T1** Phase 2 deferred minors fixed (seat grab across rooms, idle runtimes dropped, `NOT_STARTED`, reconnect banner).
+- **T2–T5** The level engine in `server/src/generators/`: seeded RNG, validator, per-mechanic solvers, generators for all 11 mechanics with theme variants, finale planning and `generateLevelSet` (20 retries per level, whole-fallback on failure).
+- **T6** Themes and level templates in MongoDB (`Theme`, `LevelTemplate`), theme snapshots, `ensureSeeded()` at boot, `seed.js` (themes plus admin from `SEED_ADMIN_*`), fresh practice values and the practice theme picker's API (`GET /api/themes`). A failed start returns the room to the lobby (D63).
+- **T7** `Challenge` model and REST (create, view by code, edit before `startsAt`, delete).
+- **T8** Entries: one attempt per team and per member (unique partial indexes), TEAM-7 (`TEAM_IN_ATTEMPT`), partner replacement with rollback (D64), and removed-partner eviction from the attempt room (D62).
+- **T9** Challenge attempts over sockets (`attempt:join { attemptId }`) with window checks (CHAL-7: the timer may run past `endsAt`).
+- **T10** Extra team hints: `hint:reveal`, ready 90 s after a level opens, one-time -25 points, hint text never sent before a reveal (tested). **T11** Client: grid clues, all 16 glyphs and 6 colours, numbered strip, hint panel, practice theme picker. **T12** Client: create challenge, challenge page, challenge play.
+- **T13 (docs part only)** README (status, REST table, socket events, seeding, MVC map with `generators/`, CO1 trace for creating a challenge), DECISIONS D50–D66, roadmap status, `themed-puzzle-sets.md` synced with the theme modules (pool sizes, `params.copy`, `{places}`, `params.variant`; §6 marked delivered).
+- Decisions: D50–D61 from the plan; D62–D66 made during the build (eviction event, failed-start recovery, TEAM_CHANGED, `levelSet.js` location, hint cost display). Q1 (admin seeding) resolved by D50.
+- Verify: `npm test` → 28 suites, 479/479 pass. `npm --prefix client run lint` clean. `npm --prefix client run build` → JS 116.54 KB gzip, CSS 4.97 KB gzip. `seed.js` run against a throwaway in-memory MongoDB with `SEED_ADMIN_*` set: "Themes: 8 created, 0 updated", "Created admin admin".
+- **Not done (needs the user):** merge/push, deploy, `GET /api/themes` check on the hosted API, and the hosted Phase 3 gate. Nothing was pushed or seeded on Render, Vercel or Atlas.
