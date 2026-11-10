@@ -53,6 +53,7 @@ test('Gate: two teams in one challenge get identical clue halves for every level
   expect(c1.A).toHaveLength(5);
   expect(c1.A).toEqual(c2.A);
   expect(c1.B).toEqual(c2.B);
+  expect(c1.B).toEqual(levels.map((l) => l.clueB));
   expect(c1.A).toEqual(levels.map((l) => l.clueA));
   expect((await Attempt.findById(one.attemptId)).status).toBe('finished');
   expect((await Attempt.findById(two.attemptId)).status).toBe('finished');
@@ -150,16 +151,32 @@ test('a finished team cannot play again: joining shows the result and lobby:read
   expect((await Attempt.findById(room.attemptId)).status).toBe('finished');
 });
 
-test('Task 8 Review Focus 4: a removed partner gets NOT_IN_ATTEMPT and the remaining player cannot start alone', async () => {
+test('Task 8 Review Focus 4 + NFR-4: a removed partner is evicted from the room, gets NOT_IN_ATTEMPT, and the remaining player cannot start alone', async () => {
   await server();
   const room = await startedChallengeAttempt({ srv, ready: false });
   const attempt = await Attempt.findById(room.attemptId);
+  const removed = nextEvent(room.b, 'attempt:removed');
+  const lobbyForA = nextEvent(room.a, 'lobby:update');
   const res = await request(srv.app).delete(`/api/teams/${attempt.teamId}/members/${room.bob.user.id}`).set('Authorization', room.alice.auth);
   expect(res.status).toBe(204);
+  expect(await removed).toEqual({ attemptId: room.attemptId, reason: 'REMOVED_FROM_TEAM' });
+  expect((await lobbyForA).players).toHaveLength(1);
+
+  const chatsB = collect(room.b, 'chat:message', 300);
+  const lobbyB = collect(room.b, 'lobby:update', 300);
+  const anyB = collect(room.b, 'attempt:snapshot', 300);
+  const chatA = nextEvent(room.a, 'chat:message');
+  expect(await room.a.emitWithAck('chat:send', { text: 'hello?' })).toEqual({ ok: true });
+  expect((await chatA).text).toBe('hello?');
   expect(await room.b.emitWithAck('lobby:ready')).toMatchObject({ error: 'NOT_IN_ATTEMPT' });
-  await room.a.emitWithAck('lobby:claimRole', { role: 'A' });
-  await ask(room.a, 'lobby:ready');
-  await new Promise((resolve) => setTimeout(resolve, 250));
+  expect(await chatsB).toEqual([]);
+  expect(await lobbyB).toEqual([]);
+  expect(await anyB).toEqual([]);
+
+  expect(await room.a.emitWithAck('lobby:claimRole', { role: 'A' })).toEqual({ ok: true });
+  const snaps = collect(room.a, 'attempt:snapshot', 300);
+  expect(await ask(room.a, 'lobby:ready')).toEqual({ ok: true });
+  expect(await snaps).toEqual([]);
   const saved = await Attempt.findById(room.attemptId);
   expect(saved.status).toBe('lobby');
   expect(saved.players).toHaveLength(1);

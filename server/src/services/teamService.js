@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const attemptEvents = require('./attemptEvents');
 const Team = require('../models/Team');
 const Attempt = require('../models/Attempt');
 const User = require('../models/User');
@@ -218,12 +219,19 @@ async function removeMember(teamId, actorId, targetUserId) {
 /** D56: pull the leaver from not-started entries (they must ready up again); delete them with an archived team. */
 async function syncEntries(teamId, targetId, archived) {
   const mine = { teamId, status: { $in: NOT_STARTED } };
+  const affected = await Attempt.find(mine, { players: 1 });
+  const attemptIds = affected.map((a) => String(a._id));
+  const player = affected.flatMap((a) => a.players).find((p) => p.id === String(targetId));
   if (archived) {
     await Attempt.deleteMany(mine);
-    return;
+  } else {
+    await Attempt.updateMany(mine, { $set: { 'players.$[].ready': false } });
+    await Attempt.updateMany(mine, { $pull: { memberIds: targetId, players: { id: targetId } } });
   }
-  await Attempt.updateMany(mine, { $set: { 'players.$[].ready': false } });
-  await Attempt.updateMany(mine, { $pull: { memberIds: targetId, players: { id: targetId } } });
+  // NFR-4: the sockets layer evicts the removed player from those attempts' rooms.
+  if (attemptIds.length > 0) {
+    attemptEvents.emit('members-removed', { attemptIds, userId: String(targetId), name: player ? player.name : null, deleted: archived });
+  }
 }
 
 module.exports = {

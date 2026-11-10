@@ -111,6 +111,10 @@ function createRuntimeRegistry(io, options) {
       if (!runtimes.has(id)) runtimes.set(id, new AttemptRuntime(id, { io, options, drop: (key) => registry.drop(key) }));
       return runtimes.get(id);
     },
+    /** The runtime if one exists; never creates one. */
+    peek(attemptId) {
+      return runtimes.get(String(attemptId));
+    },
     drop(attemptId) {
       const runtime = runtimes.get(String(attemptId));
       if (runtime) runtime.stop();

@@ -5,7 +5,10 @@
 const { Server } = require('socket.io');
 const { verifyToken } = require('../services/tokenService');
 const { resolveIdentity } = require('../services/identityService');
-const { createRuntimeRegistry } = require('./runtime');
+const { createRuntimeRegistry, roomOf } = require('./runtime');
+const attemptEvents = require('../services/attemptEvents');
+const flow = require('./flow');
+const Attempt = require('../models/Attempt');
 const { registerHandlers } = require('./handlers');
 
 const DEFAULTS = {
@@ -31,6 +34,33 @@ function attachSockets(httpServer, { clientOrigins, ...rest } = {}) {
       next(new Error('AUTH_REQUIRED'));
     }
   });
+
+  // NFR-4: a player removed from the team leaves the attempt's room at once.
+  const onRemoved = ({ attemptIds, userId, name, deleted }) => {
+    attemptIds.forEach((attemptId) => {
+      const runtime = runtimes.peek(attemptId);
+      if (!runtime) return;
+      runtime.enqueue(async () => {
+        [...(runtime.sockets.get(userId) || [])].forEach((socket) => {
+          socket.leave(roomOf(attemptId));
+          socket.data.attemptId = null;
+          runtime.removeSocket(userId, socket);
+          socket.emit('attempt:removed', { attemptId, reason: 'REMOVED_FROM_TEAM' });
+        });
+        if (deleted) return;
+        const attempt = await Attempt.findById(attemptId);
+        if (!attempt) return;
+        await flow.systemMessage(runtime, `${name || 'A player'} left the team`);
+        flow.broadcastLobby(runtime, attempt);
+      }).catch(() => {});
+    });
+  };
+  attemptEvents.on('members-removed', onRemoved);
+  const close = io.close.bind(io);
+  io.close = (...args) => {
+    attemptEvents.off('members-removed', onRemoved);
+    return close(...args);
+  };
 
   io.on('connection', (socket) => registerHandlers(socket, runtimes));
   return io;
