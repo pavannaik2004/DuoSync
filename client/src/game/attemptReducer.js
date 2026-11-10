@@ -29,6 +29,14 @@ export default function attemptReducer(state, { type, payload }) {
     }
     case 'unlocked':
       return { ...state, clue: payload };
+    case 'hintAvailable':
+      if (!state.clue || state.clue.order !== payload.order) return state;
+      return { ...state, clue: { ...state.clue, hint: { ...state.clue.hint, ready: true } } };
+    case 'hintRevealed':
+      if (!state.clue || state.clue.order !== payload.order) return state;
+      return { ...state, clue: { ...state.clue, hint: { ready: true, text: payload.hint } } };
+    case 'removed':
+      return { ...state, removed: true, clue: null };
     case 'board':
       return { ...state, board: payload.board, score: payload.score, levels: payload.levels };
     case 'chat':

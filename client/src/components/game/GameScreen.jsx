@@ -5,6 +5,7 @@ import TimerDisplay from './TimerDisplay';
 import LevelBar from './LevelBar';
 import AnswerBox from './AnswerBox';
 import ResultFlash from './ResultFlash';
+import HintPanel from './HintPanel';
 import Board from './Board';
 import ChatPanel from './ChatPanel';
 import { attemptShape, gameActionsShape } from './gameShapes';
@@ -80,6 +81,7 @@ export default function GameScreen({ state, actions }) {
                 <ClueView clue={clue.clue} />
               </div>
               <p className="form-note">Your teammate sees a different half. Describe yours in the chat.</p>
+              {clue.hint && <HintPanel hint={clue.hint} onReveal={() => actions.revealHint(clue.order)} />}
               <AnswerBox key={clue.order} order={clue.order} onSubmit={(answer) => actions.submit(clue.order, answer)} />
             </>
           ) : (

@@ -4,14 +4,16 @@ import TokensClue from './TokensClue';
 import TableClue from './TableClue';
 import StripClue from './StripClue';
 import SymbolsClue from './SymbolsClue';
+import GridClue from './GridClue';
 
-// Clue renderer composed by display type (PRD §6.3, §10.1 Unit II). `grid` arrives in Phase 3 (D40).
+// Clue renderer composed by display type (PRD §6.3, §10.1 Unit II). `grid` arrived in Phase 3 (D40).
 const RENDERERS = {
   text: TextClue,
   tokens: TokensClue,
   table: TableClue,
   strip: StripClue,
   symbols: SymbolsClue,
+  grid: GridClue,
 };
 
 export default function ClueView({ clue }) {

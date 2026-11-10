@@ -2,7 +2,10 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import FormField from '../components/FormField';
 import useForm from '../hooks/useForm';
+import StatusMessage from '../components/StatusMessage';
+import useAsync from '../hooks/useAsync';
 import { createPractice } from '../api/practice';
+import { listThemes } from '../api/themes';
 import { validators } from '../utils/validators';
 
 /** PRAC-1: open a practice room, or join one with its 6-character code. */
@@ -10,13 +13,16 @@ export default function PracticeHome() {
   const navigate = useNavigate();
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState('');
+  const [theme, setTheme] = useState('');
+  const themes = useAsync(listThemes, []);
+  const chosen = themes.data?.find((t) => t.slug === theme) || themes.data?.[0] || null;
   const form = useForm({ code: '' }, { code: validators.practiceCode });
 
   async function create() {
     setCreating(true);
     setCreateError('');
     try {
-      const { code } = await createPractice();
+      const { code } = await createPractice(chosen?.slug);
       navigate(`/play/${code}`);
     } catch (err) {
       setCreateError(err.message);
@@ -31,12 +37,25 @@ export default function PracticeHome() {
   return (
     <section className="page">
       <h1>Practice</h1>
-      <p>Play Cyber Heist with any partner. Practice games are never ranked.</p>
+      <p>Pick a story and play it with any partner. Practice games are never ranked.</p>
       <div className="tiles">
         <div className="tile tile-a">
           <h2>Start a room</h2>
           <p>You get a room code to send to your teammate.</p>
-          <button type="button" className="btn btn-primary" onClick={create} disabled={creating}>
+          {themes.loading && <StatusMessage kind="loading" message="Loading themes…" />}
+          {themes.error && <p className="form-error" role="alert">Could not load the themes. {themes.error.message}</p>}
+          {chosen && (
+            <div className="field">
+              <label htmlFor="practice-theme">Theme</label>
+              <select id="practice-theme" value={chosen.slug} onChange={(e) => setTheme(e.target.value)}>
+                {themes.data.map((t) => (
+                  <option key={t.slug} value={t.slug}>{`${t.name} · ${t.genre} · ${t.timerMinutes} min`}</option>
+                ))}
+              </select>
+              <span className="field-hint">{chosen.story}</span>
+            </div>
+          )}
+          <button type="button" className="btn btn-primary" onClick={create} disabled={creating || !chosen}>
             {creating ? 'Opening…' : 'Start a practice room'}
           </button>
           {createError && <p className="form-error" role="alert">{createError}</p>}

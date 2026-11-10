@@ -16,12 +16,22 @@ const JOIN_ERRORS = {
 const backLink = <Link className="btn" to="/practice">Back to practice</Link>;
 
 function PlayRoom({ code }) {
-  const { state, connection, error, actions, retry } = useAttempt(code);
+  const { state, connection, error, actions, retry } = useAttempt({ practiceCode: code });
 
   if (error && !state) {
     return <StatusMessage kind="error" message={JOIN_ERRORS[error.error] || error.message} action={backLink} />;
   }
   if (!state) return <StatusMessage kind="loading" message="Joining the room…" />;
+
+  if (state.removed) {
+    return (
+      <StatusMessage
+        kind="error"
+        message="You were removed from this team, so you can't play this challenge."
+        action={<Link className="btn" to="/dashboard">Back to the dashboard</Link>}
+      />
+    );
+  }
 
   let screen = <Lobby state={state} actions={actions} />;
   if (state.status === 'in_progress') screen = <GameScreen state={state} actions={actions} />;

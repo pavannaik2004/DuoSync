@@ -26,6 +26,8 @@ export const clueShape = PropTypes.shape({
   data: PropTypes.object.isRequired,
 });
 
+export const hintShape = PropTypes.shape({ ready: PropTypes.bool.isRequired, text: PropTypes.string });
+
 export const levelBarShape = PropTypes.shape({
   order: PropTypes.number.isRequired,
   title: PropTypes.string.isRequired,
@@ -68,4 +70,5 @@ export const gameActionsShape = PropTypes.shape({
   sendChat: PropTypes.func.isRequired,
   submit: PropTypes.func.isRequired,
   quit: PropTypes.func.isRequired,
+  revealHint: PropTypes.func.isRequired,
 });

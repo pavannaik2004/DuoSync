@@ -163,7 +163,7 @@ a { color: var(--role-a); }
 .form { display: grid; gap: var(--space-4); max-width: 420px; }
 .field { display: grid; gap: var(--space-1); }
 .field label { font-weight: 700; }
-.field input {
+.field input, .field select {
   min-height: var(--tap);
   padding: 0 var(--space-3);
   border: 2px solid var(--line);
@@ -173,7 +173,7 @@ a { color: var(--role-a); }
   font: inherit;
   width: 100%;
 }
-.field input:focus-visible { outline-offset: 0; border-color: var(--focus); }
+.field input:focus-visible, .field select:focus-visible { outline-offset: 0; border-color: var(--focus); }
 .field input[aria-invalid='true'] { border-color: var(--danger); }
 .field-hint { color: var(--muted); font-size: 0.9375rem; }
 .field-error { color: var(--danger); font-size: 0.9375rem; }

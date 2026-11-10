@@ -169,7 +169,7 @@
 .chat-form .field-error { flex-basis: 100%; margin: 0; }
 
 /* Attempt screen */
-.game { display: grid; gap: var(--space-3); padding-top: var(--space-3); }
+.game { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); padding-top: var(--space-3); }
 .game-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--space-4); }
 .game-head h1 { flex: 1 1 220px; margin: 0; font-size: clamp(1.25rem, 4vw, 1.75rem); }
 
@@ -237,7 +237,7 @@
 @keyframes flash-in { from { transform: translateY(-4px); opacity: 0; } to { transform: none; opacity: 1; } }
 
 .game-tabs { display: none; }
-.game-panels { display: grid; gap: var(--space-4); }
+.game-panels { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
 .panel h2 { font-size: 1.125rem; margin: 0 0 var(--space-2); }
 
 .clue-kicker {
@@ -289,6 +289,8 @@
 .token-blue { --chip: #5aa9ff; }
 .token-green { --chip: #57d68d; }
 .token-yellow { --chip: #ffd84d; }
+.token-orange { --chip: #ff9f43; }
+.token-purple { --chip: #b388ff; }
 
 .table-scroll { overflow-x: auto; max-width: 100%; }
 .table-scroll:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
@@ -427,3 +429,36 @@
 @media (prefers-reduced-motion: reduce) {
   .result-flash { animation: none; }
 }
+
+/* grid clues (D40) */
+.grid-board { display: grid; gap: 3px; max-width: min(100%, 30rem); }
+.grid-head {
+  display: grid;
+  place-items: center;
+  padding: 0 var(--space-1);
+  font-family: var(--font-display);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+.grid-cell {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 2.75rem;
+  border-radius: 4px;
+  background: var(--bg);
+  border: 1px solid var(--surface-2);
+}
+.grid-cell.has-content { border-color: var(--role); }
+.grid-label { font-size: 0.6875rem; font-weight: 700; line-height: 1.1; text-align: center; overflow-wrap: anywhere; padding: 2px; }
+@media (min-width: 480px) { .grid-label { font-size: 0.8125rem; } }
+
+/* hints (GAME-10) */
+.hint-panel { margin-top: var(--space-4); padding: var(--space-3); border: 1px dashed var(--line); border-radius: var(--radius-s); }
+.hint-panel h3 { margin: 0 0 var(--space-2); font-size: 1rem; }
+.hint-panel .form-note { margin: 0; }
+.hint-text { margin: 0; font-weight: 700; }
