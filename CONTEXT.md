@@ -4,12 +4,12 @@ The single source of truth for project progress. **Read this before starting any
 
 ## Current state
 
-- **Phase:** 1 Foundation complete. 2 Core attempt: code complete and reviewed on branch `phase-2-core-attempt`; merge and hosted gate pending.
-- **Next:** merge to `main` (user's call), push so Render and Vercel redeploy, then the Phase 2 gate: two devices finish Cyber Heist at `/practice` and see the same score.
+- **Phase:** 1 Foundation complete. 2 Core attempt merged into `main`; hosted gate pending. Phase 3 prep: Themed Puzzle Sets done on branch `phase-3-puzzle-sets`.
+- **Next:** push `main` so Render and Vercel redeploy and run the Phase 2 gate (two devices finish Cyber Heist at `/practice` with the same score); merge `phase-3-puzzle-sets`; write the Phase 3 plan against `docs/themed-puzzle-sets.md`.
 - **Hosted URLs:** API `https://duosync-api.onrender.com` (Render, free tier; sleeps when idle). Client `https://duo-sync-lovat.vercel.app` (Vercel, root `client`). Repo: `https://github.com/pavannaik2004/DuoSync`
-- **Open blockers:** the *Themed Puzzle Sets* document for Phase 3 (Q4)
+- **Open blockers:** none. The Themed Puzzle Sets are written (`docs/themed-puzzle-sets.md`, 8 themes) on branch `phase-3-puzzle-sets`
 - **Run locally:** `npm --prefix server run dev:memory` + `npm run dev:client` (no database needed)
-- **Tests:** `npm test` → 164 backend tests (REST, scoring, views, Socket.io games)
+- **Tests:** `npm test` → 309 backend tests (REST, scoring, views, Socket.io games, theme content)
 - **Deferred minors from the Phase 2 review** (do early in Phase 3): a socket already in one room can grab a seat in another (crafted client only); runtimes not dropped for attempts that end with nobody connected; a mid-game handshake failure leaves "Reconnecting…" showing; the answer flash can be skipped after a reconnect; Review Focus 2 tests cover chat only; `level:submit` before the start says ATTEMPT_OVER instead of NOT_STARTED; unused client `getPractice`
 
 ## Key documents
@@ -19,6 +19,7 @@ The single source of truth for project progress. **Read this before starting any
 | `PRD Collaborative Digital Escape Room.md` | The spec |
 | `docs/superpowers/plans/2026-11-09-00-roadmap.md` | Phase list and cross-phase architecture |
 | `docs/superpowers/plans/2026-11-09-01-foundation.md` | Phase 1 task plan |
+| `docs/themed-puzzle-sets.md` | The 8 themes: stories, roles, styles, level designs, pools, fallback values |
 | `DECISIONS.md` | Decisions made where the PRD was silent, and decisions deferred |
 | `README.md` | Setup, tests, deploy, MVC map |
 
@@ -110,3 +111,13 @@ Newest entry last. Format: `### YYYY-MM-DD — <title>`, then what was done, the
 - At the user's request, `phase-2-core-attempt` was merged into `main` locally (fast-forward), and the branch was deleted.
 - Verify on the merged `main`: `npm test` → 164/164.
 - Not pushed yet. Pushing `main` redeploys Render and Vercel; then run the Phase 2 gate.
+
+### 2026-11-10 — Themed Puzzle Sets written (pre-Phase 3)
+
+- Branch `phase-3-puzzle-sets` (from `main` 0714c7d). Resolves the open blocker Q4.
+- With the user's approval: the 4 PRD themes plus 4 new ones in other genres: Haunted Asylum (horror), Tomb of the Sun King (ancient myth), Alchemist's Tower (fantasy), Polar Expedition (survival). All 8 use only the 11 existing mechanics; each mechanic appears in at least 2 themes.
+- `docs/themed-puzzle-sets.md`: stories, roles, reveal and fail text, UI-2 styles (palette, fonts, texture, timer), level tables (randomized params, value-free hints, rewards, fallbacks), Detective consistency rules, Pirate first-letter finale, pool rules, and what Phase 3 must add (grid renderer, 10 glyphs, 2 colours, numbered strip).
+- Code: `server/src/content/catalog.js` (mechanics, clue types, 16 glyphs, 6 colours, style keys, Morse); `content/themes/*.js` × 8 (`{ theme, templates, pools }`); `content/index.js` (registry, `listThemes`, `fillText`). `cyberHeist.js` moved into `themes/` with the same values; only the Firewall hint changed (it named instance values). `attemptView` fills `{answer.N}` in the reveal text.
+- Tests: `tests/themedPuzzleSets.test.js` replaces `cyberHeist.test.js`. It solves every fallback from its own clue data (a solver per mechanic plus one per prose rule) and checks every pool rule, including that every Pirate finale word can be spelled. A deliberate mutation (2 wrong values) made exactly 2 tests fail.
+- Verify: `npm test` → 309/309 (164 − 9 old Cyber Heist content tests + 154 new).
+- Decisions D42–D49 added; D33 updated; Q4 removed from Deferred.

@@ -40,7 +40,7 @@ Status: **Decided** · **Deferred** (open, with the phase by which it must be se
 | D30 | 2026-11-09 | The API client treats a 200 reply that isn't JSON as an error (`BAD_RESPONSE`) | A wrong `VITE_API_URL` on Vercel otherwise leaves an endless "Checking your session" spinner | Decided |
 | D31 | 2026-11-09 | Hosting: MongoDB Atlas M0, Render free web service (`duosync-api`, from `render.yaml`), Vercel for the client | Free tiers that fit the PRD; resolves Q2 | Decided |
 | D32 | 2026-11-09 | Guests can create and join practice rooms from Phase 2. A player is identified by the token subject (user id or `guest_<uuid>`) | PRAC-1 allows guests and it costs nothing extra; Phase 5 still adds expiry and polish | Decided |
-| D33 | 2026-11-09 | Cyber Heist fixed values are written in `server/src/content/cyberHeist.js` (PIN 9742, FIREWALL, 23-12-4, 8315, NODE) | The *Themed Puzzle Sets* document is missing (Q4). In Phase 3 these become the templates' fallback; replace them if the document differs | Decided |
+| D33 | 2026-11-09 | Cyber Heist fixed values are written in `server/src/content/cyberHeist.js` (PIN 9742, FIREWALL, 23-12-4, 8315, NODE) | The *Themed Puzzle Sets* document is missing (Q4). In Phase 3 these become the templates' fallback; replace them if the document differs. **2026-11-10:** kept unchanged as the Cyber Heist fallback in `docs/themed-puzzle-sets.md`; the file moved to `content/themes/cyberHeist.js` | Decided |
 | D34 | 2026-11-09 | Practice attempts start in status `lobby`. `players[]` stores `{ id, kind, name, role, ready }`; `memberIds` and the challenge unique indexes arrive with challenges in Phase 3 | Practice has no entry step, and guests have no ObjectId | Decided |
 | D35 | 2026-11-09 | The extra hint (GAME-10) arrives in Phase 3; the content already carries the hint text | §11 lists "shared board and extra hints" under Phase 3 | Decided |
 | D36 | 2026-11-09 | No pause in Phase 2: a disconnect mid-attempt does not stop the timer; a reconnect gets a full snapshot. Pause, the 60 s grace and the pause budget come in Phase 4 | §11 puts "disconnect, pause and resync" in Phase 4 | Decided |
@@ -49,6 +49,14 @@ Status: **Decided** · **Deferred** (open, with the phase by which it must be se
 | D39 | 2026-11-09 | Socket events reply through an ack: `{ ok: true, … }` or `{ error, message }`. Without an ack the server emits `error` with the same body | Tests and the client can await each action; same error shape as REST (D5) | Decided |
 | D40 | 2026-11-09 | Phase 2 renders 5 clue types (text, tokens, table, strip, symbols), the ones Cyber Heist needs; `grid` comes in Phase 3. A glyph legend is `symbols` with labels | Builds only what the fixed level set uses | Decided |
 | D41 | 2026-11-09 | `rankCompare` is written with the leaderboards in Phase 4, not in Phase 2 | Nothing in Phase 2 ranks attempts | Decided |
+| D42 | 2026-11-10 | We wrote the *Themed Puzzle Sets* ourselves (`docs/themed-puzzle-sets.md`): the 4 PRD themes plus 4 new ones in other genres (Haunted Asylum, Tomb of the Sun King, Alchemist's Tower, Polar Expedition), all built only from the 11 existing mechanics | The user asked for more theme variety; resolves Q4 | Decided |
+| D43 | 2026-11-10 | Each theme is a module `{ theme, templates, pools }` under `server/src/content/themes/`; each template carries its ADMIN-3 fields and a full `fallback`. `getContent(slug).levels` is the fallback set until the level engine lands | One machine copy of the document that Phase 3 seeds and generators read | Decided |
+| D44 | 2026-11-10 | A grid coordinate answer (column letter + row digit, e.g. `B9`) uses `answerKind: 'code'`; a code is up to 4 letters or digits with at least one digit | §6.5 Star Map needs one; §6.4 names only digit codes | Decided |
+| D45 | 2026-11-10 | The glyph set grows to 16 shapes and token colours to 6 (`catalog.js`); the client draws the new ones in Phase 3 | Letter legends need up to 6 letters + 2 decoys (PARROT, SCARAB) | Decided |
+| D46 | 2026-11-10 | A `strip` clue may have no shift (`numbered: true`): a plain numbered alphabet | Dying Message's shift comes from the board (the shoe size), not from clue B | Decided |
+| D47 | 2026-11-10 | `revealText` may contain `{answer.N}`, filled from the finished attempt's levels by `fillText` in `attemptView` | §6.5: the Detective reveal states the killer and shoe size from the instance | Decided |
+| D48 | 2026-11-10 | Template hints carry no values (no digits, no instance words) | A hint is shared by every generated instance | Decided |
+| D49 | 2026-11-10 | "No half shows the answer" (§6.1 step 4) allows the answer only as one candidate among ≥3 table rows or labelled grid cells; answers under 3 characters are checked by the per-mechanic solvers instead | Suspect lists, registers and maps must name the answer among decoys | Decided |
 
 ## Deferred
 
@@ -56,7 +64,6 @@ Status: **Decided** · **Deferred** (open, with the phase by which it must be se
 | --- | --- | --- | --- | --- |
 | Q1 | 2026-11-09 | Admin account seeding: Phase 1 or with the theme seed in Phase 3? | Phase 3 | Phase 1 tests set roles directly in the DB |
 | Q3 | 2026-11-09 | Can the challenge creator see the in-progress team view if they also play in it? | Phase 4 | SCORE-5 vs. the fairness of the "accepted risk" |
-| Q4 | 2026-11-09 | Exact pool contents (words, riddles, weapons) for each generator | Phase 3 | The PRD references a *Themed Puzzle Sets* document that isn't in the repo. **Ask the user for it** |
 | Q5 | 2026-11-09 | How a paused attempt that was mid-countdown behaves after a server restart | Phase 4 | Edge case of D15 |
 | Q6 | 2026-11-09 | Sound assets: Web Audio synthesis or bundled files | Phase 6 | The PRD allows either |
 | Q7 | 2026-11-09 | NFR-6 allows 10 auth requests per minute per IP. In a class contest where 50 students share one college IP (NAT), signups would be throttled | Before the first class event (Phase 4/5) | `AUTH_RATE_LIMIT` is configurable: raise it for event days, or key the limit by IP + email |

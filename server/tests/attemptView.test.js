@@ -1,5 +1,5 @@
 const Attempt = require('../src/models/Attempt');
-const cyberHeist = require('../src/content/cyberHeist');
+const cyberHeist = require('../src/content').getContent('cyber-heist');
 const { normalizeAnswer } = require('../src/services/answers');
 const { toPlayerView, levelBar, lobbyView, resultView } = require('../src/services/attemptView');
 

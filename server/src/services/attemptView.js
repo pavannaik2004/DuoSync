@@ -4,7 +4,7 @@
  * hints and the partner's clue half cannot leak.
  */
 const { FINAL } = require('../models/Attempt');
-const { getContent } = require('../content');
+const { getContent, fillText } = require('../content');
 const { summarize, starsFor } = require('./scoring');
 
 const iso = (date) => (date ? new Date(date).toISOString() : null);
@@ -91,7 +91,7 @@ function resultView(attempt) {
     levelsCleared: summary.levelsCleared,
     wrongAnswers: summary.wrongAnswers,
     timeUsedMs: attempt.timeUsedMs || 0,
-    text: attempt.status === 'finished' ? theme.revealText : theme.failText,
+    text: attempt.status === 'finished' ? fillText(theme.revealText, attempt.levels) : theme.failText,
   };
 }
 

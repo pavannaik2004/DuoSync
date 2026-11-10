@@ -1,5 +1,5 @@
 const Attempt = require('../src/models/Attempt');
-const cyberHeist = require('../src/content/cyberHeist');
+const cyberHeist = require('../src/content').getContent('cyber-heist');
 const { startDb, clearDb, stopDb } = require('./helpers/db');
 const { createPlayer, createRoom } = require('./helpers/users');
 const { startSocketServer, connect, nextEvent, collect, join, wait } = require('./helpers/sockets');

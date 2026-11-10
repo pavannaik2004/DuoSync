@@ -14,6 +14,8 @@ It is the Experiential Learning project for Full Stack Application Development (
 
 Progress is logged in [`CONTEXT.md`](CONTEXT.md). Design decisions and open questions are in [`DECISIONS.md`](DECISIONS.md). Phase plans are in [`docs/superpowers/plans/`](docs/superpowers/plans/).
 
+The 8 themes (stories, roles, styles, level designs, generator pools and fallback values) are in [`docs/themed-puzzle-sets.md`](docs/themed-puzzle-sets.md).
+
 ## Stack
 
 | Layer | Choice |
@@ -41,7 +43,7 @@ server/src/
   sockets/      Socket.io: handshake auth, event handlers, per-attempt runtime (queue and timers)
   services/     business rules: auth, teams, practice, lobby, game, chat, scoring, answers, player views
   models/       Mongoose schemas: User, Team, Attempt, Message   (the "M")
-  content/      Cyber Heist's fixed level set (generators replace it in Phase 3)
+  content/      the 8 themes: templates, pools and fallback level sets (catalog.js holds the shared vocabulary)
   middleware/   auth, validation, rate limit, error handler
   config/       environment and database connection
 ```
@@ -112,7 +114,7 @@ The client has one variable, `VITE_API_URL`: the API's base URL, with no trailin
 npm test          # Jest + Supertest + Socket.io client against an in-memory MongoDB
 ```
 
-There are 164 tests: REST routes, scoring and answer rules, the Cyber Heist level set, the player views (no answer or partner half ever leaves the server), and full Socket.io games with two connected players. The first run downloads a MongoDB binary (about 780 MB unpacked) into `server/node_modules/.cache`. Later runs take about a minute.
+There are 309 tests: REST routes, scoring and answer rules, the 8 theme puzzle sets (each fallback solved from its own clues, every pool rule), the player views (no answer or partner half ever leaves the server), and full Socket.io games with two connected players. The first run downloads a MongoDB binary (about 780 MB unpacked) into `server/node_modules/.cache`. Later runs take about a minute.
 
 ## Deploy
 
