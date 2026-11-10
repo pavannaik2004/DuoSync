@@ -2,6 +2,7 @@
 const Challenge = require('../models/Challenge');
 const Attempt = require('../models/Attempt');
 const Team = require('../models/Team');
+const mongoose = require('mongoose');
 const AppError = require('../utils/AppError');
 const patterns = require('../utils/patterns');
 const { generateCode } = require('./codeService');
@@ -137,4 +138,43 @@ async function deleteChallenge(id, user) {
   await challenge.deleteOne();
 }
 
-module.exports = { createChallenge, getChallengeByCode, updateChallenge, deleteChallenge, statusOf };
+/** CHAL-4: a full team enters; the unique indexes make one attempt per team and member (D56, NFR-7). */
+async function enterChallenge(challengeId, user, { teamId }, now) {
+  const challenge = mongoose.isValidObjectId(challengeId) ? await Challenge.findById(challengeId) : null;
+  if (!challenge) throw notFound();
+  const status = statusOf(challenge, now, false);
+  if (status !== 'upcoming' && status !== 'open') throw new AppError(409, 'CHALLENGE_CLOSED', 'This challenge is closed');
+
+  const team = mongoose.isValidObjectId(teamId)
+    ? await Team.findById(teamId).populate('memberIds', 'username')
+    : null;
+  if (!team || team.archived || !team.memberIds.some((m) => String(m._id) === String(user._id))) {
+    throw new AppError(403, 'NOT_TEAM_MEMBER', 'Choose a team you belong to');
+  }
+  if (team.memberIds.length !== 2) throw new AppError(409, 'TEAM_NOT_FULL', 'A team needs 2 members to enter');
+
+  if (challenge.maxTeams !== null && (await Attempt.countDocuments({ challengeId: challenge._id })) >= challenge.maxTeams) {
+    throw new AppError(409, 'CHALLENGE_FULL', 'This challenge has reached its team limit');
+  }
+  try {
+    const attempt = await Attempt.create({
+      challengeId: challenge._id,
+      teamId: team._id,
+      memberIds: team.memberIds.map((m) => m._id),
+      players: team.memberIds.map((u) => ({ id: String(u._id), kind: 'user', name: u.username })),
+      status: 'entered',
+      themeSlug: challenge.themeSlug,
+      theme: challenge.theme,
+      timerMinutes: challenge.theme.timerMinutes,
+    });
+    return { attemptId: String(attempt._id) };
+  } catch (err) {
+    if (err.code !== 11000) throw err;
+    if (await Attempt.exists({ challengeId: challenge._id, teamId: team._id })) {
+      throw new AppError(409, 'ALREADY_ENTERED', 'Your team has already entered this challenge');
+    }
+    throw new AppError(409, 'MEMBER_IN_CHALLENGE', 'A member of this team has already entered with another team');
+  }
+}
+
+module.exports = { enterChallenge, createChallenge, getChallengeByCode, updateChallenge, deleteChallenge, statusOf };

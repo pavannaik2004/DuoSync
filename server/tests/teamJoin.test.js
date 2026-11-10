@@ -1,6 +1,9 @@
 const request = require('supertest');
 const { createApp } = require('../src/app');
 const Team = require('../src/models/Team');
+const Attempt = require('../src/models/Attempt');
+const Challenge = require('../src/models/Challenge');
+const { seedThemes } = require('./helpers/themes');
 const { startDb, clearDb, stopDb } = require('./helpers/db');
 const { createPlayer, createGuest } = require('./helpers/users');
 
@@ -110,4 +113,51 @@ test('a malformed code is a validation error', async () => {
   const res = await join(bob.auth, { $ne: null });
   expect(res.status).toBe(400);
   expect(res.body.error).toBe('VALIDATION_ERROR');
+});
+
+async function openChallenge(creator) {
+  await seedThemes();
+  const now = Date.now();
+  const created = await request(app).post('/api/challenges').set('Authorization', creator.auth).send({
+    name: 'Friday Heist', theme: 'cyber-heist', visibility: 'private',
+    startsAt: new Date(now + 3600e3).toISOString(), endsAt: new Date(now + 3 * 3600e3).toISOString(),
+  });
+  await Challenge.updateOne({ code: created.body.code }, { startsAt: new Date(now - 3600e3) });
+  return created.body;
+}
+const enter = (auth, challengeId, teamId) =>
+  request(app).post(`/api/challenges/${challengeId}/entries`).set('Authorization', auth).send({ teamId });
+
+async function soloEntry(ch) {
+  // alice and bob enter, then bob leaves: the team keeps an entry with one player.
+  await join(bob.auth, team.inviteCode);
+  const res = await enter(alice.auth, ch.id, team.id);
+  await request(app).delete(`/api/teams/${team.id}/members/${bob.user.id}`).set('Authorization', alice.auth);
+  return res.body.attemptId;
+}
+
+test('CHAL-6: the new partner is added to the entered attempt', async () => {
+  const ch = await openChallenge(alice);
+  const attemptId = await soloEntry(ch);
+  const carol = await createPlayer(app, 'carol');
+  expect((await join(carol.auth, team.inviteCode)).status).toBe(200);
+  const attempt = await Attempt.findById(attemptId);
+  expect(attempt.players.map((p) => p.name).sort()).toEqual(['alice', 'carol']);
+  expect(attempt.memberIds).toHaveLength(2);
+});
+
+test('CHAL-6: a new partner already in that challenge with another team → 409 PARTNER_IN_CHALLENGE, team unchanged', async () => {
+  const ch = await openChallenge(alice);
+  const attemptId = await soloEntry(ch);
+  const carol = await createPlayer(app, 'carol');
+  const dave = await createPlayer(app, 'dave');
+  const other = (await request(app).post('/api/teams').set('Authorization', carol.auth).send({ name: 'Other' })).body;
+  await join(dave.auth, other.inviteCode);
+  expect((await enter(carol.auth, ch.id, other.id)).status).toBe(201);
+  const before = await Attempt.countDocuments();
+  const res = await join(carol.auth, team.inviteCode);
+  expect([res.status, res.body.error]).toEqual([409, 'PARTNER_IN_CHALLENGE']);
+  expect((await Team.findById(team.id)).memberIds.map(String)).toEqual([alice.user.id]);
+  expect((await Attempt.findById(attemptId)).players).toHaveLength(1);
+  expect(await Attempt.countDocuments()).toBe(before);
 });

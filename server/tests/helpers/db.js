@@ -11,6 +11,7 @@ async function startDb() {
   await mongoose.connect(mongod.getUri(), { runtimeAdapters: { os } });
   // Build unique indexes before tests rely on them.
   await Promise.all(mongoose.modelNames().map((name) => mongoose.model(name).init()));
+  await require('../../src/models/Attempt').syncIndexes();
 }
 
 async function clearDb() {

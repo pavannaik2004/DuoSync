@@ -92,6 +92,14 @@ async function unready(attemptId, playerId) {
 async function startAttempt(attemptId, { now, timerMs, levelSetFor = freshLevelSet }) {
   const attempt = await load(attemptId);
   if (attempt.status !== 'countdown') return null;
+  const roles = attempt.players.map((p) => p.role).sort().join('');
+  if (attempt.players.length !== 2 || roles !== 'AB') { // a partner left mid-countdown
+    attempt.status = 'lobby';
+    attempt.countdownEndsAt = null;
+    attempt.players.forEach((p) => { p.ready = false; });
+    await attempt.save();
+    return null;
+  }
   const levels = await levelSetFor(await loadThemeContent(attempt.themeSlug));
   attempt.levels = levels.map((level, i) => ({ ...level, unlockedAt: i === 0 ? new Date(now) : null }));
   attempt.startedAt = new Date(now);

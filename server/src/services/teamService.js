@@ -1,10 +1,15 @@
 const mongoose = require('mongoose');
 const Team = require('../models/Team');
+const Attempt = require('../models/Attempt');
+const User = require('../models/User');
 const AppError = require('../utils/AppError');
 const { generateCode } = require('./codeService');
 
 const INVITE_LENGTH = 8; // TEAM-1
 const MEMBER_FIELDS = 'username avatarColor';
+
+const NOT_STARTED = ['entered', 'lobby'];
+const RUNNING = ['countdown', 'in_progress', 'paused'];
 
 const notFound = () => new AppError(404, 'TEAM_NOT_FOUND', 'Team not found');
 const nameTaken = () => new AppError(409, 'TEAM_NAME_TAKEN', 'That team name is taken');
@@ -83,14 +88,52 @@ function assertCaptain(team, userId) {
  * Joins with an invite code in one atomic update, so two players racing for
  * the last slot can never make a team of 3 (DECISIONS D13).
  */
+const partnerInChallenge = () =>
+  new AppError(409, 'PARTNER_IN_CHALLENGE', 'You are already in that challenge with another team');
+
+/** CHAL-6 pre-check: the new partner must not already be in a challenge this team entered. */
+async function assertPartnerFree(teamId, userId) {
+  const entries = await Attempt.find({ teamId, status: { $in: NOT_STARTED } }, { challengeId: 1 });
+  if (entries.length === 0) return;
+  const clash = await Attempt.exists({ challengeId: { $in: entries.map((e) => e.challengeId) }, memberIds: userId });
+  if (clash) throw partnerInChallenge();
+}
+
+/** D56: the new partner joins the team's not-started entries; on a clash the join is undone. */
+async function addToEntries(team, userId) {
+  const entries = await Attempt.find({ teamId: team._id, status: { $in: NOT_STARTED } }, { _id: 1 });
+  if (entries.length === 0) return;
+  const user = await User.findById(userId, { username: 1 });
+  const done = [];
+  try {
+    for (const entry of entries) {
+      const res = await Attempt.updateOne(
+        { _id: entry._id, status: { $in: NOT_STARTED }, 'players.1': { $exists: false } },
+        { $push: { memberIds: userId, players: { id: String(userId), kind: 'user', name: user.username } } },
+      );
+      if (res.modifiedCount === 1) done.push(entry._id);
+    }
+  } catch (err) {
+    await Team.updateOne({ _id: team._id }, { $pull: { memberIds: userId } });
+    await Attempt.updateMany({ _id: { $in: done } }, { $pull: { memberIds: userId, players: { id: String(userId) } } });
+    if (err.code === 11000) throw partnerInChallenge();
+    throw err;
+  }
+}
+
 async function joinTeam(userId, code) {
   const inviteCode = code.trim().toUpperCase();
+  const preTeam = await Team.findOne({ inviteCode, archived: false }, { _id: 1 });
+  if (preTeam) await assertPartnerFree(preTeam._id, userId);
   const team = await Team.findOneAndUpdate(
     { inviteCode, archived: false, memberIds: { $ne: userId }, 'memberIds.1': { $exists: false } },
     { $push: { memberIds: userId } },
     { returnDocument: 'after' },
   ).populate('memberIds', MEMBER_FIELDS);
-  if (team) return toView(team, userId);
+  if (team) {
+    await addToEntries(team, userId);
+    return toView(team, userId);
+  }
 
   // Work out why it failed.
   const existing = await Team.findOne({ inviteCode, archived: false });
@@ -140,7 +183,10 @@ async function removeMember(teamId, actorId, targetUserId) {
   if (!isSelf) assertCaptain(team, actor);
   const memberIds = team.memberIds.map((m) => String(m._id));
   if (!memberIds.includes(target)) throw new AppError(404, 'MEMBER_NOT_FOUND', 'That player is not in this team');
-  // TEAM-7: block while an attempt is in progress (Phase 3).
+  // TEAM-7: no membership changes while the team is playing.
+  if (await Attempt.exists({ teamId: team._id, status: { $in: RUNNING } })) {
+    throw new AppError(409, 'TEAM_IN_ATTEMPT', 'Your team is in an attempt right now');
+  }
 
   const remaining = memberIds.filter((id) => id !== target);
   const update = remaining.length === 0
@@ -152,6 +198,18 @@ async function removeMember(teamId, actorId, targetUserId) {
   if (result.modifiedCount !== 1) {
     throw new AppError(409, 'TEAM_CHANGED', 'The team changed while you were doing that. Try again.');
   }
+  await syncEntries(team._id, target, remaining.length === 0);
+}
+
+/** D56: pull the leaver from not-started entries (they must ready up again); delete them with an archived team. */
+async function syncEntries(teamId, targetId, archived) {
+  const mine = { teamId, status: { $in: NOT_STARTED } };
+  if (archived) {
+    await Attempt.deleteMany(mine);
+    return;
+  }
+  await Attempt.updateMany(mine, { $set: { 'players.$[].ready': false } });
+  await Attempt.updateMany(mine, { $pull: { memberIds: targetId, players: { id: targetId } } });
 }
 
 module.exports = {

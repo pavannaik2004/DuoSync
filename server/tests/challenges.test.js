@@ -151,10 +151,10 @@ test('edits re-check the window, and maxTeams cannot drop below the entries', as
   expect((await patch({ endsAt: new Date(doc.startsAt.getTime() + 5 * MIN).toISOString() })).body.error).toBe('VALIDATION_ERROR');
   expect((await patch({ maxTeams: 1 })).body.error).toBe('VALIDATION_ERROR');
 
-  await Attempt.create({ challengeId: made.id, themeSlug: 'cyber-heist', teamId: newId() });
-  await Attempt.create({ challengeId: made.id, themeSlug: 'cyber-heist', teamId: newId() });
+  await Attempt.create({ challengeId: made.id, themeSlug: 'cyber-heist', teamId: newId(), memberIds: [newId()] });
+  await Attempt.create({ challengeId: made.id, themeSlug: 'cyber-heist', teamId: newId(), memberIds: [newId()] });
   expect((await patch({ maxTeams: 2 })).status).toBe(204);
-  await Attempt.create({ challengeId: made.id, themeSlug: 'cyber-heist', teamId: newId() });
+  await Attempt.create({ challengeId: made.id, themeSlug: 'cyber-heist', teamId: newId(), memberIds: [newId()] });
   const tooLow = await patch({ maxTeams: 2 });
   expect(tooLow.status).toBe(409);
   expect(tooLow.body.error).toBe('MAX_TEAMS_TOO_LOW');

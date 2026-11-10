@@ -25,6 +25,7 @@ const attemptSchema = new mongoose.Schema(
   {
     challengeId: { type: ObjectId, ref: 'Challenge', default: null }, // null for practice
     teamId: { type: ObjectId, ref: 'Team', default: null },
+    memberIds: { type: [ObjectId], default: [] }, // challenge entries: the team members, for the one-team-per-player index (NFR-7)
     practiceCode: { type: String, set: upper }, // setter uppercases codes (§10.1 Unit III)
     themeSlug: { type: String, required: true },
     theme: { type: Mixed, default: null }, // snapshot of the theme at creation (D51)
@@ -52,6 +53,11 @@ const attemptSchema = new mongoose.Schema(
 );
 
 attemptSchema.index({ practiceCode: 1 }, { unique: true, partialFilterExpression: { practiceCode: { $type: 'string' } } });
+
+// One attempt per team and one team per player in a challenge (D56, NFR-7).
+const inChallenge = { partialFilterExpression: { challengeId: { $type: 'objectId' } } };
+attemptSchema.index({ challengeId: 1, teamId: 1 }, { unique: true, ...inChallenge });
+attemptSchema.index({ challengeId: 1, memberIds: 1 }, { unique: true, ...inChallenge });
 
 const Attempt = mongoose.model('Attempt', attemptSchema);
 

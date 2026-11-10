@@ -18,4 +18,8 @@ async function remove(req, res) {
   res.status(204).end();
 }
 
-module.exports = { create, show, update, remove };
+async function enter(req, res) {
+  res.status(201).json(await challengeService.enterChallenge(req.params.id, req.user, req.body, Date.now()));
+}
+
+module.exports = { enter, create, show, update, remove };
