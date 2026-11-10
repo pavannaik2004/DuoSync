@@ -11,6 +11,8 @@ export const patterns = {
   TEAM_NAME: /^(?=.{3,24}$)[A-Za-z0-9_-]+(?: [A-Za-z0-9_-]+)*$/,
   INVITE_CODE: /^[A-Za-z0-9]{1,16}$/,
   PRACTICE_CODE: /^[A-HJ-NP-Z2-9]{6}$/i,
+  CHALLENGE_NAME: /^(?=.{3,40}$)[A-Za-z0-9_'!?-]+(?: [A-Za-z0-9_'!?-]+)*$/,
+  CHALLENGE_CODE: /^[A-HJ-NP-Z2-9]{6}$/i,
 };
 
 const check = (pattern, empty, wrong) => (value) => {

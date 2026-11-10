@@ -3,14 +3,13 @@
  * loads the attempt, changes it and saves it. Callers run them inside the attempt's
  * queue, so two changes never interleave.
  */
-const crypto = require('crypto');
 const Attempt = require('../models/Attempt');
 const AppError = require('../utils/AppError');
 const { loadThemeContent } = require('./themeService');
-const { generateLevelSet } = require('../generators/levelSet');
+const { generateLevelSet, newSeed } = require('../generators/levelSet');
 
 /** PRAC-2: a new seed every game, so two games of one theme differ. */
-const freshLevelSet = (content) => generateLevelSet(content, crypto.randomBytes(8).toString('hex')).levels;
+const freshLevelSet = (content) => generateLevelSet(content, newSeed()).levels;
 
 async function load(attemptId) {
   const attempt = await Attempt.findById(attemptId);

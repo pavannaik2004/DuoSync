@@ -4,7 +4,12 @@ const { validateLevel } = require('./validate');
 const { GENERATORS } = require('./index');
 const { plan: finalePlan } = require('./fragmentFinale');
 
+const crypto = require('crypto');
+
 const RETRIES = 20;
+
+/** A fresh seed: 16 hex characters. */
+const newSeed = () => crypto.randomBytes(8).toString('hex');
 const SHAPE = ['answerKind', 'answer', 'acceptedAnswers', 'reward', 'clueA', 'clueB', 'explanation'];
 
 /** A level in the Attempt shape: the template's order, title and hint, then the generated fields. `solution` is dropped. */
@@ -62,4 +67,4 @@ function generateLevelSet(content, seed) {
   return { levels: built.map((level, i) => shape(ordered[i], level)), seed, usedFallback: false };
 }
 
-module.exports = { generateLevelSet };
+module.exports = { generateLevelSet, newSeed };
