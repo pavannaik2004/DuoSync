@@ -1,3 +1,4 @@
+const Attempt = require('../src/models/Attempt');
 const { startDb, clearDb, stopDb } = require('./helpers/db');
 const { createPlayer, createRoom } = require('./helpers/users');
 const { startSocketServer, connect, nextEvent, collect, join } = require('./helpers/sockets');
@@ -122,4 +123,15 @@ test('disconnecting in the lobby sends lobby:update with connected false and a "
   b.disconnect();
   expect((await update).players.find((p) => p.name === 'bob').connected).toBe(false);
   expect(await msg).toMatchObject({ kind: 'system', text: 'bob left' });
+});
+
+test('a socket already in one room cannot take a seat in another', async () => {
+  const carol = await createPlayer(srv.app, 'carol');
+  const dave = await createPlayer(srv.app, 'dave');
+  const r2 = await createRoom(srv.app, dave.auth);
+  const c = await connect(srv.url, carol.token);
+  expect(await join(c, code)).toEqual({ ok: true });
+  const ack = await join(c, r2);
+  expect(ack.error).toBe('ALREADY_IN_ATTEMPT');
+  expect((await Attempt.findOne({ practiceCode: r2 })).players).toHaveLength(1);
 });

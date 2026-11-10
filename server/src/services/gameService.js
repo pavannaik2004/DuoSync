@@ -18,6 +18,9 @@ const over = () => new AppError(409, 'ATTEMPT_OVER', 'This game is over');
  */
 async function submitAnswer(attemptId, player, { order, answer }, now) {
   const attempt = await Attempt.findById(attemptId);
+  if (attempt && ['lobby', 'countdown'].includes(attempt.status)) {
+    throw new AppError(409, 'NOT_STARTED', 'The game has not started yet');
+  }
   if (!attempt || attempt.status !== 'in_progress' || now >= new Date(attempt.endsAt).getTime()) throw over();
 
   const i = attempt.levels.findIndex((l) => !l.solvedAt);

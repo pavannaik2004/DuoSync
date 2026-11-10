@@ -16,7 +16,7 @@ const JOIN_ERRORS = {
 const backLink = <Link className="btn" to="/practice">Back to practice</Link>;
 
 function PlayRoom({ code }) {
-  const { state, connection, error, actions } = useAttempt(code);
+  const { state, connection, error, actions, retry } = useAttempt(code);
 
   if (error && !state) {
     return <StatusMessage kind="error" message={JOIN_ERRORS[error.error] || error.message} action={backLink} />;
@@ -30,7 +30,11 @@ function PlayRoom({ code }) {
   return (
     <div className="play">
       {connection !== 'online' && (
-        <p className="offline-banner" role="status">Connection lost. Reconnecting…</p>
+        <p className="offline-banner" role="status">
+          {error ? error.message : 'Connection lost. Reconnecting…'}
+          {error && <button type="button" className="btn" onClick={retry}>Retry</button>}
+          {error?.error === 'AUTH_REQUIRED' && <Link className="btn" to="/login">Log in</Link>}
+        </p>
       )}
       {screen}
     </div>

@@ -5,7 +5,7 @@
  */
 const Attempt = require('../models/Attempt');
 const AppError = require('../utils/AppError');
-const { joinPractice } = require('../services/practiceService');
+const { joinPractice, findPractice } = require('../services/practiceService');
 const { postMessage } = require('../services/chatService');
 const lobby = require('../services/lobbyService');
 const { submitAnswer } = require('../services/gameService');
@@ -70,11 +70,13 @@ function registerHandlers(socket, runtimes) {
 
   socket.on('attempt:join', handle(socket, async ({ practiceCode }) => {
     const code = str(practiceCode, { field: 'Room code', max: 16 });
-    const joined = await joinPractice(code, identity);
-    const attemptId = String(joined._id);
-    if (socket.data.attemptId && socket.data.attemptId !== attemptId) {
+    // Compare rooms before joinPractice takes a seat, so a refused join leaves no player behind.
+    const room = await findPractice(code);
+    if (socket.data.attemptId && socket.data.attemptId !== String(room._id)) {
       throw new AppError(409, 'ALREADY_IN_ATTEMPT', 'This connection is already in another game');
     }
+    const joined = await joinPractice(code, identity);
+    const attemptId = String(joined._id);
     const runtime = runtimes.get(attemptId);
     await runtime.enqueue(async () => {
       // The socket may have dropped while this job waited; a dead socket must not count as online.
@@ -199,7 +201,7 @@ function registerHandlers(socket, runtimes) {
         await flow.systemMessage(runtime, `${identity.name} left`);
         flow.broadcastLobby(runtime, attempt);
       }
-      if (!runtime.hasSockets() && Attempt.FINAL.includes(attempt.status)) runtimes.drop(runtime.attemptId);
+      if (Attempt.FINAL.includes(attempt.status)) runtime.release();
     }).catch(errorBody);
   });
 }

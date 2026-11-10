@@ -225,3 +225,16 @@ test('after a restart, rejoining an in-progress attempt resumes the ticks (D37)'
   expect((await snap).status).toBe('in_progress');
   expect((await collect(again, 'attempt:tick', 350)).length).toBeGreaterThanOrEqual(2);
 });
+
+test.each(['lobby:claimRole', 'lobby:ready', 'lobby:cancel', 'level:submit', 'attempt:quit'])(
+  '%s from a socket that never joined gets NOT_IN_ATTEMPT',
+  async (event) => {
+    const { a } = await setupRoom();
+    const carol = await createPlayer(srv.app, 'carol');
+    const c = await connect(srv.url, carol.token);
+    const payload = { role: 'A', order: 1, answer: 'x' };
+    const ack = await c.timeout(3000).emitWithAck(event, payload);
+    expect(ack.error).toBe('NOT_IN_ATTEMPT');
+    expect(a.connected).toBe(true);
+  },
+);

@@ -19,7 +19,7 @@ const EVENTS = {
 /**
  * Live state of one practice room. Joins on every (re)connect, so a dropped
  * connection or a page refresh gets a fresh snapshot (TIME-6).
- * Returns { state, connection, error, actions }; every action resolves with the ack.
+ * Returns { state, connection, error, actions, retry }; every action resolves with the ack.
  */
 export default function useAttempt(code) {
   const [state, dispatch] = useReducer(attemptReducer, null);
@@ -39,7 +39,9 @@ export default function useAttempt(code) {
     socket.on('disconnect', () => setConnection('offline'));
     socket.on('connect_error', (err) => {
       setConnection('offline');
-      if (err.message === 'AUTH_REQUIRED') setError({ error: 'AUTH_REQUIRED', message: 'Your session has ended. Log in again.' });
+      setError(err.message === 'AUTH_REQUIRED'
+        ? { error: 'AUTH_REQUIRED', message: 'Your session has ended. Log in again.' }
+        : { error: 'CONNECT_ERROR', message: 'Could not reach the server.' });
     });
     Object.entries(EVENTS).forEach(([event, type]) => {
       socket.on(event, (payload) => dispatch({ type, payload }));
@@ -67,5 +69,7 @@ export default function useAttempt(code) {
     quit: () => emit('attempt:quit'),
   }), [emit]);
 
-  return { state, connection, error, actions };
+  const retry = useCallback(() => socketRef.current?.connect(), []);
+
+  return { state, connection, error, actions, retry };
 }

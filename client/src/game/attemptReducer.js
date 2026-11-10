@@ -4,7 +4,7 @@
  * client never works out points or time on its own.
  */
 export default function attemptReducer(state, { type, payload }) {
-  if (type === 'snapshot') return { ...payload, lastResult: null };
+  if (type === 'snapshot') return { ...payload, lastResult: state?.lastResult ?? null };
   if (!state) return state;
 
   switch (type) {

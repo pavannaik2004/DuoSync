@@ -60,6 +60,7 @@ async function finish(runtime, status) {
   if (!attempt) return null;
   await systemMessage(runtime, 'Attempt ended');
   runtime.emitToRoom('attempt:ended', { status: attempt.status, result: resultView(attempt) });
+  runtime.release();
   return attempt;
 }
 

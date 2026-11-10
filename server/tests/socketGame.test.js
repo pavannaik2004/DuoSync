@@ -178,3 +178,25 @@ test('NFR-1: nothing player A receives during a full run contains a B half or an
   }
   for (const level of cyberHeist.levels) expect(json).not.toContain(JSON.stringify(level.clueB.data));
 });
+
+test('a finished attempt with nobody connected drops its runtime', async () => {
+  room = await startedRoom({ timerMs: 300 });
+  expect(room.srv.io.runtimes.size()).toBe(1);
+  room.a.disconnect();
+  room.b.disconnect();
+  await wait(700);
+  expect((await Attempt.findById(room.attemptId)).status).toBe('timed_out');
+  expect(room.srv.io.runtimes.size()).toBe(0);
+});
+
+test('level:submit before the start says NOT_STARTED', async () => {
+  const { createPlayer, createRoom } = require('./helpers/users');
+  const { startSocketServer } = require('./helpers/sockets');
+  const srv = await startSocketServer();
+  room = { srv };
+  const alice = await createPlayer(srv.app, 'alice');
+  const code = await createRoom(srv.app, alice.auth);
+  const a = await connect(srv.url, alice.token);
+  await join(a, code);
+  expect(await submit(a, 1, '9742')).toMatchObject({ error: 'NOT_STARTED' });
+});

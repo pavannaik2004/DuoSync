@@ -8,10 +8,11 @@
 const roomOf = (attemptId) => `attempt:${attemptId}`;
 
 class AttemptRuntime {
-  constructor(attemptId, { io, options }) {
+  constructor(attemptId, { io, options, drop }) {
     this.attemptId = String(attemptId);
     this.io = io;
     this.options = options;
+    this.drop = drop || (() => {});
     this.queue = Promise.resolve();
     this.sockets = new Map(); // playerId → Set<socket>
     this.timers = new Set();
@@ -51,6 +52,11 @@ class AttemptRuntime {
 
   hasSockets() {
     return this.sockets.size > 0;
+  }
+
+  /** Removes this runtime from its registry when nobody is connected (an idle, finished attempt). */
+  release() {
+    if (!this.hasSockets()) this.drop(this.attemptId);
   }
 
   emitToRoom(event, payload) {
@@ -96,10 +102,13 @@ class AttemptRuntime {
 /** The runtimes of one Socket.io server. Created lazily, one per attempt. */
 function createRuntimeRegistry(io, options) {
   const runtimes = new Map();
-  return {
+  const registry = {
+    size() {
+      return runtimes.size;
+    },
     get(attemptId) {
       const id = String(attemptId);
-      if (!runtimes.has(id)) runtimes.set(id, new AttemptRuntime(id, { io, options }));
+      if (!runtimes.has(id)) runtimes.set(id, new AttemptRuntime(id, { io, options, drop: (key) => registry.drop(key) }));
       return runtimes.get(id);
     },
     drop(attemptId) {
@@ -112,6 +121,7 @@ function createRuntimeRegistry(io, options) {
       runtimes.clear();
     },
   };
+  return registry;
 }
 
 module.exports = { AttemptRuntime, createRuntimeRegistry, roomOf };
