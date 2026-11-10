@@ -165,6 +165,7 @@ const templates = [
           ],
         },
       },
+      solution: {table: 'A', where: [{col: 1, op: 'eq', value: 'GOLD'}, {col: 2, op: 'eq', value: 'JEWELLERY'}], pick: 0, sort: null, join: false},
       explanation: 'The only gold piece of jewellery is the AMULET.',
     },
   },

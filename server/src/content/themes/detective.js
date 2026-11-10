@@ -55,6 +55,7 @@ const templates = [
           ],
         },
       },
+      solution: {reading: '11:35', delta: -15, format: 'clock'},
       explanation: 'The clock read 11:35 and runs 15 minutes fast, so the murder was at 11:20.',
     },
   },
@@ -93,6 +94,7 @@ const templates = [
           ],
         },
       },
+      solution: {table: 'A', where: [{col: 1, op: 'ne', value: 'nobody'}, {col: 2, op: 'covers', cols: [2, 3], value: '11:20 PM'}], pick: 0, sort: null, join: false},
       explanation: 'Only BELLAMY was seen by a witness (the cook) at 11:20 PM.',
     },
   },
@@ -133,6 +135,7 @@ const templates = [
           ],
         },
       },
+      solution: {table: 'B', where: [{col: 0, op: 'eq', value: '25 cm'}], pick: 1, sort: null, join: false},
       explanation: 'A 25 cm print is a size 8 shoe.',
     },
   },
@@ -153,8 +156,7 @@ const templates = [
         type: 'text',
         data: {
           paragraphs: [
-            'The body has a single wound under the ribs: narrow, deep and clean-edged.',
-            'There is no bruising around it and no burn.',
+            'A single wound under the ribs: narrow, deep and clean-edged, with no bruising around it.',
           ],
         },
       },
@@ -180,7 +182,7 @@ const templates = [
     title: 'Dying Message',
     mechanic: 'caesar',
     timeEstimateSec: 150,
-    params: { carryOver: { shiftFrom: 'answer.3', killerFrom: 'uncleared suspects of level 2' }, direction: 'back' },
+    params: { carryOver: { shiftFrom: 3, killerFrom: 'uncleared suspects of level 2' }, direction: 'back' },
     hint: 'The shift is the shoe size from the Footprint, on your case board.',
     rewardRule: null,
     fallback: {

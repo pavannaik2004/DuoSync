@@ -133,3 +133,9 @@ Newest entry last. Format: `### YYYY-MM-DD — <title>`, then what was done, the
 - Wrote `docs/superpowers/plans/2026-11-10-03-challenges-engine.md`: 13 tasks in 3 parts. Part A, the level engine: Phase 2 deferred minors, RNG and validator with per-mechanic solvers, the 11 generators, finale planning and `generateLevelSet`, themes in MongoDB with seeding and fresh practice values. Part B, challenges: model and REST, entries with TEAM-7 and CHAL-6, socket play with window checks, extra hints. Part C, the client: grid and glyph renderers, hints, theme picker, challenge pages. Then docs and the gate.
 - Proposes decisions D50–D61 (written into DECISIONS.md in Task 13).
 - No code yet.
+
+### 2026-11-10 — Phase 3 Task 2: RNG, level validator and the 11 solvers
+
+- Added `server/src/generators/`: `rng.js` (mulberry32 seeded by FNV-1a), `validate.js` (`validateClue`, `revealsAnswer`, `validateLevel`), `util.js`, one module per mechanic exporting `solve`, and `index.js` (`GENERATORS`).
+- Fallbacks now carry a server-only `solution` (Cyber 3; Detective 1–3; Space 1; Pirate 4; Haunted 2, 4; Tomb 3; Alchemist 1, 3; Polar 3, 4). `content/index.js` already leaves it out of `levels`. Detective 4 clue A is now the pool's DAGGER wound; Detective 5 `carryOver.shiftFrom` is the number 3.
+- `themedPuzzleSets.test.js` uses the production validator instead of test-local solvers. New `rng.test.js`, `validate.test.js`. Verify: `npm test` → 299/299 (317 − 40 old solver tests + 22 new).

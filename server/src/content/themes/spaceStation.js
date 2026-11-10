@@ -53,6 +53,7 @@ const templates = [
           ],
         },
       },
+      solution: {table: 'A', idCol: 0, valueCol: 1, direction: 'asc'},
       explanation: 'Lowest to highest: valve 2 (97), 4 (121), 3 (142), 1 (184) gives 2431.',
     },
   },

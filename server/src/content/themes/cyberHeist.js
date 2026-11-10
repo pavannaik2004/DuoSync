@@ -117,6 +117,7 @@ const templates = [
           ],
         },
       },
+      solution: {table: 'A', where: [{col: 2, op: 'eq', value: 'OFF'}, {col: 1, op: 'ne', value: 'GREEN'}], pick: 0, sort: 'desc', join: true},
       explanation: 'Servers 4, 12 and 23 are offline: 23-12-4.',
     },
   },

@@ -131,6 +131,7 @@ const templates = [
           ],
         },
       },
+      solution: {reading: '4:50', delta: 25, format: 'clock'},
       explanation: 'The dial shows 4:50 and runs 25 minutes behind, so the true time is 5:15 (0515).',
     },
   },
