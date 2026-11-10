@@ -96,7 +96,7 @@ const templates = [
     title: 'Pirate Code',
     mechanic: 'describe-match',
     timeEstimateSec: 150,
-    params: { pool: 'codeWords', legend: 'letter', decoys: 2, firstLetterFor: 'answer.5' },
+    params: { variant: 'glyph-letters', copy: { captionA: 'Carved on the cave wall, left to right.', captionB: "Blackbeard's cipher legend." }, pool: 'codeWords', legend: 'letter', decoys: 2, firstLetterFor: 'answer.5' },
     hint: 'The same symbol always stands for the same letter.',
     rewardRule: 'answer',
     fallback: {
@@ -134,7 +134,7 @@ const templates = [
     title: 'Cursed Chest',
     mechanic: 'rule-filter',
     timeEstimateSec: 120,
-    params: { pool: 'chestItems', items: 5, attributes: ['colour', 'kind'], ruleVariants: ['colour+kind', 'colour+not kind', 'not colour+kind'], answerCount: 1, firstLetterFor: 'answer.5' },
+    params: { variant: 'cursed-item', copy: { clueB: ["From the captain's log: 'One piece carries my curse. {rule}'", 'Enter the name of the cursed item.'], rules: { 'colour+kind': 'It is {colour}, and it is {kind}.', 'colour+not kind': 'It is {colour}, but it is not {kind}.', 'not colour+kind': 'It is not {colour}, but it is {kind}.' } }, colours: ['GOLD', 'WHITE', 'BRONZE', 'GREEN', 'BLACK'], kinds: ['CUP', 'JEWELLERY', 'COIN', 'RELIC'], pool: 'chestItems', items: 5, attributes: ['colour', 'kind'], ruleVariants: ['colour+kind', 'colour+not kind', 'not colour+kind'], answerCount: 1, firstLetterFor: 'answer.5' },
     hint: 'The rule has two conditions. Only one item meets both.',
     rewardRule: 'answer',
     fallback: {

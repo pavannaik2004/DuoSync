@@ -146,3 +146,11 @@ Newest entry last. Format: `### YYYY-MM-DD — <title>`, then what was done, the
 - `pickAnswer` takes an optional 5th argument, the level's fixed text, and skips pool entries that the captions or intros would spell out (D49). Example: the Morse chart's "Signal" column rules out SIGNAL as an answer.
 - Added `params.copy` (and `unit`, `mark`, `labels`, `directionWords`) to 19 templates in all 8 themes. Strip captions may use `{places}` ("place"/"places"). Detective 5 `carryOver` gained `suspectsFrom: 2` (the level whose uncleared suspects supply the killer).
 - Tests: `server/tests/generators/basic.test.js` (200 seeds per template). `npm test` → 330/330.
+
+### 2026-11-10 — Phase 3 Task 4: rule-filter, describe-match and arithmetic generators with theme variants
+
+- Added `generate` to `ruleFilter` (7 variants), `describeMatch` (3) and `arithmetic` (3), selected by `params.variant`. Added `variant` and `copy` (plus `colours`/`kinds`, `values`, `weightLimits`/`weightRange`) to 14 templates; fallbacks unchanged. Detective 1, 3 and 4 gained `copy.reward` (`Murder at {time}`, `Shoe size {answer}`, `Weapon: {answer}`); `rewardFor`/`buildLevel` take extra reward values.
+- `pick.js` gained `attempt(label, build, tries = 50)` (bounded retry that throws) and `leaks(template, answer, kind, ...clues)` (the validator's D49 check, so builders re-roll instead of emitting a clue that names the answer, e.g. the ANCHOR glyph in ANCHOR, or `5-1` inside the example `9-5-1`).
+- `arithmetic.solve` now finds the correction only as a standalone number, so a delta of 10 is not matched inside the example `1050`. Tomb 3 accepts the answer without its leading zero (`515`).
+- Detective 5 carry-over (done in Task 3) verified and tested over 300 seeds with a per-seed chain of levels 1-5. The whole-set test is `test.todo` until `generateLevelSet` (Task 5).
+- Tests: `server/tests/generators/variants.test.js`, `detective.test.js`. `npm test` -> 382 pass, 1 todo.

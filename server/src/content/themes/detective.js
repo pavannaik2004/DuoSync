@@ -29,7 +29,7 @@ const templates = [
     title: 'Stopped Clock',
     mechanic: 'arithmetic',
     timeEstimateSec: 120,
-    params: { reading: 'clock', murderTime: ['23:05', '23:35'], stepMinutes: 5, errorMinutes: [10, 15, 20], errorDirection: 'fast' },
+    params: { variant: 'clock-fast', copy: { introA: 'The study clock was knocked to the floor in the struggle and stopped.', readingA: 'Its hands read {reading}.', ruleB: "From the clockmaker's service record: the study clock runs {error} minutes fast.", enterB: 'Enter the true time of the murder as four digits, like 1050.', reward: 'Murder at {time}' }, reading: 'clock', murderTime: ['23:05', '23:35'], stepMinutes: 5, errorMinutes: [10, 15, 20], errorDirection: 'fast' },
     hint: 'A fast clock shows a later time than the real one.',
     rewardRule: 'caseNote',
     fallback: {
@@ -64,7 +64,7 @@ const templates = [
     title: 'Alibi Check',
     mechanic: 'rule-filter',
     timeEstimateSec: 180,
-    params: { suspects: 4, cleared: 1, pool: 'suspects', builtAround: 'answer.1', witnessRequired: true },
+    params: { variant: 'alibis', copy: { clueB: ['A suspect is cleared only if a witness saw them for the whole time of the murder.', 'The time of the murder is on your case board. Enter the name of the one cleared suspect.'], reward: '{answer} is cleared' }, suspects: 4, cleared: 1, pool: 'suspects', builtAround: 'answer.1', witnessRequired: true },
     hint: 'A suspect is cleared only by a witness who saw them for the whole time of the murder.',
     rewardRule: 'caseNote',
     fallback: {
@@ -103,7 +103,7 @@ const templates = [
     title: 'Footprint',
     mechanic: 'rule-filter',
     timeEstimateSec: 90,
-    params: { printLengthCm: [22, 27], sizeChart: { 22: 5, 23: 6, 24: 7, 25: 8, 26: 9, 27: 10 }, belongsTo: 'killer' },
+    params: { variant: 'shoe-size', copy: { introA: 'A muddy footprint leads from the study window to the body.', measureA: 'Heel to toe, it measures {cm} cm.', reward: 'Shoe size {answer}' }, printLengthCm: [22, 27], sizeChart: { 22: 5, 23: 6, 24: 7, 25: 8, 26: 9, 27: 10 }, belongsTo: 'killer' },
     hint: 'Find the row of the chart whose print length matches the print exactly.',
     rewardRule: 'caseNote',
     fallback: {
@@ -144,7 +144,7 @@ const templates = [
     title: 'Murder Weapon',
     mechanic: 'describe-match',
     timeEstimateSec: 120,
-    params: { pool: 'weapons', shown: 5 },
+    params: { variant: 'weapon', copy: { reward: 'Weapon: {answer}' }, pool: 'weapons', shown: 5 },
     hint: 'Only one entry in the register leaves every mark the Inspector describes.',
     rewardRule: 'caseNote',
     fallback: {

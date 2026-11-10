@@ -55,7 +55,7 @@ const templates = [
     title: 'Patient Files',
     mechanic: 'rule-filter',
     timeEstimateSec: 180,
-    params: { items: 6, attributes: ['admitted', 'discharged', 'window'], conditions: 3, answerCount: 1, answer: 'bed number', listHolder: 'B' },
+    params: { variant: 'patient-bed', copy: { clueA: ['A whisper from the dark:', '"I came here in the depth of winter. I never went home. I watched the world through the window by my bed."', 'Which bed was hers? Enter its number.'] }, items: 6, attributes: ['admitted', 'discharged', 'window'], conditions: 3, answerCount: 1, answer: 'bed number', listHolder: 'B' },
     hint: 'Check every part of the whisper against each file. Only one bed fits them all.',
     rewardRule: 'letter',
     fallback: {

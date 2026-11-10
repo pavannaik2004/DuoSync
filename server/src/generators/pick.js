@@ -1,5 +1,7 @@
 /** Helpers shared by the generators: pool picks that honour the finale plan, rewards, and text filling. */
 
+const { normalizeAnswer } = require('../services/answers');
+
 const textOfEntry = (entry) => (typeof entry === 'string' ? entry : entry.answer);
 
 const squash = (text) => String(text).toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -35,14 +37,14 @@ function fill(text, values) {
 }
 
 /** What a solved level adds to the board: the planned letter or digit, the answer, a filled case note, or nothing. */
-function rewardFor(template, answer, context) {
+function rewardFor(template, answer, context, values = {}) {
   const rule = template.rewardRule;
   if (rule === 'letter' || rule === 'digit') {
     const reward = context && context.plan && context.plan.rewards && context.plan.rewards[template.order];
     return reward === undefined ? null : reward;
   }
   if (rule === 'answer') return answer;
-  if (rule === 'caseNote') return fill(template.params.copy.reward, { answer });
+  if (rule === 'caseNote') return fill(template.params.copy.reward, { answer, ...values });
   return null;
 }
 
@@ -50,9 +52,9 @@ function rewardFor(template, answer, context) {
 const fallbackCaption = (template, half) => template.fallback[half === 'A' ? 'clueA' : 'clueB'].data.caption;
 
 /** Assembles a GeneratedLevel; `solution` is left out when there is none. */
-function buildLevel({ template, context, answerKind, answer, acceptedAnswers = [], clueA, clueB, explanation, solution }) {
+function buildLevel({ template, context, answerKind, answer, acceptedAnswers = [], clueA, clueB, explanation, solution, rewardValues }) {
   const level = {
-    clueA, clueB, answer, acceptedAnswers, answerKind, reward: rewardFor(template, answer, context), explanation,
+    clueA, clueB, answer, acceptedAnswers, answerKind, reward: rewardFor(template, answer, context, rewardValues), explanation,
   };
   if (solution) level.solution = solution;
   return level;
@@ -65,4 +67,25 @@ function distinctInts(rng, lo, hi, count) {
   return [...seen];
 }
 
-module.exports = { pickAnswer, fixedText, spells, fill, rewardFor, fallbackCaption, buildLevel, distinctInts };
+/** Runs `build(i)` until it returns something truthy, at most `tries` times; throws when none does (never loops forever). */
+function attempt(label, build, tries = 50) {
+  for (let i = 0; i < tries; i += 1) {
+    const result = build(i);
+    if (result) return result;
+  }
+  throw new Error(`${label}: no valid layout after ${tries} tries`);
+}
+
+/**
+ * True when the answer, normalized the way the validator does (D49), would show in the template's fixed text or in
+ * any of the given clues. Pass only the clues that must not name the answer: a table that lists it among 3 or more
+ * candidates is allowed to. Answers under 3 normalized characters are exempt.
+ */
+function leaks(template, answer, kind, ...clues) {
+  const target = normalizeAnswer(answer, kind);
+  if (target.length < 3) return false;
+  return [fixedText(template), ...clues.map((clue) => JSON.stringify(clue.data))]
+    .some((text) => normalizeAnswer(text, kind).includes(target));
+}
+
+module.exports = { attempt, leaks, pickAnswer, fixedText, spells, fill, rewardFor, fallbackCaption, buildLevel, distinctInts };

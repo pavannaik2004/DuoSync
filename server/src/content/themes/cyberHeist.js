@@ -85,7 +85,7 @@ const templates = [
     title: 'Server Reboot',
     mechanic: 'rule-filter',
     timeEstimateSec: 180,
-    params: { items: 6, idRange: [1, 30], answerCount: 3, sortDirection: ['desc', 'asc'] },
+    params: { variant: 'offline-servers', copy: { ruleB: 'A server is offline when its fan is OFF and its light is not GREEN.', orderB: 'Reboot the offline servers {order}. Enter the IDs separated by dashes, like {example}.', directions: { desc: { order: 'from the highest ID to the lowest', example: '9-5-1' }, asc: { order: 'from the lowest ID to the highest', example: '1-5-9' } } }, items: 6, idRange: [1, 30], answerCount: 3, sortDirection: ['desc', 'asc'] },
     hint: 'Three servers are offline.',
     rewardRule: 'letter',
     fallback: {
@@ -126,7 +126,7 @@ const templates = [
     title: 'Glyph Keypad',
     mechanic: 'describe-match',
     timeEstimateSec: 150,
-    params: { length: 4, shapesFrom: ['triangle', 'circle', 'square', 'diamond', 'hexagon', 'star'], decoys: [1, 2], legend: 'digit' },
+    params: { variant: 'glyph-digits', copy: { captionA: 'The door panel shows these glyphs, left to right.', captionB: 'Glyph legend from the manual.' }, length: 4, shapesFrom: ['triangle', 'circle', 'square', 'diamond', 'hexagon', 'star'], decoys: [1, 2], legend: 'digit' },
     hint: 'The legend lists more glyphs than the panel shows.',
     rewardRule: 'letter',
     fallback: {

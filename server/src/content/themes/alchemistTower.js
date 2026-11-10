@@ -27,7 +27,7 @@ const templates = [
     title: 'Potion Shelf',
     mechanic: 'rule-filter',
     timeEstimateSec: 150,
-    params: { items: 6, attributes: ['colour', 'stopper', 'state'], conditions: 2, answerCount: [2, 3], sortDirection: ['desc', 'asc'] },
+    params: { variant: 'potions', copy: { ruleB: 'Recipe, step one: take every potion that {rule}.', and: 'and', conditions: { colour: 'is {value}', stopper: 'is sealed with {value}', state: 'is {value}' }, orderB: 'Pour them {order}. Enter the numbers separated by dashes, like {example}.', directions: { desc: { order: 'from the highest bottle number to the lowest', example: '9-5-1' }, asc: { order: 'from the lowest bottle number to the highest', example: '1-5-9' } } }, values: { colour: ['GREEN', 'BLUE', 'RED'], stopper: ['CORK', 'WAX'], state: ['BUBBLING', 'STILL'] }, items: 6, attributes: ['colour', 'stopper', 'state'], conditions: 2, answerCount: [2, 3], sortDirection: ['desc', 'asc'] },
     hint: 'A potion must meet both conditions in the recipe.',
     rewardRule: 'letter',
     fallback: {

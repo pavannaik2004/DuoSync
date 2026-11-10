@@ -27,7 +27,7 @@ const templates = [
     title: 'Hieroglyph Wall',
     mechanic: 'describe-match',
     timeEstimateSec: 150,
-    params: { pool: 'hieroglyphWords', legend: 'letter', decoys: 2 },
+    params: { variant: 'glyph-letters', copy: { captionA: 'Carved above the first door, left to right.', captionB: 'Your translation table.' }, pool: 'hieroglyphWords', legend: 'letter', decoys: 2 },
     hint: 'Each glyph always stands for the same letter. Two glyphs in the translation are not on the wall.',
     rewardRule: 'digit',
     fallback: {
@@ -105,7 +105,7 @@ const templates = [
     title: 'Sundial',
     mechanic: 'arithmetic',
     timeEstimateSec: 120,
-    params: { reading: 'clock', readingRange: ['01:00', '05:55'], stepMinutes: 5, errorMinutes: [15, 20, 25, 30, 35], errorDirection: 'slow', output: 'HHMM' },
+    params: { variant: 'clock-slow', copy: { introA: 'A shaft of sunlight falls on the stone dial in the antechamber.', readingA: 'The shadow points to {reading}.', ruleB: "The scribe's note: this dial was cut for the old calendar and runs {error} minutes behind.", enterB: 'Enter the true time as four digits, like 0930.' }, reading: 'clock', readingRange: ['01:00', '05:55'], stepMinutes: 5, errorMinutes: [15, 20, 25, 30, 35], errorDirection: 'slow', output: 'HHMM' },
     hint: 'A dial that runs behind shows an earlier time than the true one.',
     rewardRule: 'digit',
     fallback: {

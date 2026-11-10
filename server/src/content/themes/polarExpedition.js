@@ -95,7 +95,7 @@ const templates = [
     title: 'Supply Crates',
     mechanic: 'rule-filter',
     timeEstimateSec: 180,
-    params: { items: 6, idRange: [1, 20], attributes: ['seal', 'weight', 'stencil'], conditions: 3, answerCount: 3, sortDirection: ['desc', 'asc'] },
+    params: { variant: 'crates', copy: { ruleB: 'Manifest rules: only bring in crates whose seal is {seal}, that weigh under {limit} kg, and that are stencilled {stencil}.', orderB: 'Call them in {order}, separated by dashes, like {example}.', directions: { desc: { order: 'from the highest crate number to the lowest', example: '9-5-1' }, asc: { order: 'from the lowest crate number to the highest', example: '1-5-9' } } }, values: { seal: ['INTACT', 'BROKEN'], stencil: ['FOOD', 'FUEL'] }, weightLimits: [15, 20, 25, 30], weightRange: [5, 35], items: 6, idRange: [1, 20], attributes: ['seal', 'weight', 'stencil'], conditions: 3, answerCount: 3, sortDirection: ['desc', 'asc'] },
     hint: 'A crate must pass all three checks in the manifest rules.',
     rewardRule: 'digit',
     fallback: {
@@ -136,7 +136,7 @@ const templates = [
     title: 'Fuel Gauge',
     mechanic: 'arithmetic',
     timeEstimateSec: 120,
-    params: { reading: 'number', readingRange: [200, 480], step: 5, correction: [15, 60], correctionDirection: 'subtract' },
+    params: { variant: 'gauge-high', copy: { readingA: "The generator's frosted fuel gauge reads {reading} litres.", ruleB: "Engineer's note: in deep cold this gauge reads {correction} litres too high.", enterB: 'Enter the true amount of fuel in litres.' }, reading: 'number', readingRange: [200, 480], step: 5, correction: [15, 60], correctionDirection: 'subtract' },
     hint: 'A gauge that reads too high shows more fuel than there really is.',
     rewardRule: 'digit',
     fallback: {
