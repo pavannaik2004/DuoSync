@@ -75,12 +75,12 @@ export default function Lobby({ state, actions }) {
     <div className="lobby">
       <section className="lobby-main">
         <header className="lobby-head">
-          <p className="lobby-kicker">Practice room {state.practiceCode}</p>
+          <p className="lobby-kicker">{state.practiceCode ? `Practice room ${state.practiceCode}` : 'Challenge lobby'}</p>
           <h1>{theme.name}</h1>
           <p className="lobby-story">{theme.story}</p>
         </header>
 
-        {players.length < 2 && <InviteBox code={state.practiceCode} />}
+        {players.length < 2 && state.practiceCode && <InviteBox code={state.practiceCode} />}
 
         <h2 className="visually-hidden">Roles</h2>
         <div className="role-grid">

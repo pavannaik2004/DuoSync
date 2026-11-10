@@ -178,3 +178,10 @@ Newest entry last. Format: `### YYYY-MM-DD — <title>`, then what was done, the
 - New `services/challengeAttemptService.openAttempt(attemptId, identity, now)`: guest -> GUEST_NOT_ALLOWED, bad/unknown id -> ATTEMPT_NOT_FOUND, non-member -> NOT_IN_ATTEMPT, `entered` -> NOT_OPEN (ISO start in the message) / CHALLENGE_CLOSED / atomic move to `lobby`; other statuses returned as is.
 - `attempt:join` takes exactly one of `{ practiceCode }` / `{ attemptId }` (else VALIDATION_ERROR). `lobbyService.startAttempt` copies `challenge.levels` for challenge attempts and returns `{ refused: 'CHALLENGE_CLOSED' }` (back to lobby, unready) outside the window; `flow.startCountdown` posts the closed-window system message and broadcasts the lobby. The timer is the full theme timer, so it may run past `endsAt` (CHAL-7).
 - Test helpers: `startedChallengeAttempt`, `createOpenChallenge`, `enterTeam` in `tests/helpers/rooms.js`. `socketChallenge.test.js` (8 tests, incl. the Gate and Task 8 Review Focus 4). `npm test` -> 471 pass.
+
+### 2026-11-10 — Phase 3 Task 12: challenge pages
+
+- New `api/challenges.js`, `utils/time.js` (toUtcIso, toLocalInput, formatLocal, formatCountdown, windowProblem), `utils/challengeErrors.js` (error code -> friendly text; `NOT_OPEN` -> "Opens at <local>"), `hooks/useNow.js`. Pages `CreateChallenge`, `ChallengePage`, `ChallengePlay`; routes `/challenges/new`, `/challenge/:code`, `/challenge/:code/play` (players only). Dashboard has "Create a challenge" and an "Open a challenge" code form.
+- `components/game/AttemptScreen.jsx` holds the lobby/game/results/removed switch; `PlayPage` and `ChallengePlay` both use it.
+- Fix found in the smoke test: `Lobby` crashed for a challenge attempt with one player left (`practiceCode` is null, so the invite box did `null.split`). It now shows "Challenge lobby" and no invite box for challenges.
+- Verified with headless Chrome over CDP at 360 px (not committed). Lint clean; JS 116.5 KB gzip.

@@ -1,8 +1,16 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import FormField from '../components/FormField';
+import useForm from '../hooks/useForm';
+import { validators } from '../utils/validators';
 import { useAuth } from '../context/useAuth';
 
 export default function Dashboard() {
   const { status, user, guest } = useAuth();
+  const navigate = useNavigate();
+  const form = useForm({ code: '' }, { code: validators.challengeCode });
+  const onOpen = form.handleSubmit(async ({ code }) => {
+    navigate(`/challenge/${code.trim().toUpperCase()}`);
+  });
 
   if (status === 'guest') {
     return (
@@ -33,6 +41,25 @@ export default function Dashboard() {
           <h2>Practice</h2>
           <p>Play Cyber Heist with any partner. Not ranked.</p>
         </Link>
+        <Link className="tile tile-b" to="/challenges/new">
+          <h2>Create a challenge</h2>
+          <p>Pick a story and a time window, then share the code.</p>
+        </Link>
+        <div className="tile tile-a">
+          <h2>Open a challenge</h2>
+          <form className="form" onSubmit={onOpen} noValidate>
+            {form.formError && <p className="form-error" role="alert">{form.formError}</p>}
+            <FormField
+              label="Challenge code"
+              autoComplete="off"
+              autoCapitalize="characters"
+              spellCheck="false"
+              className="code-input"
+              {...form.bind('code')}
+            />
+            <button type="submit" className="btn">Open challenge</button>
+          </form>
+        </div>
       </div>
     </section>
   );

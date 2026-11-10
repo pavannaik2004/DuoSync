@@ -392,3 +392,15 @@ a { color: var(--role-a); }
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Challenges */
+.challenge-countdown { font-size: 1.125rem; }
+.share-box { display: grid; gap: var(--space-2); justify-items: start; padding: var(--space-3); background: var(--surface-2); border-radius: var(--radius-s); margin: var(--space-4) 0; }
+.share-box p { margin: 0; }
+.share-link { overflow-wrap: anywhere; }
+.code-display { font-family: var(--font-display); letter-spacing: 0.12em; }
+.radio-group { border: 0; padding: 0; margin: 0; min-width: 0; }
+.radio-group legend { font-weight: 700; padding: 0; margin-bottom: var(--space-1); }
+.radio-row { display: flex; align-items: center; gap: var(--space-2); min-height: 44px; font-weight: 400; }
+.radio-row input { width: 24px; height: 24px; flex: none; }
+.field input[type='datetime-local'], .field input[type='number'] { min-width: 0; max-width: 100%; }

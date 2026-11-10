@@ -38,4 +38,10 @@ export const validators = {
   },
   inviteCode: check(patterns.INVITE_CODE, 'Enter the invite code.', 'Invite codes contain only letters and digits.'),
   practiceCode: check(patterns.PRACTICE_CODE, 'Enter the room code.', 'Room codes have 6 letters and digits, like K7QM2X.'),
+  challengeName: check(
+    patterns.CHALLENGE_NAME,
+    'Choose a challenge name.',
+    "Use 3-40 letters, digits, single spaces, _ ' ! ? or -, with no space at the start or end.",
+  ),
+  challengeCode: check(patterns.CHALLENGE_CODE, 'Enter the challenge code.', 'Challenge codes have 6 letters and digits, like K7QM2X.'),
 };

@@ -12,6 +12,9 @@ import TeamPage from './pages/TeamPage';
 import JoinTeam from './pages/JoinTeam';
 import PracticeHome from './pages/PracticeHome';
 import PlayPage from './pages/PlayPage';
+import CreateChallenge from './pages/CreateChallenge';
+import ChallengePage from './pages/ChallengePage';
+import ChallengePlay from './pages/ChallengePlay';
 
 const players = ['user'];
 const anyone = ['user', 'guest'];
@@ -31,6 +34,9 @@ export default function App() {
         <Route path="teams/:id" element={<ProtectedRoute allow={players}><TeamPage /></ProtectedRoute>} />
         <Route path="practice" element={<ProtectedRoute allow={anyone}><PracticeHome /></ProtectedRoute>} />
         <Route path="play/:code" element={<ProtectedRoute allow={anyone}><PlayPage /></ProtectedRoute>} />
+        <Route path="challenges/new" element={<ProtectedRoute allow={players}><CreateChallenge /></ProtectedRoute>} />
+        <Route path="challenge/:code" element={<ProtectedRoute allow={players}><ChallengePage /></ProtectedRoute>} />
+        <Route path="challenge/:code/play" element={<ProtectedRoute allow={players}><ChallengePlay /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

@@ -1,10 +1,6 @@
-import PropTypes from 'prop-types';
 import { Link, useParams } from 'react-router-dom';
 import StatusMessage from '../components/StatusMessage';
-import Lobby from '../components/game/Lobby';
-import GameScreen from '../components/game/GameScreen';
-import Results from '../components/game/Results';
-import useAttempt from '../hooks/useAttempt';
+import AttemptScreen from '../components/game/AttemptScreen';
 import { patterns } from '../utils/validators';
 
 const JOIN_ERRORS = {
@@ -14,44 +10,7 @@ const JOIN_ERRORS = {
 };
 
 const backLink = <Link className="btn" to="/practice">Back to practice</Link>;
-
-function PlayRoom({ code }) {
-  const { state, connection, error, actions, retry } = useAttempt({ practiceCode: code });
-
-  if (error && !state) {
-    return <StatusMessage kind="error" message={JOIN_ERRORS[error.error] || error.message} action={backLink} />;
-  }
-  if (!state) return <StatusMessage kind="loading" message="Joining the room…" />;
-
-  if (state.removed) {
-    return (
-      <StatusMessage
-        kind="error"
-        message="You were removed from this team, so you can't play this challenge."
-        action={<Link className="btn" to="/dashboard">Back to the dashboard</Link>}
-      />
-    );
-  }
-
-  let screen = <Lobby state={state} actions={actions} />;
-  if (state.status === 'in_progress') screen = <GameScreen state={state} actions={actions} />;
-  else if (state.result) screen = <Results state={state} />;
-
-  return (
-    <div className="play">
-      {connection !== 'online' && (
-        <p className="offline-banner" role="status">
-          {error ? error.message : 'Connection lost. Reconnecting…'}
-          {error && <button type="button" className="btn" onClick={retry}>Retry</button>}
-          {error?.error === 'AUTH_REQUIRED' && <Link className="btn" to="/login">Log in</Link>}
-        </p>
-      )}
-      {screen}
-    </div>
-  );
-}
-
-PlayRoom.propTypes = { code: PropTypes.string.isRequired };
+const describeError = (error) => JOIN_ERRORS[error.error] || error.message;
 
 /** /play/:code — the lobby, the attempt and the results for one practice room. */
 export default function PlayPage() {
@@ -59,5 +18,5 @@ export default function PlayPage() {
   if (!patterns.PRACTICE_CODE.test(code)) {
     return <StatusMessage kind="error" message="That room code doesn't look right. Room codes have 6 letters and digits." action={backLink} />;
   }
-  return <PlayRoom key={code} code={code.toUpperCase()} />;
+  return <AttemptScreen key={code} target={{ practiceCode: code.toUpperCase() }} describeError={describeError} backLink={backLink} />;
 }
