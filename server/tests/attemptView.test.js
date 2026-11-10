@@ -110,3 +110,12 @@ test('resultView is null until final, then carries the summary and revealText or
   expect(done).toMatchObject({ levelPoints: 500, bonus: 20, total: 520, stars: 3, text: cyberHeist.theme.revealText });
   expect(JSON.stringify(done)).not.toContain('NODE');
 });
+
+test('themeOf falls back to the content module for a Phase 2 attempt without a snapshot (D51)', () => {
+  const { themeOf } = require('../src/services/attemptView');
+  const old = inProgress(); // themeSlug only, no theme snapshot
+  expect(old.theme).toBeNull();
+  expect(themeOf(old)).toBe(cyberHeist.theme);
+  const view = toPlayerView(old, 'ann', { now });
+  expect(view.theme).toMatchObject({ slug: 'cyber-heist', name: cyberHeist.theme.name, roles: cyberHeist.theme.roles });
+});

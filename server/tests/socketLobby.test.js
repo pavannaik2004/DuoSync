@@ -240,3 +240,28 @@ test.each(['lobby:claimRole', 'lobby:ready', 'lobby:cancel', 'level:submit', 'at
     expect(a.connected).toBe(true);
   },
 );
+
+test('a theme deactivated after the room was made sends the room back to the lobby with a system message', async () => {
+  const Theme = require('../src/models/Theme');
+  const { collect } = require('./helpers/sockets');
+  const errors = jest.spyOn(console, 'error').mockImplementation(() => {});
+  const { a, b, attempt } = await setupRoom();
+  await Theme.updateOne({ slug: 'cyber-heist' }, { active: false });
+  await claim(a, 'A');
+  await claim(b, 'B');
+  const messages = collect(a, 'chat:message', 800);
+  const updates = collect(b, 'lobby:update', 800);
+  await ready(a);
+  await ready(b);
+  const [msgs, ups] = await Promise.all([messages, updates]);
+  expect(msgs.map((m) => m.text)).toContain('This theme is no longer available. Pick another theme for a new room.');
+  const last = ups[ups.length - 1];
+  expect(last.status).toBe('lobby');
+  expect(last.players.every((p) => p.ready === false)).toBe(true);
+  const saved = await attempt();
+  expect(saved.status).toBe('lobby');
+  expect(saved.levels).toHaveLength(0);
+  expect(saved.players.every((p) => !p.ready)).toBe(true);
+  expect(errors).toHaveBeenCalled();
+  errors.mockRestore();
+});

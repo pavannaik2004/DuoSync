@@ -87,13 +87,29 @@ function startTicking(runtime, endsAt) {
   }, runtime.options.tickMs);
 }
 
+/** The level set could not be built: back to the lobby, everyone unready, and both players are told why. */
+async function failStart(runtime, err) {
+  console.error(`Could not start attempt ${runtime.attemptId}:`, err);
+  const attempt = await lobby.resetCountdown(runtime.attemptId);
+  await systemMessage(runtime, err && err.code === 'THEME_NOT_FOUND'
+    ? 'This theme is no longer available. Pick another theme for a new room.'
+    : 'The game could not start. Try again.');
+  broadcastLobby(runtime, attempt);
+}
+
 /** LOBBY-3: after countdownMs the attempt starts, unless someone cancelled. */
 function startCountdown(runtime) {
   cancelCountdown(runtime);
   runtime.countdownTimer = runtime.later(() => {
     runtime.countdownTimer = null;
     runtime.enqueue(async () => {
-      const attempt = await lobby.startAttempt(runtime.attemptId, { now: Date.now(), timerMs: runtime.options.timerMs, levelSetFor: runtime.options.levelSetFor });
+      let attempt;
+      try {
+        attempt = await lobby.startAttempt(runtime.attemptId, { now: Date.now(), timerMs: runtime.options.timerMs, levelSetFor: runtime.options.levelSetFor });
+      } catch (err) {
+        await failStart(runtime, err);
+        return;
+      }
       if (!attempt) return;
       await systemMessage(runtime, 'Attempt started');
       await snapshotAll(runtime, await Attempt.findById(attempt._id));

@@ -128,3 +128,14 @@ test('POST /api/practice { theme: "nope" } -> 404 THEME_NOT_FOUND; { theme: {} }
   const shape = await request(app).post('/api/practice').set('Authorization', alice.auth).send({ theme: 'Bad Slug' });
   expect(shape.status).toBe(400);
 });
+
+test('preview of an old room with no theme snapshot uses the Cyber Heist content (D51)', async () => {
+  const alice = await createPlayer(app, 'alice');
+  await Attempt.collection.insertOne({
+    practiceCode: 'KLMNPQ', themeSlug: 'cyber-heist', timerMinutes: 15, status: 'lobby',
+    players: [{ id: alice.user.id, kind: 'user', name: 'alice', role: null, ready: false }], levels: [], board: [],
+  });
+  const res = await preview(alice.auth, 'KLMNPQ');
+  expect(res.status).toBe(200);
+  expect(res.body.theme).toMatchObject({ slug: 'cyber-heist', name: require('../src/content').getContent('cyber-heist').theme.name, roles: { A: { name: 'Hacker' }, B: { name: 'Decoder' } } });
+});
