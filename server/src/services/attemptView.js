@@ -5,7 +5,7 @@
  */
 const { FINAL } = require('../models/Attempt');
 const { getContent, fillText } = require('../content');
-const { summarize, starsFor } = require('./scoring');
+const { summarize, starsFor, HINT_DELAY_MS } = require('./scoring');
 
 const iso = (date) => (date ? new Date(date).toISOString() : null);
 /** The theme as it was when the attempt was created; Phase 2 attempts have no snapshot (D51). */
@@ -59,8 +59,6 @@ function messageView(msg) {
     createdAt: iso(msg.createdAt),
   };
 }
-
-const HINT_DELAY_MS = 90000; // GAME-10
 
 /** The player's own role's half of the current level, plus whether its hint is ready, or null. */
 function clueFor(attempt, playerId, { now = Date.now(), hintDelayMs = HINT_DELAY_MS } = {}) {

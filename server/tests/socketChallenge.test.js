@@ -4,6 +4,7 @@ const Challenge = require('../src/models/Challenge');
 const { startDb, clearDb, stopDb } = require('./helpers/db');
 const { seedThemes } = require('./helpers/themes');
 const { createPlayer, createGuest } = require('./helpers/users');
+const { expectNoUnrevealedHint } = require('./helpers/leaks');
 const { startSocketServer, connect, nextEvent, collect } = require('./helpers/sockets');
 const {
   startedChallengeAttempt, createOpenChallenge, enterTeam, ask, submit,
@@ -72,7 +73,18 @@ test('a teammate opens the lobby: entered → lobby; snapshot has the theme snap
   expect(snap.theme.slug).toBe('cyber-heist');
   expect(snap.theme.name).toBe(saved.theme.name);
   const json = JSON.stringify(snap);
-  for (const banned of ['"answer"', 'acceptedAnswers', 'explanation', '"hint":"', 'clueB', 'seed']) expect(json).not.toContain(banned);
+  for (const banned of ['"answer"', 'acceptedAnswers', 'explanation', 'clueB', 'seed']) expect(json).not.toContain(banned);
+  expectNoUnrevealedHint([snap], (await Challenge.findById(room.challenge.id)).levels);
+});
+
+test('NFR-1: a started challenge attempt sends no hint text to either player before a reveal', async () => {
+  await server();
+  const room = await startedChallengeAttempt({ srv });
+  const got = [];
+  room.a.onAny((e, p) => got.push([e, p]));
+  room.b.onAny((e, p) => got.push([e, p]));
+  expect(await submit(room.a, 1, (await Challenge.findById(room.challenge.id)).levels[0].answer)).toEqual({ ok: true });
+  expectNoUnrevealedHint([room.snapA, room.snapB, ...got], (await Challenge.findById(room.challenge.id)).levels);
 });
 
 test('a non-member socket → NOT_IN_ATTEMPT; a guest → GUEST_NOT_ALLOWED; both attemptId and practiceCode → VALIDATION_ERROR', async () => {

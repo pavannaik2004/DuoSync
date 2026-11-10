@@ -4,6 +4,7 @@ const { startDb, clearDb, stopDb } = require('./helpers/db');
 const { seedThemes } = require('./helpers/themes');
 const { connect, nextEvent, join, wait } = require('./helpers/sockets');
 const { startedRoom, ask, submit } = require('./helpers/rooms');
+const { expectNoUnrevealedHint } = require('./helpers/leaks');
 
 const ANSWERS = ['9742', 'FIREWALL', '23-12-4', '8315', 'NODE'];
 let room;
@@ -175,7 +176,8 @@ test('NFR-1: nothing player A receives during a full run contains a B half or an
   await solveUpTo(5);
   await ended;
   const json = JSON.stringify([room.snapA, ...received]);
-  for (const banned of ['"answer"', 'acceptedAnswers', 'explanation', '"hint":"', 'clueB', 'answerKind']) {
+  expectNoUnrevealedHint([room.snapA, ...received], (await Attempt.findById(room.attemptId)).levels);
+  for (const banned of ['"answer"', 'acceptedAnswers', 'explanation', 'clueB', 'answerKind']) {
     expect(json).not.toContain(banned);
   }
   for (const level of cyberHeist.levels) expect(json).not.toContain(JSON.stringify(level.clueB.data));

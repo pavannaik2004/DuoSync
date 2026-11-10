@@ -4,7 +4,7 @@
 const Attempt = require('../models/Attempt');
 const AppError = require('../utils/AppError');
 const { isCorrect } = require('./answers');
-const { levelPoints, summarize } = require('./scoring');
+const { levelPoints, summarize, HINT_DELAY_MS } = require('./scoring');
 
 const over = () => new AppError(409, 'ATTEMPT_OVER', 'This game is over');
 
@@ -62,7 +62,7 @@ async function submitAnswer(attemptId, player, { order, answer }, now) {
  * or already revealed). The update is conditional on the hint being unrevealed and the
  * level unsolved, so two simultaneous reveals cost the 25 points once (NFR-9).
  */
-async function revealHint(attemptId, player, { order }, now, { hintDelayMs = 90000 } = {}) {
+async function revealHint(attemptId, player, { order }, now, { hintDelayMs = HINT_DELAY_MS } = {}) {
   const attempt = await Attempt.findById(attemptId);
   if (attempt && ['lobby', 'countdown'].includes(attempt.status)) {
     throw new AppError(409, 'NOT_STARTED', 'The game has not started yet');

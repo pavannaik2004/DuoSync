@@ -43,4 +43,6 @@ function summarize(levels, { remainingMs }) {
   return { levelPoints: levelTotal, levelsCleared, wrongAnswers, bonus, total, stars: starsFor({ total, levelsCleared }) };
 }
 
-module.exports = { levelPoints, completionBonus, starsFor, summarize, WRONG_COST, HINT_COST };
+const HINT_DELAY_MS = 90000; // GAME-10: a level's hint unlocks this long after the level opens
+
+module.exports = { HINT_DELAY_MS, levelPoints, completionBonus, starsFor, summarize, WRONG_COST, HINT_COST };

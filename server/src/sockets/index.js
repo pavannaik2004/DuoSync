@@ -8,6 +8,7 @@ const { resolveIdentity } = require('../services/identityService');
 const { createRuntimeRegistry, roomOf } = require('./runtime');
 const attemptEvents = require('../services/attemptEvents');
 const flow = require('./flow');
+const { HINT_DELAY_MS } = require('../services/scoring');
 const Attempt = require('../models/Attempt');
 const { registerHandlers } = require('./handlers');
 
@@ -15,7 +16,7 @@ const DEFAULTS = {
   countdownMs: 5000, // LOBBY-3
   tickMs: 1000, // TIME-1
   submitGapMs: 2000, // §7.4
-  hintDelayMs: 90000, // GAME-10
+  hintDelayMs: HINT_DELAY_MS, // GAME-10
   timerMs: null, // overrides the theme timer; tests only
   levelSetFor: undefined, // (themeContent) => levels; default is a fresh generated set (D60)
 };

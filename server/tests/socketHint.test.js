@@ -1,9 +1,10 @@
 const Attempt = require('../src/models/Attempt');
-const { levelPoints } = require('../src/services/scoring');
+const { levelPoints, HINT_COST } = require('../src/services/scoring');
 const { startDb, clearDb, stopDb } = require('./helpers/db');
 const { seedThemes } = require('./helpers/themes');
 const { connect, nextEvent, collect, join, wait } = require('./helpers/sockets');
 const { startedRoom, ask } = require('./helpers/rooms');
+const { expectNoUnrevealedHint } = require('./helpers/leaks');
 
 let room;
 
@@ -25,6 +26,8 @@ test('hint:available arrives after hintDelayMs, with a chat message, once', asyn
   const events = collect(room.a, 'hint:available', 900);
   const [msgs, got] = await Promise.all([chat, events]);
   expect(got).toEqual([{ order: 1 }]);
+  const levels = (await Attempt.findById(room.attemptId)).levels;
+  expectNoUnrevealedHint([got, msgs, room.snapA, room.snapB], levels);
   expect(Date.now() - started).toBeGreaterThanOrEqual(250);
   expect(msgs.filter((m) => m.text === 'Hint ready for Access PIN')).toHaveLength(1);
 });
@@ -54,20 +57,29 @@ test('Review Focus 5: both reveal at once → one hint:revealed, and the level s
   expect(typeof revealed[0].hint).toBe('string');
   expect(chat.filter((t) => /revealed the hint \(−25\)$/.test(t))).toHaveLength(1);
 
+  const before = await Attempt.findById(room.attemptId);
+  expect(revealed[0].hint).toBe(before.levels[0].hint);
   const result = nextEvent(room.a, 'level:result');
-  await ask(room.a, 'level:submit', { order: 1, answer: room.answers ? room.answers[0] : '9742' });
+  await ask(room.a, 'level:submit', { order: 1, answer: before.levels[0].answer });
   const solved = await result;
   const saved = await Attempt.findById(room.attemptId);
   expect(solved.correct).toBe(true);
-  expect(saved.levels[0].points).toBe(levelPoints({ activeMs: saved.levels[0].activeMs, wrongCount: 0, hintUsed: true }));
+  const { activeMs } = saved.levels[0];
+  expect(saved.levels[0].points).toBe(levelPoints({ activeMs, wrongCount: 0, hintUsed: true }));
+  expect(levelPoints({ activeMs, wrongCount: 0, hintUsed: false }) - saved.levels[0].points).toBe(HINT_COST);
 });
 
 test('a reconnecting player sees the revealed hint text in the snapshot', async () => {
   room = await startedRoom({ hintDelayMs: 100 });
   await nextEvent(room.a, 'hint:available');
+  const revealedA = nextEvent(room.a, 'hint:revealed');
   const revealed = nextEvent(room.b, 'hint:revealed');
+  const chatB = nextEvent(room.b, 'chat:message');
   expect(await reveal(room.a)).toEqual({ ok: true });
   const { hint } = await revealed;
+  expect((await revealedA).hint).toBe(hint);
+  expect(hint).toBe((await Attempt.findById(room.attemptId)).levels[0].hint);
+  expect((await chatB).text).not.toContain(hint); // the reveal line names who, not what
   const b2 = await connect(room.srv.url, room.bob.token);
   const snap = nextEvent(b2, 'attempt:snapshot');
   await join(b2, room.code);
