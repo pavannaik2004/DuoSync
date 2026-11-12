@@ -4,6 +4,7 @@ const validate = require('../middleware/validate');
 const { requirePlayer } = require('../middleware/auth');
 const patterns = require('../utils/patterns');
 const teams = require('../controllers/teamController');
+const { pageRules } = require('./userRoutes');
 
 const nameRules = [
   body('name').isString().withMessage('Team name is required').bail()
@@ -25,6 +26,7 @@ function createTeamRouter() {
   router.get('/mine', teams.mine);
   router.post('/join', validate(codeRules), teams.join);
   router.get('/:id', teams.show);
+  router.get('/:id/history', validate(pageRules), teams.teamHistory);
   router.patch('/:id', validate(nameRules), teams.rename);
   router.post('/:id/invite-code', teams.newInviteCode);
   router.delete('/:id/members/:userId', teams.removeMember);

@@ -5,6 +5,7 @@ const Attempt = require('../models/Attempt');
 const User = require('../models/User');
 const AppError = require('../utils/AppError');
 const { generateCode } = require('./codeService');
+const { teamRecords } = require('./historyService');
 
 const INVITE_LENGTH = 8; // TEAM-1
 const MEMBER_FIELDS = 'username avatarColor';
@@ -72,7 +73,8 @@ async function listMine(userId) {
   const teams = await Team.find({ memberIds: userId, archived: false })
     .sort({ createdAt: -1 })
     .populate('memberIds', MEMBER_FIELDS);
-  return teams.map((t) => toView(t, userId));
+  const records = await teamRecords(teams.map((t) => t._id)); // TEAM-3
+  return teams.map((t) => ({ ...toView(t, userId), record: records.get(String(t._id)) || { played: 0, totalPoints: 0 } }));
 }
 
 async function getTeam(teamId, viewerId) {
@@ -237,5 +239,5 @@ async function syncEntries(teamId, targetId, archived) {
 }
 
 module.exports = {
-  toView, createTeam, listMine, getTeam, joinTeam, renameTeam, regenerateInvite, removeMember, addToEntries,
+  toView, findTeam, createTeam, listMine, getTeam, joinTeam, renameTeam, regenerateInvite, removeMember, addToEntries,
 };

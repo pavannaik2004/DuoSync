@@ -1,4 +1,5 @@
 const teamService = require('../services/teamService');
+const { history } = require('../services/historyService');
 
 async function create(req, res) {
   res.status(201).json(await teamService.createTeam(req.user._id, req.body.name));
@@ -29,4 +30,12 @@ async function removeMember(req, res) {
   res.status(204).end();
 }
 
-module.exports = { create, mine, show, join, rename, newInviteCode, removeMember };
+/** TEAM-6: any player may read a team's history, archived teams included (D12). */
+async function teamHistory(req, res) {
+  await teamService.findTeam(req.params.id); // 404 TEAM_NOT_FOUND
+  res.json(await history({ teamId: req.params.id }, Number(req.query.page) || 1));
+}
+
+module.exports = {
+  create, mine, show, join, rename, newInviteCode, removeMember, teamHistory,
+};
