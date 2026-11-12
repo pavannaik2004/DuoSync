@@ -42,6 +42,7 @@ function createChallengeRouter() {
   router.patch('/:id', validate(updateRules), challenges.update);
   router.post('/:id/entries', validate([body('teamId').isString().withMessage('Choose a team')]), challenges.enter);
   router.delete('/:id', challenges.remove);
+  router.get('/:id/leaderboard', challenges.leaderboard);
 
   return router;
 }

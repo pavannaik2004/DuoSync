@@ -13,4 +13,14 @@ function expectNoUnrevealedHint(payloads, levels) {
   expect(shaped).toHaveLength(keys.length);
 }
 
-module.exports = { expectNoUnrevealedHint };
+/** NFR-1: no answer, accepted answer or explanation of any level appears in the payload. */
+function expectNoAnswers(payload, levels) {
+  const json = JSON.stringify(payload);
+  for (const key of ['"answer"', 'acceptedAnswers', 'explanation', 'clueA', 'clueB']) expect(json).not.toContain(key);
+  levels.forEach((l) => {
+    [l.answer, ...(l.acceptedAnswers || [])].forEach((a) => expect(json).not.toContain(JSON.stringify(a)));
+    if (l.explanation) expect(json).not.toContain(l.explanation);
+  });
+}
+
+module.exports = { expectNoUnrevealedHint, expectNoAnswers };

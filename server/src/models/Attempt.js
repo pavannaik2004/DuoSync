@@ -61,6 +61,7 @@ attemptSchema.index({ practiceCode: 1 }, { unique: true, partialFilterExpression
 const inChallenge = { partialFilterExpression: { challengeId: { $type: 'objectId' } } };
 attemptSchema.index({ challengeId: 1, teamId: 1 }, { unique: true, ...inChallenge });
 attemptSchema.index({ challengeId: 1, memberIds: 1 }, { unique: true, ...inChallenge });
+attemptSchema.index({ challengeId: 1, status: 1 }, inChallenge); // leaderboards and ranks (NFR-11)
 
 const Attempt = mongoose.model('Attempt', attemptSchema);
 

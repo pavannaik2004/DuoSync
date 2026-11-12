@@ -1,4 +1,5 @@
 const challengeService = require('../services/challengeService');
+const { leaderboardFor } = require('../services/leaderboardService');
 
 async function create(req, res) {
   res.status(201).json(await challengeService.createChallenge(req.user, req.body, Date.now()));
@@ -22,4 +23,10 @@ async function enter(req, res) {
   res.status(201).json(await challengeService.enterChallenge(req.params.id, req.user, req.body, Date.now()));
 }
 
-module.exports = { enter, create, show, update, remove };
+async function leaderboard(req, res) {
+  res.json(await leaderboardFor(req.params.id, Date.now()));
+}
+
+module.exports = {
+  enter, create, show, update, remove, leaderboard,
+};

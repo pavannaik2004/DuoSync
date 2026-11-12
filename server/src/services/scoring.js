@@ -43,6 +43,19 @@ function summarize(levels, { remainingMs }) {
   return { levelPoints: levelTotal, levelsCleared, wrongAnswers, bonus, total, stars: starsFor({ total, levelsCleared }) };
 }
 
+/**
+ * §7.3 ranking order: more points, then more levels cleared, then less time used, then the
+ * earlier finish. Negative when `a` ranks first; 0 when all four are equal (a shared rank, D72).
+ */
+function rankCompare(a, b) {
+  return (b.totalPoints - a.totalPoints)
+    || (b.levelsCleared - a.levelsCleared)
+    || (a.timeUsedMs - b.timeUsedMs)
+    || (new Date(a.finishedAt).getTime() - new Date(b.finishedAt).getTime());
+}
+
 const HINT_DELAY_MS = 90000; // GAME-10: a level's hint unlocks this long after the level opens
 
-module.exports = { HINT_DELAY_MS, levelPoints, completionBonus, starsFor, summarize, WRONG_COST, HINT_COST };
+module.exports = {
+  HINT_DELAY_MS, levelPoints, completionBonus, starsFor, summarize, rankCompare, WRONG_COST, HINT_COST,
+};
