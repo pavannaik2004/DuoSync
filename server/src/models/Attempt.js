@@ -14,6 +14,7 @@ const playerSchema = new mongoose.Schema(
     name: { type: String, required: true },
     role: { type: String, enum: ['A', 'B', null], default: null },
     ready: { type: Boolean, default: false },
+    awaySince: { type: Date, default: null }, // set while the player's last socket is gone mid-game (D67)
   },
   { _id: false },
 );

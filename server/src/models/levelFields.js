@@ -23,6 +23,7 @@ const progressLevelFields = {
   solvedAt: { type: Date, default: null },
   solvedBy: { type: String, default: null },
   activeMs: { type: Number, default: 0 },
+  pausedMs: { type: Number, default: 0 }, // stopped-clock time while this level was open (D68)
   wrongCount: { type: Number, default: 0 },
   points: { type: Number, default: 0 },
 };

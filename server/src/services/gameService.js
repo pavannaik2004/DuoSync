@@ -5,6 +5,7 @@ const Attempt = require('../models/Attempt');
 const AppError = require('../utils/AppError');
 const { isCorrect } = require('./answers');
 const { levelPoints, summarize, HINT_DELAY_MS } = require('./scoring');
+const { activeMsOf, foldPause, PAUSE_BUDGET_MS } = require('./clock');
 
 const over = () => new AppError(409, 'ATTEMPT_OVER', 'This game is over');
 
@@ -38,7 +39,7 @@ async function submitAnswer(attemptId, player, { order, answer }, now) {
     return { kind: 'wrong', order, wrongCount: updated.levels[i].wrongCount, attempt: updated };
   }
 
-  const activeMs = now - new Date(level.unlockedAt).getTime();
+  const activeMs = activeMsOf(level, attempt, now); // §7.3: paused time excluded (D68)
   const points = levelPoints({ activeMs, wrongCount: level.wrongCount, hintUsed: Boolean(level.hintRevealedAt) });
   const set = {
     [`levels.${i}.solvedAt`]: new Date(now),
@@ -74,7 +75,7 @@ async function revealHint(attemptId, player, { order }, now, { hintDelayMs = HIN
   const level = attempt.levels[i];
   if (level.hintRevealedAt) return { kind: 'ignored' };
   if (!level.hint) throw new AppError(409, 'NO_HINT', 'This level has no hint');
-  if (now - new Date(level.unlockedAt).getTime() < hintDelayMs) {
+  if (activeMsOf(level, attempt, now) < hintDelayMs) {
     throw new AppError(409, 'HINT_NOT_READY', 'The hint is not ready yet');
   }
   const updated = await Attempt.findOneAndUpdate(
@@ -90,15 +91,23 @@ async function revealHint(attemptId, player, { order }, now, { hintDelayMs = HIN
  * Ends the attempt with a final status and saves its results. A no-op (null) when it
  * has already ended, so a timeout racing a quit or a last solve ends it only once.
  */
-async function endAttempt(attemptId, status, now) {
+async function endAttempt(attemptId, status, now, { pauseBudgetMs = PAUSE_BUDGET_MS } = {}) {
   const attempt = await Attempt.findById(attemptId);
   if (!attempt || Attempt.FINAL.includes(attempt.status) || !attempt.startedAt) return null;
+  if (attempt.status === 'paused' && attempt.pausedAt) {
+    // A pause still running is folded first, as a resume would (D70).
+    const fold = foldPause(attempt, now, pauseBudgetMs);
+    attempt.endsAt = fold.endsAt;
+    attempt.pauseUsedMs = (attempt.pauseUsedMs || 0) + fold.stoppedMs;
+    if (fold.levelIndex !== -1) attempt.levels[fold.levelIndex].pausedMs += fold.stoppedMs;
+    attempt.pausedAt = null;
+  }
   const endsAt = new Date(attempt.endsAt).getTime();
   const remainingMs = status === 'finished' ? Math.max(0, endsAt - now) : 0;
   const summary = summarize(attempt.levels, { remainingMs });
   attempt.status = status;
   attempt.finishedAt = new Date(now);
-  attempt.timeUsedMs = Math.min(now, endsAt) - new Date(attempt.startedAt).getTime();
+  attempt.timeUsedMs = Math.min(now, endsAt) - new Date(attempt.startedAt).getTime() - (attempt.pauseUsedMs || 0); // D70
   attempt.totalPoints = summary.total;
   attempt.levelsCleared = summary.levelsCleared;
   attempt.bonus = summary.bonus;

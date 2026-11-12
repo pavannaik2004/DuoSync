@@ -6,6 +6,7 @@
 const { FINAL } = require('../models/Attempt');
 const { getContent, fillText } = require('../content');
 const { summarize, starsFor, HINT_DELAY_MS } = require('./scoring');
+const { activeMsOf, remainingMsOf } = require('./clock');
 
 const iso = (date) => (date ? new Date(date).toISOString() : null);
 /** The theme as it was when the attempt was created; Phase 2 attempts have no snapshot (D51). */
@@ -68,7 +69,7 @@ function clueFor(attempt, playerId, { now = Date.now(), hintDelayMs = HINT_DELAY
   const level = attempt.levels[index];
   // The hint text goes out only once revealed (NFR-1).
   const revealed = Boolean(level.hintRevealedAt);
-  const ready = Boolean(level.hint) && (revealed || now - new Date(level.unlockedAt).getTime() >= hintDelayMs);
+  const ready = Boolean(level.hint) && (revealed || activeMsOf(level, attempt, now) >= hintDelayMs); // D68
   return {
     order: level.order,
     title: level.title,
@@ -122,7 +123,7 @@ function toPlayerView(attempt, playerId, { connectedIds = [], messages = [], now
     countdownEndsAt: iso(attempt.countdownEndsAt),
     startedAt: iso(attempt.startedAt),
     endsAt: iso(attempt.endsAt),
-    remainingMs: attempt.endsAt ? Math.max(0, new Date(attempt.endsAt).getTime() - now) : null,
+    remainingMs: remainingMsOf(attempt, now),
     levels: levelBar(attempt),
     clue: clueFor(attempt, playerId, { now, hintDelayMs }),
     board: boardView(attempt),
