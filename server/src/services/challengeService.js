@@ -8,7 +8,7 @@ const patterns = require('../utils/patterns');
 const { generateCode } = require('./codeService');
 const { loadThemeContent } = require('./themeService');
 const { generateLevelSet, newSeed } = require('../generators/levelSet');
-const { challengeView } = require('./challengeView');
+const { challengeView, solutionsView } = require('./challengeView');
 
 const CODE_LENGTH = 6;
 const MIN_WINDOW_MS = 15 * 60 * 1000;
@@ -94,7 +94,63 @@ async function getChallengeByCode(code, user, now) {
     teamsEntered,
     viewerId: user._id,
     myEntry,
+    canSeeTeams: canSeeTeams(challenge, user),
   });
+}
+
+/** D75: the creator, or any organizer or admin. */
+function canSeeTeams(challenge, user) {
+  return String(challenge.creatorId) === String(user._id) || isOrganizer(user);
+}
+
+async function findById(id) {
+  const challenge = mongoose.isValidObjectId(id) ? await Challenge.findById(id) : null;
+  if (!challenge) throw notFound();
+  return challenge;
+}
+
+const NOT_STARTED = ['entered', 'lobby', 'countdown'];
+
+/** One team's status for the creator's view (SCORE-5). */
+function teamStatus(attempt, windowClosed) {
+  if (NOT_STARTED.includes(attempt.status)) return windowClosed ? 'did_not_start' : 'not_started';
+  return attempt.status; // in_progress, paused, finished, timed_out, ended_early
+}
+
+/** SCORE-5: every entered team's status, level reached and points (D75). */
+async function teamStatuses(id, user, now) {
+  const challenge = await findById(id);
+  if (!canSeeTeams(challenge, user)) {
+    throw new AppError(403, 'NOT_CREATOR', 'Only the creator or an organizer can see every team');
+  }
+  const attempts = await Attempt.find({ challengeId: challenge._id }).populate('teamId', 'name');
+  const windowClosed = now >= challenge.endsAt.getTime();
+  const teams = attempts.map((a) => {
+    const status = teamStatus(a, windowClosed);
+    let levelReached = 0;
+    if (status === 'in_progress' || status === 'paused') levelReached = Math.min(5, a.levelsCleared + 1);
+    else if (Attempt.FINAL.includes(status)) levelReached = a.levelsCleared;
+    return {
+      teamId: String(a.teamId && a.teamId._id ? a.teamId._id : a.teamId),
+      teamName: a.teamId && a.teamId.name ? a.teamId.name : 'Unknown team',
+      members: a.players.map((p) => p.name),
+      status,
+      levelReached,
+      points: a.totalPoints || 0,
+    };
+  });
+  teams.sort((x, y) => x.teamName.localeCompare(y.teamName));
+  return { teams };
+}
+
+/** CHAL-10, D76: answers and explanations, once the window has closed and every game has ended. */
+async function solutions(id, now) {
+  const challenge = await findById(id);
+  const running = await Attempt.exists({ challengeId: challenge._id, status: { $in: RUNNING } });
+  if (statusOf(challenge, now, Boolean(running)) !== 'closed') {
+    throw new AppError(409, 'NOT_CLOSED', 'Answers are shown once the challenge has closed and every game has ended');
+  }
+  return solutionsView(challenge);
 }
 
 async function ownChallenge(id, user) {
@@ -183,4 +239,6 @@ async function enterChallenge(challengeId, user, { teamId }, now) {
   }
 }
 
-module.exports = { enterChallenge, createChallenge, getChallengeByCode, updateChallenge, deleteChallenge, statusOf };
+module.exports = {
+  enterChallenge, createChallenge, getChallengeByCode, updateChallenge, deleteChallenge, statusOf, teamStatuses, solutions,
+};

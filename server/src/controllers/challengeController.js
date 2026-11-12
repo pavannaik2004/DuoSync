@@ -23,10 +23,18 @@ async function enter(req, res) {
   res.status(201).json(await challengeService.enterChallenge(req.params.id, req.user, req.body, Date.now()));
 }
 
+async function teams(req, res) {
+  res.json(await challengeService.teamStatuses(req.params.id, req.user, Date.now()));
+}
+
+async function solutions(req, res) {
+  res.json(await challengeService.solutions(req.params.id, Date.now()));
+}
+
 async function leaderboard(req, res) {
   res.json(await leaderboardFor(req.params.id, Date.now()));
 }
 
 module.exports = {
-  enter, create, show, update, remove, leaderboard,
+  enter, create, show, update, remove, leaderboard, teams, solutions,
 };

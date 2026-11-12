@@ -1,5 +1,7 @@
 /** The only place a challenge becomes a client payload (NFR-1): no levels, seed or usedFallback. */
-function challengeView(challenge, { status, teamsEntered, viewerId, myEntry }) {
+function challengeView(challenge, {
+  status, teamsEntered, viewerId, myEntry, canSeeTeams = false,
+}) {
   const theme = challenge.theme;
   return {
     id: String(challenge._id),
@@ -13,8 +15,18 @@ function challengeView(challenge, { status, teamsEntered, viewerId, myEntry }) {
     teamsEntered,
     maxTeams: challenge.maxTeams,
     isCreator: String(challenge.creatorId) === String(viewerId),
+    canSeeTeams, // SCORE-5: creator, organizer or admin (D75)
     myEntry,
   };
 }
 
-module.exports = { challengeView };
+/** CHAL-10, D76: each level's answer and explanation. Only for a closed challenge; the caller checks. */
+function solutionsView(challenge) {
+  return {
+    levels: challenge.levels.map((l) => ({
+      order: l.order, title: l.title, answer: l.answer, explanation: l.explanation || null,
+    })),
+  };
+}
+
+module.exports = { challengeView, solutionsView };
