@@ -1,9 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import ConfirmButton from '../components/ConfirmButton';
 import FormField from '../components/FormField';
 import StatusMessage from '../components/StatusMessage';
+import Leaderboard from '../components/Leaderboard';
+import TeamStatusTable from '../components/TeamStatusTable';
+import Solutions from '../components/Solutions';
+import useLeaderboard from '../hooks/useLeaderboard';
 import useAsync from '../hooks/useAsync';
 import useForm from '../hooks/useForm';
 import useNow from '../hooks/useNow';
@@ -33,6 +37,7 @@ const challengeShape = PropTypes.shape({
   teamsEntered: PropTypes.number.isRequired,
   maxTeams: PropTypes.number,
   isCreator: PropTypes.bool.isRequired,
+  canSeeTeams: PropTypes.bool,
 });
 
 function Countdown({ challenge }) {
@@ -180,14 +185,60 @@ function EditForm({ challenge, onSaved }) {
 
 EditForm.propTypes = { challenge: challengeShape.isRequired, onSaved: PropTypes.func.isRequired };
 
+/** CHAL-5: the live leaderboard; for the creator and organizers, every team (SCORE-5); answers once closed (CHAL-10). */
+function Standings({ challenge, reload }) {
+  const { board, live, error, version, reload: retry } = useLeaderboard(challenge.id);
+  // The page's status comes from the challenge; when the live board's status moves on, reload it once.
+  const seen = useRef(challenge.status);
+  useEffect(() => {
+    if (board && board.status !== seen.current) {
+      seen.current = board.status;
+      if (board.status !== challenge.status) reload();
+    }
+  }, [board, challenge.status, reload]);
+
+  let table;
+  if (board) table = <Leaderboard board={board} live={live} />;
+  else if (error) {
+    table = (
+      <StatusMessage
+        kind="error"
+        message={challengeMessage(error)}
+        action={<button type="button" className="btn" onClick={retry}>Try again</button>}
+      />
+    );
+  } else table = <StatusMessage kind="loading" message="Loading the leaderboard…" />;
+
+  return (
+    <>
+      {table}
+      {challenge.canSeeTeams && <TeamStatusTable challengeId={challenge.id} version={version} />}
+      {challenge.status === 'closed' && <Solutions challengeId={challenge.id} />}
+    </>
+  );
+}
+
+Standings.propTypes = { challenge: challengeShape.isRequired, reload: PropTypes.func.isRequired };
+
 function ChallengeDetails({ challenge, reload }) {
   const navigate = useNavigate();
   const now = useNow();
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
   const start = new Date(challenge.startsAt).getTime();
+  const end = new Date(challenge.endsAt).getTime();
   const open = challenge.status === 'upcoming' || challenge.status === 'open';
   const { myEntry } = challenge;
+
+  // When the window opens or closes while the page is open, fetch the new status once per edge.
+  const edge = now < start ? 'before' : now < end ? 'during' : 'after';
+  const lastEdge = useRef(edge);
+  useEffect(() => {
+    if (edge !== lastEdge.current) {
+      lastEdge.current = edge;
+      reload();
+    }
+  }, [edge, reload]);
 
   async function remove() {
     setDeleting(true);
@@ -236,6 +287,8 @@ function ChallengeDetails({ challenge, reload }) {
       )}
       {!myEntry && open && <EnterForm challenge={challenge} onEntered={reload} />}
       {!myEntry && !open && <p className="form-note">Entries are closed.</p>}
+
+      {challenge.status !== 'upcoming' && <Standings challenge={challenge} reload={reload} />}
 
       {challenge.isCreator && now < start && (
         <>

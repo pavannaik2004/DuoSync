@@ -404,3 +404,13 @@ a { color: var(--role-a); }
 .radio-row { display: flex; align-items: center; gap: var(--space-2); min-height: 44px; font-weight: 400; }
 .radio-row input { width: 24px; height: 24px; flex: none; }
 .field input[type='datetime-local'], .field input[type='number'] { min-width: 0; max-width: 100%; }
+
+/* Challenge standings (SCORE-3..5, CHAL-10). */
+.leaderboard .page-head { gap: var(--space-2); flex-wrap: wrap; }
+.leaderboard h3 { margin: var(--space-4) 0 var(--space-2); font-size: 1rem; }
+.leaderboard-table td:first-child { font-family: var(--font-display); font-weight: 700; }
+.plain-list { list-style: none; margin: 0; padding: 0; }
+.plain-list li { padding: var(--space-2) 0; border-bottom: 1px solid var(--line); }
+.solutions { padding-left: var(--space-5); }
+.solutions li { margin-bottom: var(--space-3); }
+.solutions p { margin: 0; }
