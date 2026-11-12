@@ -10,6 +10,7 @@ const { postMessage, recentMessages } = require('../services/chatService');
 const { toPlayerView, lobbyView, resultView, themeOf } = require('../services/attemptView');
 const pauses = require('../services/pauseService');
 const { activeMsOf, budgetLeftMs, graceLeftMs } = require('../services/clock');
+const { rankOf } = require('../services/leaderboardService');
 const { roomOf } = require('./runtime');
 
 const WARNINGS = [
@@ -34,13 +35,19 @@ function roleNameOf(attempt, player) {
 const whoOf = (player) => ({ id: player.id, name: player.name, role: player.role || null });
 const graceSeconds = (runtime) => Math.round(runtime.options.graceMs / 1000);
 
-function viewOptions(runtime, messages) {
+async function viewOptions(runtime, attempt) {
   const { hintDelayMs, graceMs, pauseBudgetMs } = runtime.options;
-  return { connectedIds: runtime.connectedIds(), messages, hintDelayMs, graceMs, pauseBudgetMs };
+  const [messages, rank] = await Promise.all([recentMessages(attempt._id), rankOf(attempt)]);
+  return { connectedIds: runtime.connectedIds(), messages, hintDelayMs, graceMs, pauseBudgetMs, rank };
+}
+
+/** D73: this attempt's challenge board changed (a start, solve, end, pause or resume). */
+function notifyBoard(runtime) {
+  if (runtime.challengeId && runtime.io.leaderboards) runtime.io.leaderboards.changed(runtime.challengeId);
 }
 
 async function sendSnapshot(runtime, attempt, playerId, target) {
-  const view = toPlayerView(attempt, playerId, viewOptions(runtime, await recentMessages(attempt._id)));
+  const view = toPlayerView(attempt, playerId, await viewOptions(runtime, attempt));
   target.emit('attempt:snapshot', view);
 }
 
@@ -58,7 +65,7 @@ function broadcastLobby(runtime, attempt) {
 
 /** Snapshot to every connected socket of every player (each gets only their own view). */
 async function snapshotAll(runtime, attempt) {
-  const options = viewOptions(runtime, await recentMessages(attempt._id));
+  const options = await viewOptions(runtime, attempt);
   attempt.players.forEach((p) => {
     runtime.emitToPlayer(p.id, 'attempt:snapshot', toPlayerView(attempt, p.id, options));
   });
@@ -104,7 +111,8 @@ async function finish(runtime, status) {
   [...runtime.graceTimers.keys()].forEach((id) => clearGrace(runtime, id));
   if (!attempt) return null;
   await systemMessage(runtime, 'Attempt ended');
-  runtime.emitToRoom('attempt:ended', { status: attempt.status, result: resultView(attempt) });
+  runtime.emitToRoom('attempt:ended', { status: attempt.status, result: resultView(attempt, { rank: await rankOf(attempt) }) });
+  notifyBoard(runtime);
   runtime.release();
   return attempt;
 }
@@ -171,6 +179,7 @@ function scheduleHint(runtime, attempt, { quiet = false } = {}) {
 
 /** After a resume: the clock runs again, so the ticks count down and the hint timer restarts. */
 function afterResume(runtime, attempt) {
+  notifyBoard(runtime);
   clearBudget(runtime);
   syncClock(runtime, attempt);
   scheduleHint(runtime, attempt);
@@ -227,6 +236,7 @@ async function playerAway(runtime, player) {
   if (clockStopped) {
     clearHint(runtime);
     armBudget(runtime, attempt);
+    notifyBoard(runtime);
   }
   const me = attempt.players.find((p) => p.id === player.id);
   armGrace(runtime, player.id, ms(me.awaySince));
@@ -295,6 +305,7 @@ function startCountdown(runtime) {
       syncClock(runtime, started);
       startTicking(runtime);
       scheduleHint(runtime, started);
+      notifyBoard(runtime);
     }).catch(logFailure(`start of ${runtime.attemptId}`));
   }, runtime.options.countdownMs);
 }
@@ -302,5 +313,5 @@ function startCountdown(runtime) {
 module.exports = {
   sendSnapshot, systemMessage, broadcastLobby, snapshotAll, startCountdown, cancelCountdown,
   startTicking, stopTicking, finish, scheduleHint, logFailure, syncClock,
-  playerAway, playerBack, armGrace, armBudget, roleNameOf,
+  playerAway, playerBack, armGrace, armBudget, roleNameOf, notifyBoard,
 };

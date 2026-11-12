@@ -60,7 +60,26 @@ async function collect(socket, event, ms) {
   return got;
 }
 
+/** Resolves with the first payload of `event` that matches `predicate`, or rejects after `ms`. */
+function waitFor(socket, event, predicate, ms = 3000) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      socket.off(event, onEvent);
+      reject(new Error(`timed out waiting for a matching ${event}`));
+    }, ms);
+    function onEvent(payload) {
+      if (!predicate(payload)) return;
+      clearTimeout(timer);
+      socket.off(event, onEvent);
+      resolve(payload);
+    }
+    socket.on(event, onEvent);
+  });
+}
+
 const join = (socket, code) => socket.emitWithAck('attempt:join', { practiceCode: code });
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-module.exports = { startSocketServer, connect, nextEvent, collect, join, wait };
+module.exports = {
+  startSocketServer, connect, nextEvent, collect, waitFor, join, wait,
+};

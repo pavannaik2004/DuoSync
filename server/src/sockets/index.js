@@ -12,6 +12,7 @@ const { HINT_DELAY_MS } = require('../services/scoring');
 const { GRACE_MS, PAUSE_BUDGET_MS } = require('../services/clock');
 const Attempt = require('../models/Attempt');
 const { registerHandlers } = require('./handlers');
+const { createLeaderboardHub } = require('./leaderboard');
 
 const DEFAULTS = {
   countdownMs: 5000, // LOBBY-3
@@ -20,6 +21,7 @@ const DEFAULTS = {
   hintDelayMs: HINT_DELAY_MS, // GAME-10
   graceMs: GRACE_MS, // §7.6 reconnect grace
   pauseBudgetMs: PAUSE_BUDGET_MS, // §7.6 stopped-clock budget per attempt
+  leaderboardDelayMs: 500, // D73: at most one leaderboard recompute per challenge per this long
   timerMs: null, // overrides the theme timer; tests only
   levelSetFor: undefined, // (themeContent) => levels; default is a fresh generated set (D60)
 };
@@ -29,6 +31,8 @@ function attachSockets(httpServer, { clientOrigins, ...rest } = {}) {
   const io = new Server(httpServer, { cors: { origin: clientOrigins } });
   const runtimes = createRuntimeRegistry(io, options);
   io.runtimes = runtimes;
+  io.leaderboards = createLeaderboardHub(io, { delayMs: options.leaderboardDelayMs });
+  runtimes.leaderboards = io.leaderboards; // handlers reach the hub through the registry
 
   io.use(async (socket, next) => {
     try {
@@ -64,6 +68,7 @@ function attachSockets(httpServer, { clientOrigins, ...rest } = {}) {
   const close = io.close.bind(io);
   io.close = (...args) => {
     attemptEvents.off('members-removed', onRemoved);
+    io.leaderboards.stop();
     return close(...args);
   };
 

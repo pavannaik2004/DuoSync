@@ -89,7 +89,7 @@ function scoreOf(attempt) {
 }
 
 /** Results breakdown (SCORE-2). Null until the attempt is final. Never includes answers (D38). */
-function resultView(attempt) {
+function resultView(attempt, { rank = null } = {}) {
   if (!isFinal(attempt)) return null;
   const theme = themeOf(attempt);
   const summary = summarize(attempt.levels, { remainingMs: 0 });
@@ -108,6 +108,7 @@ function resultView(attempt) {
     wrongAnswers: summary.wrongAnswers,
     timeUsedMs: attempt.timeUsedMs || 0,
     text: attempt.status === 'finished' ? fillText(theme.revealText, attempt.levels) : theme.failText,
+    rank, // { position, outOf, provisional } for a challenge (D74); null for practice
   };
 }
 
@@ -124,7 +125,7 @@ function pauseView(attempt, { now, graceMs, pauseBudgetMs }) {
 
 /** Full state for one player: snapshot on join, start and reconnect. */
 function toPlayerView(attempt, playerId, {
-  connectedIds = [], messages = [], now = Date.now(), hintDelayMs, graceMs = GRACE_MS, pauseBudgetMs = PAUSE_BUDGET_MS,
+  connectedIds = [], messages = [], now = Date.now(), hintDelayMs, graceMs = GRACE_MS, pauseBudgetMs = PAUSE_BUDGET_MS, rank = null,
 } = {}) {
   const theme = themeOf(attempt);
   const me = attempt.players.find((p) => p.id === playerId);
@@ -145,7 +146,7 @@ function toPlayerView(attempt, playerId, {
     board: boardView(attempt),
     score: scoreOf(attempt),
     chat: messages.map(messageView),
-    result: resultView(attempt),
+    result: resultView(attempt, { rank }),
   };
 }
 

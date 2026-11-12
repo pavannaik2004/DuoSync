@@ -97,11 +97,12 @@ function registerHandlers(socket, runtimes) {
       // The socket may have dropped while this job waited; a dead socket must not count as online.
       if (!socket.connected) return;
       // A removal can land between openAttempt and this job; re-check before entering the room.
-      const current = await Attempt.findById(attemptId, { players: 1 });
+      const current = await Attempt.findById(attemptId, { players: 1, challengeId: 1 });
       if (!current || !current.players.some((p) => p.id === identity.id)) {
         throw new AppError(403, 'NOT_IN_ATTEMPT', 'You are not on this team');
       }
       socket.data.attemptId = attemptId;
+      runtime.challengeId = current.challengeId ? String(current.challengeId) : null;
       socket.join(roomOf(attemptId));
       const first = runtime.addSocket(identity.id, socket);
       // Rebuild timers only for a runtime created after a restart (D37), never on later joins.
@@ -120,6 +121,13 @@ function registerHandlers(socket, runtimes) {
       await flow.sendSnapshot(runtime, attempt, identity.id, socket);
       if (first) flow.broadcastLobby(runtime, attempt);
     });
+  }));
+
+  // D73: follow a challenge's leaderboard (players only); the ack carries the current board.
+  socket.on('leaderboard:watch', handle(socket, async ({ challengeId }) => {
+    if (identity.kind === 'guest') throw new AppError(403, 'GUEST_NOT_ALLOWED', 'Sign in to see challenge leaderboards');
+    const id = str(challengeId, { field: 'Challenge id', max: 64 });
+    return { board: await runtimes.leaderboards.watch(socket, id) };
   }));
 
   socket.on('chat:send', handle(socket, async ({ text }) => {
@@ -189,6 +197,7 @@ function registerHandlers(socket, runtimes) {
       runtime.emitToRoom('level:result', { order: level, correct: true, submittedBy, text, points: outcome.points });
       runtime.emitToRoom('board:update', { board: boardView(attempt), score: scoreOf(attempt), levels: levelBar(attempt) });
       await flow.systemMessage(runtime, `${solved.title} solved: +${outcome.points}`);
+      if (!outcome.finished) flow.notifyBoard(runtime); // finish notifies on its own
       if (outcome.finished) {
         await flow.finish(runtime, 'finished');
       } else {
