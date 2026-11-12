@@ -1,31 +1,15 @@
 const Attempt = require('../src/models/Attempt');
-const { getContent } = require('../src/content');
 const { submitAnswer, revealHint, endAttempt } = require('../src/services/gameService');
 const { clueFor, toPlayerView } = require('../src/services/attemptView');
 const { startDb, clearDb, stopDb } = require('./helpers/db');
+const { startedAttemptDoc, T, MIN } = require('./helpers/attempts');
 
 beforeAll(startDb);
 afterEach(clearDb);
 afterAll(stopDb);
 
-const T = Date.UTC(2026, 10, 12, 10, 0, 0);
-const MIN = 60000;
 const PLAYER = { id: 'p1', name: 'alice', role: 'A' };
-
-/** A started Cyber Heist attempt: level 1 unlocked at T, a 15-minute timer. */
-async function started(over = {}) {
-  const { theme, levels } = getContent('cyber-heist');
-  return Attempt.create({
-    themeSlug: theme.slug,
-    theme,
-    players: [{ id: 'p1', kind: 'user', name: 'alice', role: 'A' }, { id: 'p2', kind: 'user', name: 'bob', role: 'B' }],
-    status: 'in_progress',
-    levels: levels.map((l, i) => ({ ...l, unlockedAt: i === 0 ? new Date(T) : null })),
-    startedAt: new Date(T),
-    endsAt: new Date(T + 15 * MIN),
-    ...over,
-  });
-}
+const started = startedAttemptDoc;
 
 test('§7.3 t excludes paused time: 180 s on the level with a 60 s pause scores as 120 s', async () => {
   const attempt = await started();
