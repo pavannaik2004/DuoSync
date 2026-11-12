@@ -215,8 +215,8 @@ test('a player who leaves the lobby is no longer ready (review I3)', async () =>
   expect((await attempt()).players.find((p) => p.name === 'bob').ready).toBe(false);
 });
 
-test('after a restart, rejoining an in-progress attempt resumes the ticks (D37)', async () => {
-  const { a, b, alice, code } = await setupRoom();
+test('after a restart, rejoining resumes the ticks; play resumes once both are back (D37, D71)', async () => {
+  const { a, b, alice, bob, code } = await setupRoom();
   await startGame(a, b);
   srv.io.runtimes.stopAll(); // what a server restart loses
   a.disconnect();
@@ -224,8 +224,12 @@ test('after a restart, rejoining an in-progress attempt resumes the ticks (D37)'
   const again = await connect(srv.url, alice.token);
   const snap = nextEvent(again, 'attempt:snapshot');
   await join(again, code);
-  expect((await snap).status).toBe('in_progress');
+  expect((await snap).status).toBe('paused'); // bob has not come back yet
   expect((await collect(again, 'attempt:tick', 350)).length).toBeGreaterThanOrEqual(2);
+  const resumed = nextEvent(again, 'attempt:resumed');
+  const bob2 = await connect(srv.url, bob.token);
+  await join(bob2, code);
+  expect(await resumed).toMatchObject({ reason: 'RETURNED' });
 });
 
 test.each(['lobby:claimRole', 'lobby:ready', 'lobby:cancel', 'level:submit', 'attempt:quit'])(

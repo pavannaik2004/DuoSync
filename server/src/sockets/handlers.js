@@ -13,6 +13,7 @@ const { submitAnswer, revealHint } = require('../services/gameService');
 const { WRONG_COST, HINT_COST } = require('../services/scoring');
 const { boardView, scoreOf, levelBar, clueFor, themeOf } = require('../services/attemptView');
 const flow = require('./flow');
+const { recoverOne } = require('./recovery');
 const { str, int, oneOf } = require('./validate');
 const { roomOf } = require('./runtime');
 
@@ -106,7 +107,7 @@ function registerHandlers(socket, runtimes) {
       // Rebuild timers only for a runtime created after a restart (D37), never on later joins.
       if (!runtime.resumed) {
         runtime.resumed = true;
-        await flow.resume(runtime, await Attempt.findById(attemptId));
+        await recoverOne(runtime, await Attempt.findById(attemptId));
       }
       let attempt = await Attempt.findById(attemptId);
       // TIME-4/TIME-6: an away player is back; a stopped clock runs again before their snapshot.

@@ -299,24 +299,8 @@ function startCountdown(runtime) {
   }, runtime.options.countdownMs);
 }
 
-/**
- * A runtime created after a restart rebuilds its timers from the database (D37):
- * an in-progress attempt resumes ticking (or ends if its time ran out meanwhile),
- * and a countdown with no timer goes back to the lobby.
- */
-async function resume(runtime, attempt) {
-  if (['in_progress', 'paused'].includes(attempt.status) && !runtime.tickTimer) {
-    if (attempt.status === 'in_progress' && ms(attempt.endsAt) <= Date.now()) return finish(runtime, 'timed_out');
-    syncClock(runtime, attempt);
-    startTicking(runtime);
-    scheduleHint(runtime, attempt, { quiet: true });
-  }
-  if (attempt.status === 'countdown' && !runtime.countdownTimer) return lobby.resetCountdown(attempt._id);
-  return null;
-}
-
 module.exports = {
   sendSnapshot, systemMessage, broadcastLobby, snapshotAll, startCountdown, cancelCountdown,
-  startTicking, stopTicking, finish, resume, scheduleHint, logFailure, syncClock,
+  startTicking, stopTicking, finish, scheduleHint, logFailure, syncClock,
   playerAway, playerBack, armGrace, armBudget, roleNameOf,
 };
