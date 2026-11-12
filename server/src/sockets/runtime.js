@@ -22,6 +22,7 @@ class AttemptRuntime {
     this.awaySince = new Map(); // playerId → ms, for the grace left in each tick
     this.graceTimers = new Map(); // playerId → timer ending the attempt after the grace (§7.6)
     this.budgetTimer = null; // restarts the clock when the pause budget runs out
+    this.hintAnnounced = null; // order of the level whose hint:available was sent (sent once per level)
   }
 
   /** Runs `fn` after every job queued before it. A failing job does not block the next. */

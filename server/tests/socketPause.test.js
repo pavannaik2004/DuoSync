@@ -196,3 +196,22 @@ test('§7.5: the hint delay excludes paused time', async () => {
   await hint;
   expect(Date.now() - startedAt).toBeGreaterThanOrEqual(650);
 });
+
+test('a pause and resume after the hint is ready does not announce it again', async () => {
+  room = await pauseRoom({ hintDelayMs: 200, graceMs: 2000 });
+  const messages = [];
+  const available = [];
+  room.a.on('chat:message', (m) => messages.push(m.text));
+  room.a.on('hint:available', (h) => available.push(h));
+  await nextEvent(room.a, 'hint:available', 2000).catch(() => {});
+  await wait(100);
+  const paused = nextEvent(room.a, 'attempt:paused');
+  room.b.disconnect();
+  await paused;
+  const resumed = nextEvent(room.a, 'attempt:resumed');
+  await bobReturns();
+  await resumed;
+  await wait(400);
+  expect(messages.filter((t) => t.startsWith('Hint ready')).length).toBe(1);
+  expect(available).toHaveLength(1);
+});

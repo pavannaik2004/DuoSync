@@ -164,13 +164,15 @@ function scheduleHint(runtime, attempt, { quiet = false } = {}) {
   const wait = runtime.options.hintDelayMs - activeMsOf(level, attempt, Date.now());
   if (wait <= 0 && quiet) return;
   const { order } = level;
+  if (runtime.hintAnnounced === order) return; // a resume must not announce the same hint again
   runtime.hintTimer = runtime.later(() => {
     runtime.hintTimer = null;
     runtime.enqueue(async () => {
       const current = await Attempt.findById(runtime.attemptId);
       if (!current || current.status !== 'in_progress') return;
       const now = current.levels.find((l) => !l.solvedAt);
-      if (!now || now.order !== order || now.hintRevealedAt) return;
+      if (!now || now.order !== order || now.hintRevealedAt || runtime.hintAnnounced === order) return;
+      runtime.hintAnnounced = order;
       runtime.emitToRoom('hint:available', { order });
       await systemMessage(runtime, `Hint ready for ${now.title}`);
     }).catch(logFailure(`hint timer of ${runtime.attemptId}`));

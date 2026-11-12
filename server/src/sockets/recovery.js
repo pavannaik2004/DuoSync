@@ -7,7 +7,7 @@
 const Attempt = require('../models/Attempt');
 const lobby = require('../services/lobbyService');
 const pauses = require('../services/pauseService');
-const { graceLeftMs } = require('../services/clock');
+const { graceLeftMs, activeMsOf } = require('../services/clock');
 const flow = require('./flow');
 
 const LIVE = ['in_progress', 'paused'];
@@ -47,6 +47,9 @@ async function recoverOne(runtime, attempt, now = Date.now()) {
     }
   }
   const fresh = await Attempt.findById(attempt._id);
+  // A hint whose delay passed before the restart was announced then; a later resume must not repeat it.
+  const level = fresh.levels.find((l) => !l.solvedAt);
+  if (level && level.unlockedAt && activeMsOf(level, fresh, now) >= runtime.options.hintDelayMs) runtime.hintAnnounced = level.order;
   flow.syncClock(runtime, fresh);
   flow.startTicking(runtime);
   fresh.players.filter((p) => p.awaySince).forEach((p) => flow.armGrace(runtime, p.id, ms(p.awaySince)));
