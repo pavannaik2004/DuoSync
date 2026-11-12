@@ -26,6 +26,7 @@ The single source of truth for project progress. **Read this before starting any
 | `docs/superpowers/plans/2026-11-09-00-roadmap.md` | Phase list and cross-phase architecture |
 | `docs/superpowers/plans/2026-11-09-01-foundation.md` | Phase 1 task plan |
 | `docs/superpowers/plans/2026-11-10-03-challenges-engine.md` | Phase 3 task plan (13 tasks) |
+| `docs/superpowers/plans/2026-11-12-04-competition.md` | Phase 4 task plan (13 tasks) |
 | `docs/themed-puzzle-sets.md` | The 8 themes: stories, roles, styles, level designs, pools, fallback values |
 | `DECISIONS.md` | Decisions made where the PRD was silent, and decisions deferred |
 | `README.md` | Setup, tests, deploy, MVC map |
@@ -214,3 +215,9 @@ Newest entry last. Format: `### YYYY-MM-DD — <title>`, then what was done, the
 - One fix wave (46b05d6): `myEntry` found via `Attempt.findOne({ challengeId, memberIds })`; `attempt:join` re-checks membership inside the queue before joining the room; entering re-reads the team and returns 409 TEAM_CHANGED if a member was removed meanwhile; `startsAt`/`endsAt` must carry `Z` or an offset; eviction errors are logged; the challenge page button says "View results" for finished entries and explains a closed window; the challenge lobby explains a missing partner; the hint panel resets per level. Re-review clean.
 - Parked for Phase 4: team-change writes to attempts run outside the per-attempt queue (see Deferred minors).
 - At the user's request, `phase-3-challenges-engine` was merged into `main` locally (fast-forward to 46b05d6) and the branch deleted. Verify on the merged `main`: `npm test` → 483/483. Not pushed.
+
+### 2026-11-12 — Phase 4 plan written
+
+- Wrote `docs/superpowers/plans/2026-11-12-04-competition.md`: 13 tasks in 3 parts. Part A, resilience: version-checked lobby writes against team changes (the Phase 3 parked race) and logged background failures; pure clock rules (active time, frozen remaining time, capped pause folding); the pause service; disconnect/pause/grace/budget/resync over sockets; boot-time recovery of live attempts. Part B, competition: `rankCompare`, the leaderboard aggregation and `rankOf`; the live leaderboard room with coalesced updates and rank on results; the creator's team view, solutions after closing and `GET /api/attempts/:id/result`; profiles, history and team records. Part C, the client: pause banner and rank on results; live leaderboard, team view and solutions on the challenge page; profile, history and result pages. Then docs and the gate.
+- Proposes decisions D67–D81 (written into DECISIONS.md in Task 13). They resolve Q3 (creator team view) and Q5 (restart during a pause/countdown), and move SCORE-6 and AUTH-7 (both C) to Phase 6.
+- Roadmap Phase 4 row updated. No code yet. The Phase 2 and 3 hosted gates are still pending.
