@@ -11,7 +11,8 @@ It is the Experiential Learning project for Full Stack Application Development (
 | 1 Foundation | Accounts, guest tokens, teams with invite codes, router shell, deployment | Done, live at https://duo-sync-lovat.vercel.app |
 | 2 Core attempt | Socket.io, practice rooms, team lobby with roles, team chat, server timer, Cyber Heist with fixed values, scoring, results | Built; hosted gate pending |
 | 3 Challenges + level engine | 8 themes in MongoDB, generators for all 11 mechanics, challenges with time windows, entries, one attempt per team and member, extra team hints, grid clues, challenge pages | Built; hosted gate pending |
-| 4–6 | Leaderboards and resilience, admin, polish | Not started |
+| 4 Competition + resilience | Live challenge leaderboards with in-progress teams, ranks on results, creator's team view, answers after closing, disconnect pause with a 60 s grace and a 3-minute budget, resync on refresh, boot-time recovery, profiles and history | Built; hosted gate pending |
+| 5–6 | Admin and organizers, polish | Not started |
 
 Progress is logged in [`CONTEXT.md`](CONTEXT.md). Design decisions and open questions are in [`DECISIONS.md`](DECISIONS.md). Phase plans are in [`docs/superpowers/plans/`](docs/superpowers/plans/).
 
@@ -33,7 +34,7 @@ The 8 themes (stories, roles, styles, level designs, generator pools and fallbac
 client/src/
   api/          one module per REST resource, the fetch wrapper (client.js) and the socket (socket.js)
   context/      AuthContext — who is signed in
-  hooks/        useForm (regex validation), useAsync (loading and error states), useAttempt (live game state)
+  hooks/        useForm (regex validation), useAsync (loading and error states), useAttempt (live game state), useLeaderboard (live board)
   game/         attemptReducer — applies server events to the game state
   components/   shared UI with PropTypes; game/ (lobby, attempt, results) and clues/ (one renderer per clue type)
   pages/        one component per route
@@ -42,8 +43,9 @@ server/src/
   routes/       URL → middleware → controller          (the "C" entry point)
   controllers/  read the request, call a service, send JSON
   generators/   the level engine: seeded RNG, one generator + solver per mechanic, level validator, `levelSet.js` (`generateLevelSet`)
-  sockets/      Socket.io: handshake auth, event handlers, per-attempt runtime (queue and timers)
-  services/     business rules: auth, teams, themes, challenges, entries, practice, lobby, game, hints, chat, scoring, answers, player views
+  sockets/      Socket.io: handshake auth, event handlers, per-attempt runtime (queue and timers), pause/grace flow, leaderboard rooms, boot recovery
+  services/     business rules: auth, teams, themes, challenges, entries, practice, lobby, game, hints, chat, scoring, answers, player views,
+                clock and pauses, leaderboards and ranks, history and profiles, results
   models/       Mongoose schemas: User, Team, Theme, Challenge, Attempt, Message   (the "M")
   content/      the 8 themes: templates, pools and fallback level sets (catalog.js holds the shared vocabulary)
   middleware/   auth, validation, rate limit, error handler
@@ -54,6 +56,8 @@ server/scripts/ seed.js (themes and the admin), devMemoryDb.js
 React is the **view**. To trace one REST request, for example joining a team: `client/src/pages/JoinTeam.jsx` → `api/teams.js#joinTeam` → `POST /api/teams/join` → `routes/teamRoutes.js` (requirePlayer, validate) → `controllers/teamController.js#join` → `services/teamService.js#joinTeam` (one atomic update, so a team can never get a third member) → `models/Team.js`.
 
 To trace **submitting an answer** (CO1): `components/game/AnswerBox.jsx` passes the answer up to `GameScreen` → `hooks/useAttempt.js#submit` emits the socket event `level:submit` → `sockets/handlers.js` validates it, checks that the sender is a player in this attempt and applies the 2-second limit → `runtime.enqueue()` runs it after any earlier event for the same attempt → `services/gameService.js#submitAnswer` normalizes the answer (`services/answers.js`) and scores it (`services/scoring.js`) → `models/Attempt.js`, updated only if the level is still unsolved, so two simultaneous correct answers score once → the handler emits `level:result` and `board:update` to the team's room, and `level:unlocked` to each player with only their own clue half (`services/attemptView.js`).
+
+To trace **a leaderboard update** (CO1, Lab 8): a solve in `sockets/handlers.js` calls `flow.notifyBoard` → `sockets/leaderboard.js#changed` waits `leaderboardDelayMs` (500 ms) so bursts are coalesced → `services/leaderboardService.js#leaderboardFor` runs one aggregation on `attempts` (`$match` → `$lookup` teams → `$facet` ranked / playing / waiting, sorted by points, levels, time used, finish) → `io.to('leaderboard:<id>').emit('leaderboard:update')` → `client/src/hooks/useLeaderboard.js` → `components/Leaderboard.jsx`. A team's rank is a separate `$or` comparison query, `rankOf` (Lab 7).
 
 To trace **creating a challenge** (CO1): `pages/CreateChallenge.jsx` → `api/challenges.js#createChallenge` → `POST /api/challenges` → `routes/challengeRoutes.js` (requirePlayer, validate) → `controllers/challengeController.js#create` → `services/challengeService.js#createChallenge` (checks the window, snapshots the theme, calls `generators/levelSet.js#generateLevelSet` once so every team gets the same levels) → `models/Challenge.js`.
 
@@ -72,6 +76,12 @@ All routes are under `/api`. Errors are `{ error, message }`. Theme routes need 
 | `PATCH /challenges/:id` | Creator edits name, window or `maxTeams`, only before `startsAt` |
 | `DELETE /challenges/:id` | Creator deletes it, unless a team has entered |
 | `POST /challenges/:id/entries { teamId }` | Enter a full team. One attempt per team (`ALREADY_ENTERED`) and per member (`MEMBER_IN_CHALLENGE`) |
+| `GET /challenges/:id/leaderboard` | Ranked final attempts, teams playing now (level reached, paused) and teams not started; `provisional` until closed |
+| `GET /challenges/:id/teams` | Every entered team's status, level and points. Creator, organizer or admin (`NOT_CREATOR`) |
+| `GET /challenges/:id/solutions` | Each level's answer and explanation, only once the challenge is closed (`NOT_CLOSED`) |
+| `GET /attempts/:id/result` | Your game's result, current rank and chat log (players and practice guests; `NOT_FINISHED` while running) |
+| `GET /users/me`, `GET /users/me/history?page=` | Your profile (teams, challenges played, total points, best rank) and history, 10 per page, newest first |
+| `GET /teams/:id/history?page=` | A team's challenge history, also for archived teams. `GET /teams/mine` items carry `record: { played, totalPoints }` |
 
 ## Real time
 
@@ -86,17 +96,23 @@ Live play runs over Socket.io on the API's own server. The handshake sends the s
 | client → server | `level:submit { order, answer }` | Answer the current level (one per player every 2 seconds) |
 | client → server | `hint:reveal { order }` | Show the team the level's hint, once it is ready (90 s after the level opens). Costs 25 points, once |
 | client → server | `attempt:quit` | End early, keeping the points earned |
+| client → server | `leaderboard:watch { challengeId }` | Follow a challenge's leaderboard (players only); the ack carries the current board |
 | server → client | `attempt:snapshot` | This player's full state: on join, start and reconnect |
 | server → client | `lobby:update` | Players, roles, ready flags, countdown |
-| server → client | `attempt:tick { remainingMs }` | Every second; the client only displays it |
+| server → client | `attempt:tick { remainingMs, paused, away }` | Every second; the client only displays it. While paused the time is frozen and `away` lists each missing teammate's grace left |
+| server → client | `attempt:paused { who, graceMs, clockStopped }` | A teammate's last connection dropped. The clock stops while the 3-minute pause budget lasts; after 60 s away the game ends early |
+| server → client | `attempt:resumed { who, reason, remainingMs, endsAt }` | The teammate is back (`RETURNED`), or the budget ran out (`PAUSE_BUDGET_USED`); `endsAt` moved by the stopped time |
 | server → client | `level:result`, `board:update`, `level:unlocked` | After each answer |
 | server → client | `hint:available { order }` | The hint can now be revealed (the text is not sent yet) |
 | server → client | `hint:revealed { order, hint }` | The hint text, to both players, after a reveal |
 | server → client | `attempt:removed { attemptId, reason }` | You were removed from the team; you have left the room |
 | server → client | `chat:message` | Team and system messages |
-| server → client | `attempt:ended { status, result }` | Finished, timed out or ended early |
+| server → client | `attempt:ended { status, result }` | Finished, timed out or ended early. `result.rank` is `{ position, outOf, provisional }` for challenges |
+| server → client | `leaderboard:update` | The full board, at most every 500 ms per challenge, to `leaderboard:<id>` watchers only |
 
-Every client event takes an acknowledgement callback, which answers `{ ok: true }` or `{ error, message }`, the same error shape as REST.
+Every client event takes an acknowledgement callback, which answers `{ ok: true }` or `{ error, message }`, the same error shape as REST. While the clock is paused, `level:submit` and `hint:reveal` answer `ATTEMPT_PAUSED` at no cost.
+
+When the API starts it rebuilds every live game (`sockets/recovery.js`): a countdown goes back to the lobby, a game whose time or grace has run out ends, and any other game waits for its players as if both had just disconnected.
 
 ## Run it locally
 
@@ -148,7 +164,7 @@ The client has one variable, `VITE_API_URL`: the API's base URL, with no trailin
 npm test          # Jest + Supertest + Socket.io client against an in-memory MongoDB
 ```
 
-There are 479 tests: REST routes, scoring and answer rules, the 8 theme puzzle sets (each fallback solved from its own clues, every pool rule), the level generators (200 seeds per template, validated by per-mechanic solvers), challenges and entries, the player views (no answer or partner half ever leaves the server), and full Socket.io games with two connected players. The first run downloads a MongoDB binary (about 780 MB unpacked) into `server/node_modules/.cache`. Later runs take about a minute.
+There are 565 tests: REST routes, scoring and answer rules, the 8 theme puzzle sets (each fallback solved from its own clues, every pool rule), the level generators (200 seeds per template, validated by per-mechanic solvers), challenges and entries, leaderboards and ranks (ties, 100 teams under 1 s), pauses and boot recovery, history and profiles, the player views (no answer or partner half ever leaves the server), and full Socket.io games with two connected players. The first run downloads a MongoDB binary (about 780 MB unpacked) into `server/node_modules/.cache`. Later runs take about a minute.
 
 ## Deploy
 
