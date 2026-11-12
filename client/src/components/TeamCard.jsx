@@ -13,6 +13,11 @@ export default function TeamCard({ team, viewerId }) {
           {partner ? <>With {partner.username}</> : <span className="seat-open">Waiting for a partner</span>}
           {team.isCaptain && <span className="badge">Captain</span>}
         </span>
+        {team.record && (
+          <span className="team-card-record">
+            {team.record.played === 1 ? '1 challenge' : `${team.record.played} challenges`} · {team.record.totalPoints} points
+          </span>
+        )}
       </Link>
     </li>
   );

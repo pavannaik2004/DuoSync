@@ -292,7 +292,7 @@
 .token-orange { --chip: #ff9f43; }
 .token-purple { --chip: #b388ff; }
 
-.table-scroll { overflow-x: auto; max-width: 100%; }
+.table-scroll { position: relative; overflow-x: auto; max-width: 100%; } /* relative: clips visually-hidden cells too */
 .table-scroll:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .clue-table table, .results-table { border-collapse: collapse; min-width: 100%; }
 .clue-table th, .clue-table td, .results-table th, .results-table td {

@@ -15,6 +15,8 @@ import PlayPage from './pages/PlayPage';
 import CreateChallenge from './pages/CreateChallenge';
 import ChallengePage from './pages/ChallengePage';
 import ChallengePlay from './pages/ChallengePlay';
+import Profile from './pages/Profile';
+import AttemptResult from './pages/AttemptResult';
 
 const players = ['user'];
 const anyone = ['user', 'guest'];
@@ -37,6 +39,8 @@ export default function App() {
         <Route path="challenges/new" element={<ProtectedRoute allow={players}><CreateChallenge /></ProtectedRoute>} />
         <Route path="challenge/:code" element={<ProtectedRoute allow={players}><ChallengePage /></ProtectedRoute>} />
         <Route path="challenge/:code/play" element={<ProtectedRoute allow={players}><ChallengePlay /></ProtectedRoute>} />
+        <Route path="profile" element={<ProtectedRoute allow={players}><Profile /></ProtectedRoute>} />
+        <Route path="results/:attemptId" element={<ProtectedRoute allow={anyone}><AttemptResult /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

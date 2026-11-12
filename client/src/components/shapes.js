@@ -15,4 +15,5 @@ export const teamShape = PropTypes.shape({
   members: PropTypes.arrayOf(memberShape).isRequired,
   isCaptain: PropTypes.bool.isRequired,
   inviteCode: PropTypes.string,
+  record: PropTypes.shape({ played: PropTypes.number.isRequired, totalPoints: PropTypes.number.isRequired }), // TEAM-3
 });

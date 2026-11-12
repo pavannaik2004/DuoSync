@@ -4,11 +4,12 @@ import PropTypes from 'prop-types';
 import ConfirmButton from '../components/ConfirmButton';
 import FormField from '../components/FormField';
 import StatusMessage from '../components/StatusMessage';
+import HistoryList from '../components/HistoryList';
 import { memberShape, teamShape } from '../components/shapes';
 import useAsync from '../hooks/useAsync';
 import useForm from '../hooks/useForm';
 import { useAuth } from '../context/useAuth';
-import { getTeam, newInviteCode, removeMember, renameTeam } from '../api/teams';
+import { getTeam, newInviteCode, removeMember, renameTeam, teamHistory } from '../api/teams';
 import { splitApiError } from '../utils/formErrors';
 import { validators } from '../utils/validators';
 
@@ -170,6 +171,9 @@ export default function TeamPage() {
           <p className="form-note">A new code stops the old link from working.</p>
         </>
       )}
+
+      <h2 className="section-title">Challenges played</h2>
+      <HistoryList load={(page) => teamHistory(t.id, page)} emptyText="This team has not finished a challenge yet." />
 
       {isMember && (
         <div className="actions leave">

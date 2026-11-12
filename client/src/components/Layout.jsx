@@ -22,6 +22,7 @@ export default function Layout() {
             <>
               <NavLink to="/teams">My teams</NavLink>
               <NavLink to="/practice">Practice</NavLink>
+              <NavLink to="/profile">Profile</NavLink>
               <span className="who" title="Signed in">{user.username}</span>
               <button type="button" className="btn btn-ghost" onClick={handleLogout}>Log out</button>
             </>

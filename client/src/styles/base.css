@@ -414,3 +414,9 @@ a { color: var(--role-a); }
 .solutions { padding-left: var(--space-5); }
 .solutions li { margin-bottom: var(--space-3); }
 .solutions p { margin: 0; }
+
+/* Profile and history (AUTH-6, SCORE-7, TEAM-3). */
+.avatar-dot { display: inline-block; width: 0.75em; height: 0.75em; margin-right: var(--space-2); border-radius: 50%; vertical-align: middle; }
+.pager { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-top: var(--space-3); flex-wrap: wrap; }
+.team-card-record { display: block; color: var(--muted); font-size: 0.9375rem; }
+.history-table th[scope='row'] { min-width: 10rem; }
