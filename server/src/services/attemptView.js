@@ -6,7 +6,9 @@
 const { FINAL } = require('../models/Attempt');
 const { getContent, fillText } = require('../content');
 const { summarize, starsFor, HINT_DELAY_MS } = require('./scoring');
-const { activeMsOf, remainingMsOf } = require('./clock');
+const {
+  activeMsOf, remainingMsOf, budgetLeftMs, graceLeftMs, GRACE_MS, PAUSE_BUDGET_MS,
+} = require('./clock');
 
 const iso = (date) => (date ? new Date(date).toISOString() : null);
 /** The theme as it was when the attempt was created; Phase 2 attempts have no snapshot (D51). */
@@ -17,7 +19,7 @@ function themeOf(attempt) {
 const isFinal = (attempt) => FINAL.includes(attempt.status);
 
 function currentIndex(attempt) {
-  if (attempt.status !== 'in_progress') return -1;
+  if (attempt.status !== 'in_progress' && attempt.status !== 'paused') return -1;
   return attempt.levels.findIndex((l) => !l.solvedAt);
 }
 
@@ -109,8 +111,21 @@ function resultView(attempt) {
   };
 }
 
+/** Who is away, their grace left, and whether the clock is stopped (§7.6, D67). */
+function pauseView(attempt, { now, graceMs, pauseBudgetMs }) {
+  return {
+    clockStopped: attempt.status === 'paused',
+    away: attempt.players.filter((p) => p.awaySince).map((p) => ({
+      id: p.id, name: p.name, role: p.role || null, graceMs: graceLeftMs(p, now, graceMs),
+    })),
+    budgetLeftMs: budgetLeftMs(attempt, now, pauseBudgetMs),
+  };
+}
+
 /** Full state for one player: snapshot on join, start and reconnect. */
-function toPlayerView(attempt, playerId, { connectedIds = [], messages = [], now = Date.now(), hintDelayMs } = {}) {
+function toPlayerView(attempt, playerId, {
+  connectedIds = [], messages = [], now = Date.now(), hintDelayMs, graceMs = GRACE_MS, pauseBudgetMs = PAUSE_BUDGET_MS,
+} = {}) {
   const theme = themeOf(attempt);
   const me = attempt.players.find((p) => p.id === playerId);
   return {
@@ -124,6 +139,7 @@ function toPlayerView(attempt, playerId, { connectedIds = [], messages = [], now
     startedAt: iso(attempt.startedAt),
     endsAt: iso(attempt.endsAt),
     remainingMs: remainingMsOf(attempt, now),
+    pause: pauseView(attempt, { now, graceMs, pauseBudgetMs }),
     levels: levelBar(attempt),
     clue: clueFor(attempt, playerId, { now, hintDelayMs }),
     board: boardView(attempt),

@@ -184,7 +184,7 @@ test('NFR-1: nothing player A receives during a full run contains a B half or an
 });
 
 test('a finished attempt with nobody connected drops its runtime', async () => {
-  room = await startedRoom({ timerMs: 300 });
+  room = await startedRoom({ timerMs: 300, pauseBudgetMs: 0 }); // the clock keeps running while both are away
   expect(room.srv.io.runtimes.size()).toBe(1);
   room.a.disconnect();
   room.b.disconnect();

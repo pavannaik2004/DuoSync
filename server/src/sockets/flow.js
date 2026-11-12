@@ -1,12 +1,15 @@
 /**
  * Attempt flow driven by the runtime's timers: the lobby countdown, the start, the
- * 1-second tick with timer warnings, and the end. Shared emit helpers live here too.
+ * 1-second tick with timer warnings, disconnect pauses with their grace and budget
+ * timers (§7.6), and the end. Shared emit helpers live here too.
  */
 const Attempt = require('../models/Attempt');
 const lobby = require('../services/lobbyService');
 const { endAttempt } = require('../services/gameService');
 const { postMessage, recentMessages } = require('../services/chatService');
-const { toPlayerView, lobbyView, resultView } = require('../services/attemptView');
+const { toPlayerView, lobbyView, resultView, themeOf } = require('../services/attemptView');
+const pauses = require('../services/pauseService');
+const { activeMsOf, budgetLeftMs, graceLeftMs } = require('../services/clock');
 const { roomOf } = require('./runtime');
 
 const WARNINGS = [
@@ -20,12 +23,24 @@ function logFailure(label) {
   return (err) => console.error(`Background job failed (${label}):`, err);
 }
 
+const ms = (date) => (date ? new Date(date).getTime() : null);
+
+/** The theme's name for the player's role, or the player's name before roles exist. */
+function roleNameOf(attempt, player) {
+  const roles = themeOf(attempt).roles || {};
+  return player.role && roles[player.role] ? roles[player.role].name : player.name;
+}
+
+const whoOf = (player) => ({ id: player.id, name: player.name, role: player.role || null });
+const graceSeconds = (runtime) => Math.round(runtime.options.graceMs / 1000);
+
+function viewOptions(runtime, messages) {
+  const { hintDelayMs, graceMs, pauseBudgetMs } = runtime.options;
+  return { connectedIds: runtime.connectedIds(), messages, hintDelayMs, graceMs, pauseBudgetMs };
+}
+
 async function sendSnapshot(runtime, attempt, playerId, target) {
-  const view = toPlayerView(attempt, playerId, {
-    connectedIds: runtime.connectedIds(),
-    messages: await recentMessages(attempt._id),
-    hintDelayMs: runtime.options.hintDelayMs,
-  });
+  const view = toPlayerView(attempt, playerId, viewOptions(runtime, await recentMessages(attempt._id)));
   target.emit('attempt:snapshot', view);
 }
 
@@ -43,9 +58,9 @@ function broadcastLobby(runtime, attempt) {
 
 /** Snapshot to every connected socket of every player (each gets only their own view). */
 async function snapshotAll(runtime, attempt) {
-  const messages = await recentMessages(attempt._id);
+  const options = viewOptions(runtime, await recentMessages(attempt._id));
   attempt.players.forEach((p) => {
-    runtime.emitToPlayer(p.id, 'attempt:snapshot', toPlayerView(attempt, p.id, { connectedIds: runtime.connectedIds(), messages, hintDelayMs: runtime.options.hintDelayMs }));
+    runtime.emitToPlayer(p.id, 'attempt:snapshot', toPlayerView(attempt, p.id, options));
   });
 }
 
@@ -59,12 +74,34 @@ function stopTicking(runtime) {
   runtime.tickTimer = null;
 }
 
-/** Ends the attempt once and tells both players (GAME-11, GAME-12). Run inside the queue. */
-async function finish(runtime, status) {
-  const attempt = await endAttempt(runtime.attemptId, status, Date.now());
-  stopTicking(runtime);
+function clearHint(runtime) {
   runtime.clear(runtime.hintTimer);
   runtime.hintTimer = null;
+}
+
+function clearBudget(runtime) {
+  runtime.clear(runtime.budgetTimer);
+  runtime.budgetTimer = null;
+}
+
+function clearGrace(runtime, playerId) {
+  runtime.clear(runtime.graceTimers.get(playerId));
+  runtime.graceTimers.delete(playerId);
+}
+
+/** Copies the clock and the away players from the database into the runtime, for the ticks (D81). */
+function syncClock(runtime, attempt) {
+  runtime.clock = { endsAt: ms(attempt.endsAt), pausedAt: attempt.status === 'paused' ? ms(attempt.pausedAt) : null };
+  runtime.awaySince = new Map(attempt.players.filter((p) => p.awaySince).map((p) => [p.id, ms(p.awaySince)]));
+}
+
+/** Ends the attempt once and tells both players (GAME-11, GAME-12). Run inside the queue. */
+async function finish(runtime, status) {
+  const attempt = await endAttempt(runtime.attemptId, status, Date.now(), { pauseBudgetMs: runtime.options.pauseBudgetMs });
+  stopTicking(runtime);
+  clearHint(runtime);
+  clearBudget(runtime);
+  [...runtime.graceTimers.keys()].forEach((id) => clearGrace(runtime, id));
   if (!attempt) return null;
   await systemMessage(runtime, 'Attempt ended');
   runtime.emitToRoom('attempt:ended', { status: attempt.status, result: resultView(attempt) });
@@ -72,19 +109,30 @@ async function finish(runtime, status) {
   return attempt;
 }
 
-/** TIME-1: the server broadcasts the remaining time every tick; clients only display it. */
-function startTicking(runtime, endsAt) {
-  if (runtime.tickTimer) return;
-  const end = new Date(endsAt).getTime();
-  const initial = end - Date.now();
+/**
+ * TIME-1: the server broadcasts the remaining time every tick; clients only display it.
+ * While the clock is stopped the ticks go on with a frozen time and each away player's
+ * grace left (D81). Reads `runtime.clock`, so call syncClock first.
+ */
+function startTicking(runtime) {
+  if (runtime.tickTimer || !runtime.clock) return;
+  const remaining = () => {
+    const { endsAt, pausedAt } = runtime.clock;
+    return Math.max(0, endsAt - (pausedAt === null ? Date.now() : pausedAt));
+  };
+  const initial = remaining();
   // Thresholds already passed at start (a short timer, or a resume) are not announced.
-  runtime.warned = new Set(WARNINGS.filter(([ms]) => initial <= ms).map(([ms]) => ms));
+  runtime.warned = new Set(WARNINGS.filter(([limit]) => initial <= limit).map(([limit]) => limit));
   runtime.tickTimer = runtime.every(() => {
-    const remainingMs = Math.max(0, end - Date.now());
-    runtime.emitToRoom('attempt:tick', { remainingMs });
-    WARNINGS.forEach(([ms, text]) => {
-      if (remainingMs <= ms && !runtime.warned.has(ms)) {
-        runtime.warned.add(ms);
+    const now = Date.now();
+    const remainingMs = remaining();
+    const paused = runtime.clock.pausedAt !== null;
+    const away = [...runtime.awaySince].map(([id, since]) => ({ id, graceMs: Math.max(0, since + runtime.options.graceMs - now) }));
+    runtime.emitToRoom('attempt:tick', { remainingMs, paused, away });
+    if (paused) return;
+    WARNINGS.forEach(([limit, text]) => {
+      if (remainingMs <= limit && !runtime.warned.has(limit)) {
+        runtime.warned.add(limit);
         runtime.enqueue(() => systemMessage(runtime, text)).catch(logFailure(`timer warning for ${runtime.attemptId}`));
       }
     });
@@ -96,17 +144,16 @@ function startTicking(runtime, endsAt) {
 }
 
 /**
- * GAME-10: tells both players when the current level's hint unlocks (hintDelayMs after the level
- * opened, by wall time, D59). Call after the start, after each unlock and on resume; it replaces
- * any earlier timer. `quiet` skips the announcement when the delay has already passed (a resume).
+ * GAME-10: tells both players when the current level's hint unlocks, hintDelayMs of active time
+ * after the level opened (D68). Call after the start, after each unlock and on every resume; it
+ * replaces any earlier timer. `quiet` skips the announcement when the delay has already passed.
  */
 function scheduleHint(runtime, attempt, { quiet = false } = {}) {
-  runtime.clear(runtime.hintTimer);
-  runtime.hintTimer = null;
+  clearHint(runtime);
   if (attempt.status !== 'in_progress') return;
   const level = attempt.levels.find((l) => !l.solvedAt);
   if (!level || !level.hint || level.hintRevealedAt || !level.unlockedAt) return;
-  const wait = new Date(level.unlockedAt).getTime() + runtime.options.hintDelayMs - Date.now();
+  const wait = runtime.options.hintDelayMs - activeMsOf(level, attempt, Date.now());
   if (wait <= 0 && quiet) return;
   const { order } = level;
   runtime.hintTimer = runtime.later(() => {
@@ -120,6 +167,93 @@ function scheduleHint(runtime, attempt, { quiet = false } = {}) {
       await systemMessage(runtime, `Hint ready for ${now.title}`);
     }).catch(logFailure(`hint timer of ${runtime.attemptId}`));
   }, Math.max(0, wait));
+}
+
+/** After a resume: the clock runs again, so the ticks count down and the hint timer restarts. */
+function afterResume(runtime, attempt) {
+  clearBudget(runtime);
+  syncClock(runtime, attempt);
+  scheduleHint(runtime, attempt);
+}
+
+/** §7.6: when an away player's 60 s pass, the attempt ends early (TIME-5). */
+function armGrace(runtime, playerId, awaySinceMs) {
+  clearGrace(runtime, playerId);
+  const wait = Math.max(0, awaySinceMs + runtime.options.graceMs - Date.now());
+  const timer = runtime.later(() => {
+    runtime.graceTimers.delete(playerId);
+    runtime.enqueue(async () => {
+      const attempt = await Attempt.findById(runtime.attemptId);
+      if (!attempt || Attempt.FINAL.includes(attempt.status)) return;
+      const player = attempt.players.find((p) => p.id === playerId);
+      const left = player && graceLeftMs(player, Date.now(), runtime.options.graceMs);
+      if (left === null || left === undefined) return; // came back meanwhile
+      if (left > 0) {
+        armGrace(runtime, playerId, ms(player.awaySince));
+        return;
+      }
+      await systemMessage(runtime, `${roleNameOf(attempt, player)} did not return within ${graceSeconds(runtime)} seconds.`);
+      await finish(runtime, 'ended_early');
+    }).catch(logFailure(`grace timer of ${runtime.attemptId}`));
+  }, wait);
+  runtime.graceTimers.set(playerId, timer);
+}
+
+/** §7.6 abuse guard: when the pause budget runs out, the clock runs again although a player is still away. */
+function armBudget(runtime, attempt) {
+  clearBudget(runtime);
+  if (attempt.status !== 'paused') return;
+  const { pauseBudgetMs } = runtime.options;
+  runtime.budgetTimer = runtime.later(() => {
+    runtime.budgetTimer = null;
+    runtime.enqueue(async () => {
+      const resumed = await pauses.resumeClock(runtime.attemptId, Date.now(), { budgetMs: pauseBudgetMs });
+      if (!resumed) return;
+      afterResume(runtime, resumed);
+      runtime.emitToRoom('attempt:resumed', {
+        who: null, reason: 'PAUSE_BUDGET_USED', remainingMs: Math.max(0, ms(resumed.endsAt) - Date.now()), endsAt: resumed.endsAt.toISOString(),
+      });
+      await systemMessage(runtime, 'The pause budget is used up. The clock is running again.');
+    }).catch(logFailure(`pause budget of ${runtime.attemptId}`));
+  }, budgetLeftMs(attempt, Date.now(), pauseBudgetMs));
+}
+
+/** TIME-3: a player's last socket is gone mid-game. Run inside the queue. Returns the attempt or null. */
+async function playerAway(runtime, player) {
+  const result = await pauses.markAway(runtime.attemptId, player.id, Date.now(), { budgetMs: runtime.options.pauseBudgetMs });
+  if (!result) return null;
+  const { attempt, clockStopped } = result;
+  syncClock(runtime, attempt);
+  if (clockStopped) {
+    clearHint(runtime);
+    armBudget(runtime, attempt);
+  }
+  const me = attempt.players.find((p) => p.id === player.id);
+  armGrace(runtime, player.id, ms(me.awaySince));
+  runtime.emitToRoom('attempt:paused', {
+    who: whoOf(me), graceMs: graceLeftMs(me, Date.now(), runtime.options.graceMs), clockStopped,
+  });
+  const running = attempt.status === 'paused' ? '' : ' The pause budget is used up, so the clock keeps running.';
+  await systemMessage(runtime, `${roleNameOf(attempt, me)} lost connection. Waiting ${graceSeconds(runtime)} seconds for them to return.${running}`);
+  return attempt;
+}
+
+/** TIME-4: an away player is back. Run inside the queue, before their snapshot. Returns the attempt or null. */
+async function playerBack(runtime, player) {
+  const result = await pauses.markBack(runtime.attemptId, player.id, Date.now(), { budgetMs: runtime.options.pauseBudgetMs });
+  clearGrace(runtime, player.id);
+  if (!result) return null;
+  const { attempt, resumed } = result;
+  syncClock(runtime, attempt);
+  if (Attempt.FINAL.includes(attempt.status)) return attempt;
+  if (resumed) afterResume(runtime, attempt);
+  if (attempt.status === 'in_progress') {
+    runtime.emitToRoom('attempt:resumed', {
+      who: whoOf(player), reason: 'RETURNED', remainingMs: Math.max(0, ms(attempt.endsAt) - Date.now()), endsAt: attempt.endsAt.toISOString(),
+    });
+  }
+  await systemMessage(runtime, resumed ? `${roleNameOf(attempt, player)} is back. Play resumed.` : `${roleNameOf(attempt, player)} is back.`);
+  return attempt;
 }
 
 /** The level set could not be built: back to the lobby, everyone unready, and both players are told why. */
@@ -156,9 +290,11 @@ function startCountdown(runtime) {
         return;
       }
       await systemMessage(runtime, 'Attempt started');
-      await snapshotAll(runtime, await Attempt.findById(attempt._id));
-      startTicking(runtime, attempt.endsAt);
-      scheduleHint(runtime, await Attempt.findById(attempt._id));
+      const started = await Attempt.findById(attempt._id);
+      await snapshotAll(runtime, started);
+      syncClock(runtime, started);
+      startTicking(runtime);
+      scheduleHint(runtime, started);
     }).catch(logFailure(`start of ${runtime.attemptId}`));
   }, runtime.options.countdownMs);
 }
@@ -169,9 +305,10 @@ function startCountdown(runtime) {
  * and a countdown with no timer goes back to the lobby.
  */
 async function resume(runtime, attempt) {
-  if (attempt.status === 'in_progress' && !runtime.tickTimer) {
-    if (new Date(attempt.endsAt).getTime() <= Date.now()) return finish(runtime, 'timed_out');
-    startTicking(runtime, attempt.endsAt);
+  if (['in_progress', 'paused'].includes(attempt.status) && !runtime.tickTimer) {
+    if (attempt.status === 'in_progress' && ms(attempt.endsAt) <= Date.now()) return finish(runtime, 'timed_out');
+    syncClock(runtime, attempt);
+    startTicking(runtime);
     scheduleHint(runtime, attempt, { quiet: true });
   }
   if (attempt.status === 'countdown' && !runtime.countdownTimer) return lobby.resetCountdown(attempt._id);
@@ -180,5 +317,6 @@ async function resume(runtime, attempt) {
 
 module.exports = {
   sendSnapshot, systemMessage, broadcastLobby, snapshotAll, startCountdown, cancelCountdown,
-  startTicking, stopTicking, finish, resume, scheduleHint, logFailure,
+  startTicking, stopTicking, finish, resume, scheduleHint, logFailure, syncClock,
+  playerAway, playerBack, armGrace, armBudget, roleNameOf,
 };

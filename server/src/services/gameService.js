@@ -8,6 +8,7 @@ const { levelPoints, summarize, HINT_DELAY_MS } = require('./scoring');
 const { activeMsOf, foldPause, PAUSE_BUDGET_MS } = require('./clock');
 
 const over = () => new AppError(409, 'ATTEMPT_OVER', 'This game is over');
+const pausedError = () => new AppError(409, 'ATTEMPT_PAUSED', 'The game is paused while your teammate reconnects');
 
 /**
  * Checks one answer for the current level (GAME-4..7). Returns:
@@ -22,6 +23,7 @@ async function submitAnswer(attemptId, player, { order, answer }, now) {
   if (attempt && ['lobby', 'countdown'].includes(attempt.status)) {
     throw new AppError(409, 'NOT_STARTED', 'The game has not started yet');
   }
+  if (attempt && attempt.status === 'paused') throw pausedError(); // D69: no cost
   if (!attempt || attempt.status !== 'in_progress' || now >= new Date(attempt.endsAt).getTime()) throw over();
 
   const i = attempt.levels.findIndex((l) => !l.solvedAt);
@@ -68,6 +70,7 @@ async function revealHint(attemptId, player, { order }, now, { hintDelayMs = HIN
   if (attempt && ['lobby', 'countdown'].includes(attempt.status)) {
     throw new AppError(409, 'NOT_STARTED', 'The game has not started yet');
   }
+  if (attempt && attempt.status === 'paused') throw pausedError(); // D69: no cost
   if (!attempt || attempt.status !== 'in_progress' || now >= new Date(attempt.endsAt).getTime()) throw over();
 
   const i = attempt.levels.findIndex((l) => !l.solvedAt);

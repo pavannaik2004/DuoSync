@@ -18,6 +18,10 @@ class AttemptRuntime {
     this.timers = new Set();
     this.lastSubmitAt = new Map(); // playerId → ms, for the 2-second submit gap (§7.4)
     this.resumed = false; // set once the first join has rebuilt timers from the database (D37)
+    this.clock = null; // { endsAt, pausedAt } in ms, read by the ticks (D81)
+    this.awaySince = new Map(); // playerId → ms, for the grace left in each tick
+    this.graceTimers = new Map(); // playerId → timer ending the attempt after the grace (§7.6)
+    this.budgetTimer = null; // restarts the clock when the pause budget runs out
   }
 
   /** Runs `fn` after every job queued before it. A failing job does not block the next. */

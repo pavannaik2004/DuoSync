@@ -108,8 +108,12 @@ function registerHandlers(socket, runtimes) {
         runtime.resumed = true;
         await flow.resume(runtime, await Attempt.findById(attemptId));
       }
-      const attempt = await Attempt.findById(attemptId);
-      if (first && !Attempt.FINAL.includes(attempt.status)) {
+      let attempt = await Attempt.findById(attemptId);
+      // TIME-4/TIME-6: an away player is back; a stopped clock runs again before their snapshot.
+      const me = attempt.players.find((p) => p.id === identity.id);
+      const back = first && me && me.awaySince ? await flow.playerBack(runtime, me) : null;
+      if (back) attempt = await Attempt.findById(attemptId);
+      if (first && !back && !Attempt.FINAL.includes(attempt.status)) {
         await flow.systemMessage(runtime, `${identity.name} joined`, { except: socket });
       }
       await flow.sendSnapshot(runtime, attempt, identity.id, socket);
@@ -231,10 +235,15 @@ function registerHandlers(socket, runtimes) {
         attempt = await lobby.unready(runtime.attemptId, identity.id);
         flow.cancelCountdown(runtime);
       }
-      if (!Attempt.FINAL.includes(attempt.status)) {
+      if (['in_progress', 'paused'].includes(attempt.status)) {
+        // TIME-3: the last socket of a player mid-game is gone: pause, and start the grace.
+        const me = attempt.players.find((p) => p.id === identity.id);
+        const away = me ? await flow.playerAway(runtime, me) : null;
+        attempt = away || await Attempt.findById(runtime.attemptId);
+      } else if (!Attempt.FINAL.includes(attempt.status)) {
         await flow.systemMessage(runtime, `${identity.name} left`);
-        flow.broadcastLobby(runtime, attempt);
       }
+      if (!Attempt.FINAL.includes(attempt.status)) flow.broadcastLobby(runtime, attempt);
       if (Attempt.FINAL.includes(attempt.status)) runtime.release();
     }).catch(errorBody);
   });
