@@ -49,7 +49,9 @@ const attemptSchema = new mongoose.Schema(
     stars: { type: Number, default: 0 },
     finishedAt: { type: Date, default: null },
   },
-  { timestamps: true },
+  // Every save checks __v, so a lobby save on a stale copy fails instead of writing
+  // over a team change (D79); the lobby service retries it.
+  { timestamps: true, optimisticConcurrency: true },
 );
 
 attemptSchema.index({ practiceCode: 1 }, { unique: true, partialFilterExpression: { practiceCode: { $type: 'string' } } });

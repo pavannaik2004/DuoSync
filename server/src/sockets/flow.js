@@ -15,6 +15,11 @@ const WARNINGS = [
   [10000, '10 seconds left'],
 ]; // TIME-2
 
+/** A .catch handler for queued background jobs: they have no caller to report to, so they log. */
+function logFailure(label) {
+  return (err) => console.error(`Background job failed (${label}):`, err);
+}
+
 async function sendSnapshot(runtime, attempt, playerId, target) {
   const view = toPlayerView(attempt, playerId, {
     connectedIds: runtime.connectedIds(),
@@ -80,12 +85,12 @@ function startTicking(runtime, endsAt) {
     WARNINGS.forEach(([ms, text]) => {
       if (remainingMs <= ms && !runtime.warned.has(ms)) {
         runtime.warned.add(ms);
-        runtime.enqueue(() => systemMessage(runtime, text)).catch(() => {});
+        runtime.enqueue(() => systemMessage(runtime, text)).catch(logFailure(`timer warning for ${runtime.attemptId}`));
       }
     });
     if (remainingMs === 0) {
       stopTicking(runtime);
-      runtime.enqueue(() => finish(runtime, 'timed_out')).catch(() => {});
+      runtime.enqueue(() => finish(runtime, 'timed_out')).catch(logFailure(`timeout of ${runtime.attemptId}`));
     }
   }, runtime.options.tickMs);
 }
@@ -113,18 +118,22 @@ function scheduleHint(runtime, attempt, { quiet = false } = {}) {
       if (!now || now.order !== order || now.hintRevealedAt) return;
       runtime.emitToRoom('hint:available', { order });
       await systemMessage(runtime, `Hint ready for ${now.title}`);
-    }).catch(() => {});
+    }).catch(logFailure(`hint timer of ${runtime.attemptId}`));
   }, Math.max(0, wait));
 }
 
 /** The level set could not be built: back to the lobby, everyone unready, and both players are told why. */
 async function failStart(runtime, err) {
   console.error(`Could not start attempt ${runtime.attemptId}:`, err);
-  const attempt = await lobby.resetCountdown(runtime.attemptId);
-  await systemMessage(runtime, err && err.code === 'THEME_NOT_FOUND'
-    ? 'This theme is no longer available. Pick another theme for a new room.'
-    : 'The game could not start. Try again.');
-  broadcastLobby(runtime, attempt);
+  try {
+    const attempt = await lobby.resetCountdown(runtime.attemptId);
+    await systemMessage(runtime, err && err.code === 'THEME_NOT_FOUND'
+      ? 'This theme is no longer available. Pick another theme for a new room.'
+      : 'The game could not start. Try again.');
+    broadcastLobby(runtime, attempt);
+  } catch (resetErr) {
+    console.error(`Could not reset attempt ${runtime.attemptId} after a failed start:`, resetErr);
+  }
 }
 
 /** LOBBY-3: after countdownMs the attempt starts, unless someone cancelled. */
@@ -150,7 +159,7 @@ function startCountdown(runtime) {
       await snapshotAll(runtime, await Attempt.findById(attempt._id));
       startTicking(runtime, attempt.endsAt);
       scheduleHint(runtime, await Attempt.findById(attempt._id));
-    }).catch(() => {});
+    }).catch(logFailure(`start of ${runtime.attemptId}`));
   }, runtime.options.countdownMs);
 }
 
@@ -171,5 +180,5 @@ async function resume(runtime, attempt) {
 
 module.exports = {
   sendSnapshot, systemMessage, broadcastLobby, snapshotAll, startCountdown, cancelCountdown,
-  startTicking, stopTicking, finish, resume, scheduleHint,
+  startTicking, stopTicking, finish, resume, scheduleHint, logFailure,
 };

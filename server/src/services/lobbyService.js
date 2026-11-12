@@ -3,11 +3,28 @@
  * loads the attempt, changes it and saves it. Callers run them inside the attempt's
  * queue, so two changes never interleave.
  */
+const mongoose = require('mongoose');
 const Attempt = require('../models/Attempt');
 const Challenge = require('../models/Challenge');
 const AppError = require('../utils/AppError');
 const { loadThemeContent } = require('./themeService');
 const { generateLevelSet, newSeed } = require('../generators/levelSet');
+
+/**
+ * Runs `fn` again when its save hit a VersionError: a team change (D56) wrote the attempt
+ * after `fn` loaded it (D79). Each try reloads, so the retry sees the new players.
+ */
+async function withVersionRetry(fn, tries = 3) {
+  for (let i = 1; ; i += 1) {
+    try {
+      return await fn();
+    } catch (err) {
+      if (!(err instanceof mongoose.Error.VersionError) || i >= tries) throw err;
+    }
+  }
+}
+
+const retrying = (fn) => (...args) => withVersionRetry(() => fn(...args));
 
 /** PRAC-2: a new seed every game, so two games of one theme differ. */
 const freshLevelSet = (content) => generateLevelSet(content, newSeed()).levels;
@@ -135,4 +152,13 @@ async function resetCountdown(attemptId) {
   return attempt;
 }
 
-module.exports = { claimRole, releaseRole, setReady, unready, startAttempt, resetCountdown, canStart };
+module.exports = {
+  claimRole: retrying(claimRole),
+  releaseRole: retrying(releaseRole),
+  setReady: retrying(setReady),
+  unready: retrying(unready),
+  startAttempt: retrying(startAttempt),
+  resetCountdown: retrying(resetCountdown),
+  canStart,
+  withVersionRetry,
+};

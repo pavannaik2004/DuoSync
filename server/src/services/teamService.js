@@ -114,7 +114,7 @@ async function addToEntries(team, userId) {
     for (const entry of entries) {
       const res = await Attempt.updateOne(
         { _id: entry._id, status: { $in: NOT_STARTED }, 'players.1': { $exists: false } },
-        { $push: { memberIds: userId, players: { id: String(userId), kind: 'user', name: user.username } } },
+        { $push: { memberIds: userId, players: { id: String(userId), kind: 'user', name: user.username } }, $inc: { __v: 1 } },
       );
       if (res.modifiedCount === 1) {
         done.push(entry._id);
@@ -128,7 +128,7 @@ async function addToEntries(team, userId) {
     failure = err.code === 11000 ? partnerInChallenge() : err;
   }
   try {
-    await Attempt.updateMany({ _id: { $in: done } }, { $pull: { memberIds: userId, players: { id: String(userId) } } });
+    await Attempt.updateMany({ _id: { $in: done } }, { $pull: { memberIds: userId, players: { id: String(userId) } }, $inc: { __v: 1 } });
     await Team.updateOne({ _id: team._id }, { $pull: { memberIds: userId } });
   } catch (rollbackErr) {
     console.error(`joinTeam rollback failed for team ${team._id}, user ${userId}:`, rollbackErr);
@@ -225,8 +225,10 @@ async function syncEntries(teamId, targetId, archived) {
   if (archived) {
     await Attempt.deleteMany(mine);
   } else {
-    await Attempt.updateMany(mine, { $set: { 'players.$[].ready': false } });
-    await Attempt.updateMany(mine, { $pull: { memberIds: targetId, players: { id: targetId } } });
+    // $inc __v makes a lobby save on a copy loaded before this change fail and retry (D79).
+    // (Two updates: Mongo refuses $set on players.$[] and $pull on players together.)
+    await Attempt.updateMany(mine, { $set: { 'players.$[].ready': false }, $inc: { __v: 1 } });
+    await Attempt.updateMany(mine, { $pull: { memberIds: targetId, players: { id: targetId } }, $inc: { __v: 1 } });
   }
   // NFR-4: the sockets layer evicts the removed player from those attempts' rooms.
   if (attemptIds.length > 0) {
