@@ -1,8 +1,7 @@
 import PropTypes from 'prop-types';
-import { Link } from 'react-router-dom';
 import TimerDisplay from './TimerDisplay';
 import ChatPanel from './ChatPanel';
-import { attemptShape } from './gameShapes';
+import { messageShape, rankShape, resultShape, rolesShape } from './gameShapes';
 
 const HEADLINES = {
   finished: 'Finished',
@@ -21,9 +20,25 @@ function Stars({ count }) {
 
 Stars.propTypes = { count: PropTypes.number.isRequired };
 
-/** Results (SCORE-2) and the team's chat log (CHAT-4). Practice is never ranked (PRAC-3). */
-export default function Results({ state }) {
-  const { result, theme } = state;
+/** SCORE-2: the team's current place. Provisional until the challenge has closed (D74). */
+function Rank({ rank }) {
+  return (
+    <p className="results-rank">
+      Rank <strong>{rank.position}</strong> of {rank.outOf}
+      {rank.provisional && <span className="form-note"> (provisional: other teams may still play)</span>}
+    </p>
+  );
+}
+
+Rank.propTypes = { rank: rankShape.isRequired };
+
+/**
+ * Results (SCORE-2) and the team's chat log (CHAT-4). Practice is never ranked (PRAC-3).
+ * `actions` are the links under the table: a new practice room, or back to the challenge.
+ */
+export default function Results({
+  result, theme, chat, actions,
+}) {
   return (
     <div className="results">
       <header className="results-head">
@@ -32,6 +47,7 @@ export default function Results({ state }) {
         <p className="results-text">{result.text}</p>
         <p className="results-total"><strong>{result.total}</strong> points</p>
         <Stars count={result.stars} />
+        {result.rank && <Rank rank={result.rank} />}
       </header>
 
       <div className="table-scroll">
@@ -64,16 +80,21 @@ export default function Results({ state }) {
         <div><dt>Time used</dt><dd>{TimerDisplay.format(result.timeUsedMs)}</dd></div>
       </dl>
 
-      <p className="actions"><Link className="btn btn-primary" to="/practice">New practice room</Link></p>
+      {actions && <p className="actions">{actions}</p>}
 
       <section className="results-chat">
         <h2>Team chat</h2>
-        <ChatPanel messages={state.chat} roles={theme.roles} />
+        <ChatPanel messages={chat} roles={theme.roles} />
       </section>
     </div>
   );
 }
 
 Results.propTypes = {
-  state: attemptShape.isRequired,
+  result: resultShape.isRequired,
+  theme: PropTypes.shape({ name: PropTypes.string.isRequired, roles: rolesShape.isRequired }).isRequired,
+  chat: PropTypes.arrayOf(messageShape).isRequired,
+  actions: PropTypes.node,
 };
+
+Results.defaultProps = { actions: null };

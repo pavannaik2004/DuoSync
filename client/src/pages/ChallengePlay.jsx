@@ -54,6 +54,7 @@ function ChallengeAttempt({ challenge }) {
       target={{ attemptId: challenge.myEntry.attemptId }}
       describeError={challengeMessage}
       backLink={back}
+      resultActions={<Link className="btn btn-primary" to={`/challenge/${challenge.code}`}>See the leaderboard</Link>}
     />
   );
 }

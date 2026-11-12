@@ -42,6 +42,43 @@ export const boardEntryShape = PropTypes.shape({
   reward: PropTypes.string,
 });
 
+export const pauseShape = PropTypes.shape({
+  clockStopped: PropTypes.bool.isRequired,
+  away: PropTypes.arrayOf(PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    name: PropTypes.string.isRequired,
+    role: PropTypes.oneOf(['A', 'B', null]),
+    graceMs: PropTypes.number,
+  })).isRequired,
+  budgetLeftMs: PropTypes.number,
+});
+
+export const rankShape = PropTypes.shape({
+  position: PropTypes.number.isRequired,
+  outOf: PropTypes.number.isRequired,
+  provisional: PropTypes.bool.isRequired,
+});
+
+export const resultShape = PropTypes.shape({
+  status: PropTypes.string.isRequired,
+  levels: PropTypes.arrayOf(PropTypes.shape({
+    order: PropTypes.number.isRequired,
+    title: PropTypes.string.isRequired,
+    solved: PropTypes.bool.isRequired,
+    points: PropTypes.number.isRequired,
+    wrongCount: PropTypes.number.isRequired,
+  })).isRequired,
+  levelPoints: PropTypes.number.isRequired,
+  bonus: PropTypes.number.isRequired,
+  total: PropTypes.number.isRequired,
+  stars: PropTypes.number.isRequired,
+  levelsCleared: PropTypes.number.isRequired,
+  wrongAnswers: PropTypes.number.isRequired,
+  timeUsedMs: PropTypes.number.isRequired,
+  text: PropTypes.string,
+  rank: rankShape,
+});
+
 export const attemptShape = PropTypes.shape({
   id: PropTypes.string.isRequired,
   practiceCode: PropTypes.string,
@@ -60,6 +97,7 @@ export const attemptShape = PropTypes.shape({
   board: PropTypes.arrayOf(boardEntryShape).isRequired,
   score: PropTypes.number.isRequired,
   chat: PropTypes.arrayOf(messageShape).isRequired,
+  pause: pauseShape,
 });
 
 export const gameActionsShape = PropTypes.shape({

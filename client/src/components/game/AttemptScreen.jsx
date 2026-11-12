@@ -10,7 +10,9 @@ import useAttempt from '../../hooks/useAttempt';
  * The lobby, the game and the results of one attempt. `target` is what useAttempt
  * joins: { practiceCode } or { attemptId }. `describeError` turns a join error into text.
  */
-export default function AttemptScreen({ target, describeError, backLink }) {
+export default function AttemptScreen({
+  target, describeError, backLink, resultActions,
+}) {
   const { state, connection, error, actions, retry } = useAttempt(target);
 
   if (error && !state) {
@@ -40,8 +42,8 @@ export default function AttemptScreen({ target, describeError, backLink }) {
   }
 
   let screen = <Lobby state={state} actions={actions} />;
-  if (state.status === 'in_progress') screen = <GameScreen state={state} actions={actions} />;
-  else if (state.result) screen = <Results state={state} />;
+  if (state.status === 'in_progress' || state.status === 'paused') screen = <GameScreen state={state} actions={actions} />;
+  else if (state.result) screen = <Results result={state.result} theme={state.theme} chat={state.chat} actions={resultActions} />;
 
   return (
     <div className="play">
@@ -64,4 +66,7 @@ AttemptScreen.propTypes = {
   ]).isRequired,
   describeError: PropTypes.func.isRequired,
   backLink: PropTypes.node.isRequired,
+  resultActions: PropTypes.node,
 };
+
+AttemptScreen.defaultProps = { resultActions: null };

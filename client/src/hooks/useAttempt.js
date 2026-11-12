@@ -17,6 +17,8 @@ const EVENTS = {
   'board:update': 'board',
   'chat:message': 'chat',
   'attempt:ended': 'ended',
+  'attempt:paused': 'paused',
+  'attempt:resumed': 'resumed',
 };
 
 /**

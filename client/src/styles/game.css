@@ -462,3 +462,20 @@
 .hint-panel h3 { margin: 0 0 var(--space-2); font-size: 1rem; }
 .hint-panel .form-note { margin: 0; }
 .hint-text { margin: 0; font-weight: 700; }
+
+/* TIME-3: the reconnect banner. Text carries the meaning; the colour only draws the eye (NFR-16). */
+.pause-banner {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  margin: 0 0 var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  border: 2px solid var(--role-b);
+  border-radius: var(--radius-s);
+  background: var(--surface-2);
+}
+.pause-banner p { margin: 0; }
+.pause-grace { font-family: var(--font-display); font-weight: 700; font-variant-numeric: tabular-nums; }
+.pause-clock { color: var(--muted); font-size: 0.9375rem; }
+.timer-paused .timer-label { color: var(--role-b); font-weight: 700; }
+.results-rank { margin: var(--space-2) 0 0; font-size: 1.125rem; }

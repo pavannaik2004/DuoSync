@@ -2,13 +2,16 @@ import { useState } from 'react';
 import PropTypes from 'prop-types';
 
 const MAX = 40;
-const MESSAGES = { RATE_LIMITED: 'Wait 2 seconds between answers.' };
+const MESSAGES = {
+  RATE_LIMITED: 'Wait 2 seconds between answers.',
+  ATTEMPT_PAUSED: 'Paused while your teammate reconnects.',
+};
 
 /**
  * The answer form. It passes the answer up to the game page (child to parent,
  * §10.1 Unit II) and shows the server's reply. Either teammate can answer (GAME-4).
  */
-export default function AnswerBox({ order, onSubmit }) {
+export default function AnswerBox({ order, onSubmit, disabled }) {
   const [answer, setAnswer] = useState('');
   const [error, setError] = useState('');
   const [sending, setSending] = useState(false);
@@ -45,8 +48,9 @@ export default function AnswerBox({ order, onSubmit }) {
           aria-describedby={error ? `answer-error-${order}` : undefined}
           onChange={(e) => setAnswer(e.target.value)}
         />
-        <button type="submit" className="btn btn-primary" disabled={sending}>{sending ? 'Checking…' : 'Submit'}</button>
+        <button type="submit" className="btn btn-primary" disabled={sending || disabled}>{sending ? 'Checking…' : 'Submit'}</button>
       </div>
+      {disabled && <p className="form-note">Paused while your teammate reconnects.</p>}
       {error && <p className="field-error" id={`answer-error-${order}`} role="alert">{error}</p>}
     </form>
   );
@@ -55,4 +59,7 @@ export default function AnswerBox({ order, onSubmit }) {
 AnswerBox.propTypes = {
   order: PropTypes.number.isRequired,
   onSubmit: PropTypes.func.isRequired,
+  disabled: PropTypes.bool,
 };
+
+AnswerBox.defaultProps = { disabled: false };

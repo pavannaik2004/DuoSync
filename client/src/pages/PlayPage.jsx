@@ -11,6 +11,7 @@ const JOIN_ERRORS = {
 
 const backLink = <Link className="btn" to="/practice">Back to practice</Link>;
 const describeError = (error) => JOIN_ERRORS[error.error] || error.message;
+const resultActions = <Link className="btn btn-primary" to="/practice">New practice room</Link>;
 
 /** /play/:code — the lobby, the attempt and the results for one practice room. */
 export default function PlayPage() {
@@ -18,5 +19,5 @@ export default function PlayPage() {
   if (!patterns.PRACTICE_CODE.test(code)) {
     return <StatusMessage kind="error" message="That room code doesn't look right. Room codes have 6 letters and digits." action={backLink} />;
   }
-  return <AttemptScreen key={code} target={{ practiceCode: code.toUpperCase() }} describeError={describeError} backLink={backLink} />;
+  return <AttemptScreen key={code} target={{ practiceCode: code.toUpperCase() }} describeError={describeError} backLink={backLink} resultActions={resultActions} />;
 }

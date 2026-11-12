@@ -14,17 +14,18 @@ export default class TimerDisplay extends Component {
   }
 
   render() {
-    const { remainingMs } = this.props;
+    const { remainingMs, paused } = this.props;
     const low = remainingMs !== null && remainingMs <= 60000;
     const text = remainingMs === null ? '--:--' : TimerDisplay.format(remainingMs);
+    const label = paused ? 'Paused' : 'Time left';
     return (
-      <div className={`timer${low ? ' timer-low' : ''}`} role="timer" aria-live="off" aria-label={`Time left ${text}`}>
-        <span className="timer-label">Time left</span>
+      <div className={`timer${low ? ' timer-low' : ''}${paused ? ' timer-paused' : ''}`} role="timer" aria-live="off" aria-label={`${label} ${text}`}>
+        <span className="timer-label">{label}</span>
         <span className="timer-value">{text}</span>
       </div>
     );
   }
 }
 
-TimerDisplay.propTypes = { remainingMs: PropTypes.number };
-TimerDisplay.defaultProps = { remainingMs: null };
+TimerDisplay.propTypes = { remainingMs: PropTypes.number, paused: PropTypes.bool };
+TimerDisplay.defaultProps = { remainingMs: null, paused: false };

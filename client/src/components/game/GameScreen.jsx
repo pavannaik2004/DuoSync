@@ -8,6 +8,7 @@ import ResultFlash from './ResultFlash';
 import HintPanel from './HintPanel';
 import Board from './Board';
 import ChatPanel from './ChatPanel';
+import PauseBanner from './PauseBanner';
 import { attemptShape, gameActionsShape } from './gameShapes';
 
 const TABS = [
@@ -28,6 +29,7 @@ export default function GameScreen({ state, actions }) {
   const { theme, me, clue } = state;
   const myRole = me.role ? theme.roles[me.role] : null;
   const unread = tab === 'chat' ? 0 : Math.max(0, state.chat.length - seenChat);
+  const paused = Boolean(state.pause?.clockStopped);
 
   function openTab(next) {
     if (tab === 'chat' || next === 'chat') setSeenChat(state.chat.length);
@@ -44,10 +46,11 @@ export default function GameScreen({ state, actions }) {
     <div className="game">
       <header className="game-head">
         <h1>{theme.name}</h1>
-        <TimerDisplay remainingMs={state.remainingMs} />
+        <TimerDisplay remainingMs={state.remainingMs} paused={paused} />
         <ConfirmButton label="End attempt" confirmLabel="End now, keep my points" danger busy={quitting} onConfirm={quit} />
       </header>
 
+      {state.pause && <PauseBanner pause={state.pause} roles={theme.roles} meId={me.id} />}
       <LevelBar levels={state.levels} score={state.score} />
       <ResultFlash result={state.lastResult} roles={theme.roles} />
 
@@ -81,8 +84,8 @@ export default function GameScreen({ state, actions }) {
                 <ClueView clue={clue.clue} />
               </div>
               <p className="form-note">Your teammate sees a different half. Describe yours in the chat.</p>
-              {clue.hint && <HintPanel key={clue.order} hint={clue.hint} onReveal={() => actions.revealHint(clue.order)} />}
-              <AnswerBox key={clue.order} order={clue.order} onSubmit={(answer) => actions.submit(clue.order, answer)} />
+              {clue.hint && <HintPanel key={clue.order} hint={clue.hint} disabled={paused} onReveal={() => actions.revealHint(clue.order)} />}
+              <AnswerBox key={clue.order} order={clue.order} disabled={paused} onSubmit={(answer) => actions.submit(clue.order, answer)} />
             </>
           ) : (
             <p className="form-note">Waiting for the next level…</p>
