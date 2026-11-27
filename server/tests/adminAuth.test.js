@@ -19,6 +19,11 @@ const ROUTES = [
   ['get', '/api/admin/themes/:id'],
   ['put', '/api/admin/themes/:id'],
   ['delete', '/api/admin/themes/:id'],
+  ['get', '/api/admin/themes/:id/levels'],
+  ['post', '/api/admin/themes/:id/levels'],
+  ['put', '/api/admin/levels/:levelId'],
+  ['delete', '/api/admin/levels/:levelId'],
+  ['patch', '/api/admin/themes/:id/levels/order'],
 ];
 
 test.each(ROUTES)('%s %s: 401 anon, 403 guest, 403 player, 403 organizer', async (method, path) => {

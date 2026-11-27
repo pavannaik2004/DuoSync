@@ -1,4 +1,5 @@
 const themes = require('../services/adminThemeService');
+const levels = require('../services/adminLevelService');
 
 async function listThemes(req, res) {
   res.json(await themes.listThemes({ q: req.query.q, status: req.query.status }));
@@ -21,4 +22,26 @@ async function deleteTheme(req, res) {
   res.status(204).end();
 }
 
-module.exports = { listThemes, getTheme, createTheme, updateTheme, deleteTheme };
+async function listLevels(req, res) {
+  res.json(await levels.listLevels(req.params.id));
+}
+
+async function createLevel(req, res) {
+  res.status(201).json(await levels.createLevel(req.params.id, req.body));
+}
+
+async function updateLevel(req, res) {
+  res.json(await levels.updateLevel(req.params.id, req.body));
+}
+
+async function deleteLevel(req, res) {
+  res.json(await levels.deleteLevel(req.params.id));
+}
+
+async function reorderLevels(req, res) {
+  res.json(await levels.reorderLevels(req.params.id, req.body.levelIds));
+}
+
+module.exports = {
+  listThemes, getTheme, createTheme, updateTheme, deleteTheme, listLevels, createLevel, updateLevel, deleteLevel, reorderLevels,
+};

@@ -5,6 +5,7 @@ const LevelTemplate = require('../src/models/LevelTemplate');
 const { ensureSeeded, seedThemes, loadThemeContent } = require('../src/services/themeService');
 const { startDb, clearDb, stopDb } = require('./helpers/db');
 const { createPlayer, createGuest } = require('./helpers/users');
+const { getContent } = require('../src/content');
 
 const app = createApp({ authRateLimit: 1000 });
 
@@ -70,4 +71,25 @@ test('loadThemeContent returns a snapshot, 5 templates, pools and fallback level
   expect(c.templates.map((t) => t.order)).toEqual([1, 2, 3, 4, 5]);
   expect(c.fallbackLevels).toHaveLength(5);
   expect(c.fallbackLevels.map((l) => l.answer)).toEqual(['9742', 'FIREWALL', '23-12-4', '8315', 'NODE']);
+});
+
+test('D94: seedThemes overwrite restores an edited built-in theme and leaves admin-made themes alone', async () => {
+  await ensureSeeded();
+  const cyber = await Theme.findOne({ slug: 'cyber-heist' });
+  // what an admin can do: delete level 3 (the rest renumbered), rename level 1, soft-delete the theme
+  await LevelTemplate.deleteOne({ themeId: cyber._id, order: 3 });
+  await LevelTemplate.updateOne({ themeId: cyber._id, order: 4 }, { order: 3 });
+  await LevelTemplate.updateOne({ themeId: cyber._id, order: 5 }, { order: 4 });
+  await LevelTemplate.updateOne({ themeId: cyber._id, order: 1 }, { title: 'Renamed' });
+  await Theme.updateOne({ _id: cyber._id }, { active: false, deletedAt: new Date() });
+  const vault = await Theme.create({ slug: 'test-vault', name: 'Test Vault', timerMinutes: 15, roles: { A: { name: 'Aa' }, B: { name: 'Bb' } }, active: false });
+  await LevelTemplate.create({ themeId: vault._id, order: 1, title: 'Only level', mechanic: 'morse', fallback: { answer: 'X' } });
+
+  await seedThemes({ overwrite: true });
+
+  const restored = await LevelTemplate.find({ themeId: cyber._id }).sort({ order: 1 });
+  expect(restored.map((t) => [t.order, t.title])).toEqual(getContent('cyber-heist').templates.map((t) => [t.order, t.title]));
+  expect(await Theme.findOne({ slug: 'cyber-heist' })).toMatchObject({ active: true, deletedAt: null });
+  expect(await Theme.findOne({ slug: 'test-vault' })).toMatchObject({ name: 'Test Vault', active: false });
+  expect((await LevelTemplate.find({ themeId: vault._id })).map((t) => t.title)).toEqual(['Only level']);
 });

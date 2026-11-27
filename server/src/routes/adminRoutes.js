@@ -2,8 +2,8 @@ const express = require('express');
 const { body, query } = require('express-validator');
 const validate = require('../middleware/validate');
 const { requirePlayer, requireRole } = require('../middleware/auth');
-const { STYLE_KEYS } = require('../content/catalog');
-const { isPlainJson } = require('../utils/jsonGuard');
+const { STYLE_KEYS, MECHANICS, REWARD_RULES } = require('../content/catalog');
+const { isPlainJson, isPlainObject } = require('../utils/jsonGuard');
 const admin = require('../controllers/adminController');
 
 // No control characters; long texts may hold line breaks.
@@ -65,6 +65,31 @@ function themeRules({ create }) {
   ];
 }
 
+/** D83: the fixed values (the "clue templates") — both clue halves and the answer, as plain JSON. */
+function checkFallback(fallback) {
+  if (!isPlainJson(fallback)) throw new Error('Fixed values must be a JSON object, without $ or . in keys, at most 10 deep');
+  if (!isPlainObject(fallback.clueA) || !isPlainObject(fallback.clueB)) throw new Error('Fixed values need clueA and clueB objects');
+  if (typeof fallback.answer !== 'string') throw new Error('Fixed values need an answer');
+  return true;
+}
+
+/** ADMIN-3 fields. The order is set by creating, deleting and reordering, never in this body (D87). */
+const levelRules = [
+  text('title', 'Title', { min: 3, max: 40 }),
+  body('mechanic').isIn(MECHANICS).withMessage('Choose a mechanic from the list'),
+  body('params').custom((v) => {
+    if (!isPlainJson(v)) throw new Error('Parameters must be a JSON object, without $ or . in keys, at most 10 deep');
+    return true;
+  }),
+  body('fallback').custom(checkFallback),
+  text('hint', 'Hint', { max: 300, optional: true }),
+  body('rewardRule').optional({ values: 'null' }).isIn(REWARD_RULES).withMessage('Choose a reward rule from the list'),
+  body('timeEstimateSec').optional({ values: 'null' }).isInt({ min: 30, max: 1800 })
+    .withMessage('Time estimate must be 30 to 1800 seconds').toInt(),
+];
+
+const orderRules = [body('levelIds').isArray({ min: 1, max: 5 }).withMessage('List every level of this theme exactly once')];
+
 const listRules = [
   query('q').optional().isString().bail().isLength({ max: 40 }).withMessage('Search is at most 40 characters'),
   query('status').optional().isIn(['active', 'inactive', 'deleted', 'all']).withMessage('Status must be active, inactive, deleted or all'),
@@ -80,6 +105,12 @@ function createAdminRouter() {
   router.get('/themes/:id', admin.getTheme);
   router.put('/themes/:id', validate(themeRules({ create: false })), admin.updateTheme);
   router.delete('/themes/:id', admin.deleteTheme);
+
+  router.get('/themes/:id/levels', admin.listLevels);
+  router.post('/themes/:id/levels', validate(levelRules), admin.createLevel);
+  router.patch('/themes/:id/levels/order', validate(orderRules), admin.reorderLevels);
+  router.put('/levels/:id', validate(levelRules), admin.updateLevel);
+  router.delete('/levels/:id', admin.deleteLevel);
 
   return router;
 }
