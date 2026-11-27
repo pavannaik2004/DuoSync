@@ -291,3 +291,8 @@ Newest entry last. Format: `### YYYY-MM-DD — <title>`, then what was done, the
   - D93 marked "Pending user confirmation" in DECISIONS.md.
 - Verify: `npm test` → 749/749; client lint clean; main JS 123.26 KB gzip; Task 11 browser checks re-run 6/6.
 - Deferred minors (Phase 5): two admins writing one theme at once can break D85 or get a vague 409 `DUPLICATE`, and a start that reads templates mid-reorder can 500 (no version check on Theme); array values in admin fields (`styleKey: ['x']`, `mechanic`, `rewardRule`, `timeEstimateSec`) give 500, not 400; `GET /api/challenges?page=1&page=2` answers `page: null`; a member rejoining a practice room doesn't refresh `lastActivityAt` (a tiny sweep window), and deleted rooms leave their runtime in the registry; the 200 KB admin body parser runs before auth; `render.yaml` hard-codes the two auth limits (a Blueprint sync resets dashboard changes); the challenges list shows "Create a challenge" to guests, and its theme select shows "All themes" for a deactivated slug in the URL.
+
+### 2026-11-27 — Phase 5 pushed for review
+
+- At the user's request, `phase-5-admin` was pushed to `origin` and opened as PR #1 against `main` (https://github.com/pavannaik2004/DuoSync/pull/1). Not merged.
+- Open before merge: the user's decision on D93 (auth limits per IP + account). After merge and deploy: the hosted Phase 5 gate.
