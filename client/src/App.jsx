@@ -26,6 +26,8 @@ const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
 const AdminThemes = lazy(() => import('./pages/admin/AdminThemes'));
 const AdminThemeEdit = lazy(() => import('./pages/admin/AdminThemeEdit'));
 const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
+const AdminLevelEdit = lazy(() => import('./pages/admin/AdminLevelEdit'));
+const AdminPreview = lazy(() => import('./pages/admin/AdminPreview'));
 
 const players = ['user'];
 const anyone = ['user', 'guest'];
@@ -55,6 +57,9 @@ export default function App() {
           <Route index element={<Navigate to="themes" replace />} />
           <Route path="themes" element={<AdminThemes />} />
           <Route path="themes/:id" element={<AdminThemeEdit />} />
+          <Route path="themes/:id/levels/new" element={<AdminLevelEdit />} />
+          <Route path="themes/:id/levels/:levelId" element={<AdminLevelEdit />} />
+          <Route path="themes/:id/preview" element={<AdminPreview />} />
           <Route path="users" element={<AdminUsers />} />
         </Route>
         <Route path="*" element={<NotFound />} />
