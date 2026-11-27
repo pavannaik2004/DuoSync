@@ -20,6 +20,7 @@ import ChallengePage from './pages/ChallengePage';
 import ChallengePlay from './pages/ChallengePlay';
 import Profile from './pages/Profile';
 import AttemptResult from './pages/AttemptResult';
+import Rankings from './pages/Rankings';
 
 // Admin pages load only when an admin opens them (NFR-12); AdminLayout holds their Suspense boundary.
 const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
@@ -51,6 +52,7 @@ export default function App() {
         <Route path="challenges/new" element={<ProtectedRoute allow={players}><CreateChallenge /></ProtectedRoute>} />
         <Route path="challenge/:code" element={<ProtectedRoute allow={players}><ChallengePage /></ProtectedRoute>} />
         <Route path="challenge/:code/play" element={<ProtectedRoute allow={players}><ChallengePlay /></ProtectedRoute>} />
+        <Route path="rankings" element={<ProtectedRoute allow={players}><Rankings /></ProtectedRoute>} />
         <Route path="profile" element={<ProtectedRoute allow={players}><Profile /></ProtectedRoute>} />
         <Route path="results/:attemptId" element={<ProtectedRoute allow={anyone}><AttemptResult /></ProtectedRoute>} />
         <Route path="admin" element={<RoleRoute role="admin"><AdminLayout /></RoleRoute>}>

@@ -426,3 +426,11 @@ a { color: var(--role-a); }
 .filters .field { flex: 1 1 12rem; min-width: 0; }
 .mute-toggle { gap: var(--space-2); }
 .site-main:focus { outline: none; }
+
+/* Profile editing (AUTH-7): colour swatches as labelled radio buttons, 44 px rows. */
+.profile-editor { max-width: 480px; margin-bottom: var(--space-5); }
+.swatches { border: 0; padding: 0; margin: 0 0 var(--space-3); display: grid; grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr)); gap: var(--space-1) var(--space-3); min-width: 0; }
+.swatches legend { font-weight: 700; padding: 0; margin-bottom: var(--space-2); }
+.swatch { display: flex; align-items: center; gap: var(--space-2); min-height: var(--tap); font-weight: 400; cursor: pointer; }
+.swatch input { width: 22px; height: 22px; margin: 0; flex: none; }
+.swatch-dot { width: 22px; height: 22px; border-radius: 50%; flex: none; border: 2px solid var(--line); }

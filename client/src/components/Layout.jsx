@@ -25,6 +25,7 @@ export default function Layout() {
             <>
               <NavLink to="/teams">My teams</NavLink>
               <NavLink to="/challenges">Challenges</NavLink>
+              <NavLink to="/rankings">Rankings</NavLink>
               <NavLink to="/practice">Practice</NavLink>
               <NavLink to="/profile">Profile</NavLink>
               {user.roles.includes('admin') && <NavLink to="/admin">Admin</NavLink>}
