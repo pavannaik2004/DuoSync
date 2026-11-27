@@ -23,19 +23,20 @@ function shape(template, generated) {
 const fallbackSet = (templates) => templates.map((template) => shape(template, template.fallback));
 
 /**
- * generateLevelSet({ templates, pools }, seed) → { levels, seed, usedFallback }.
+ * generateLevelSet({ templates, pools }, seed, { quiet }) → { levels, seed, usedFallback, failure }.
  * Levels are generated in order with `${seed}:${order}:${retry}` keys; the first that validates is kept. If any level
- * fails every retry, the whole fallback set is returned, because the rewards are planned across the set.
+ * fails every retry, the whole fallback set is returned, because the rewards are planned across the set, and
+ * `failure` says which level and why (D95). `quiet` skips the warning (admin checks and previews).
  */
-function generateLevelSet(content, seed) {
+function generateLevelSet(content, seed, { quiet = false } = {}) {
   const { templates, pools } = content;
   const ordered = [...templates].sort((a, b) => a.order - b.order);
   const finale = ordered.find((t) => t.mechanic === 'fragment-finale');
   const slug = (content.theme && content.theme.slug) || 'unknown';
   const fail = (template, error) => {
-    const reason = error ? `: ${error.message}` : '';
-    console.warn(`Level generation fell back to the fixed set: theme ${slug}, level ${template.order}, seed ${seed}${reason}`);
-    return { levels: fallbackSet(ordered), seed, usedFallback: true };
+    const message = error && error.message ? error.message : String(error || 'unknown error');
+    if (!quiet) console.warn(`Level generation fell back to the fixed set: theme ${slug}, level ${template.order}, seed ${seed}: ${message}`);
+    return { levels: fallbackSet(ordered), seed, usedFallback: true, failure: { order: template.order, reason: message } };
   };
   let thePlan;
   try {
@@ -64,7 +65,7 @@ function generateLevelSet(content, seed) {
     if (!level) return fail(template, lastError);
     built.push(level);
   }
-  return { levels: built.map((level, i) => shape(ordered[i], level)), seed, usedFallback: false };
+  return { levels: built.map((level, i) => shape(ordered[i], level)), seed, usedFallback: false, failure: null };
 }
 
 module.exports = { generateLevelSet, newSeed };

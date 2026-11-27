@@ -134,3 +134,12 @@ describe('finale plan', () => {
     expect(p.startsWith).toEqual({});
   });
 });
+
+test('a fallback reports the level and the reason (D95); a clean set has failure null', () => {
+  const c = structuredClone(getContent('cyber-heist'));
+  delete c.pools.caesarWords;
+  const set = generateLevelSet(c, 'x');
+  expect(set.usedFallback).toBe(true);
+  expect(set.failure).toEqual({ order: 2, reason: expect.any(String) });
+  expect(generateLevelSet(getContent('cyber-heist'), 'x').failure).toBeNull();
+});

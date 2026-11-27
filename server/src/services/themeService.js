@@ -70,12 +70,9 @@ async function listActiveThemes() {
   return themes.map((t) => pick(t, ['slug', 'name', 'genre', 'story', 'timerMinutes', 'styleKey', 'roles']));
 }
 
-/** The snapshot, templates, pools and fallback level set for a playable theme. */
-async function loadThemeContent(slug) {
-  const theme = await Theme.findOne({ slug, ...activeFilter }).lean();
-  if (!theme) throw new AppError(404, 'THEME_NOT_FOUND', 'That theme does not exist');
-  const templates = (await LevelTemplate.find({ themeId: theme._id }).sort({ order: 1 }).lean())
-    .map((t) => pick(t, ['order', ...TEMPLATE_FIELDS]));
+/** The content shape the generators and checkTheme read, for any theme (active or not) and its templates. */
+function draftContent(theme, templateDocs) {
+  const templates = [...templateDocs].sort((x, y) => x.order - y.order).map((t) => pick(t, ['order', ...TEMPLATE_FIELDS]));
   return {
     theme: themeSnapshot(theme),
     templates,
@@ -84,4 +81,11 @@ async function loadThemeContent(slug) {
   };
 }
 
-module.exports = { seedThemes, ensureSeeded, listActiveThemes, loadThemeContent, themeSnapshot };
+/** The snapshot, templates, pools and fallback level set for a playable theme. */
+async function loadThemeContent(slug) {
+  const theme = await Theme.findOne({ slug, ...activeFilter }).lean();
+  if (!theme) throw new AppError(404, 'THEME_NOT_FOUND', 'That theme does not exist');
+  return draftContent(theme, await LevelTemplate.find({ themeId: theme._id }).lean());
+}
+
+module.exports = { seedThemes, ensureSeeded, listActiveThemes, loadThemeContent, themeSnapshot, draftContent, THEME_FIELDS, TEMPLATE_FIELDS };
