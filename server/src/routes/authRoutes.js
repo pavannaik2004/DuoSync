@@ -1,7 +1,7 @@
 const express = require('express');
 const { body } = require('express-validator');
 const validate = require('../middleware/validate');
-const { createAuthLimiter } = require('../middleware/rateLimit');
+const { createAuthLimiters } = require('../middleware/rateLimit');
 const { requireAuth } = require('../middleware/auth');
 const patterns = require('../utils/patterns');
 const auth = require('../controllers/authController');
@@ -28,9 +28,10 @@ const guestRules = [
     .withMessage('Nickname must be 3-20 letters, digits or underscores'),
 ];
 
-function createAuthRouter({ authRateLimit }) {
+function createAuthRouter({ authRateLimit, authIpRateLimit }) {
   const router = express.Router();
-  const limiter = createAuthLimiter(authRateLimit);
+  const { byIp, byAccount } = createAuthLimiters({ perKey: authRateLimit, perIp: authIpRateLimit });
+  const limiter = [byIp, byAccount];
 
   router.post('/signup', limiter, validate(signupRules), auth.signup);
   router.post('/login', limiter, validate(loginRules), auth.login);

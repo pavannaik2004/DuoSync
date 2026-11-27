@@ -20,6 +20,11 @@ services:
         sync: false
       - key: CLIENT_ORIGIN
         sync: false
+      # Auth limits per minute (D93): per IP + account, and a per-IP ceiling for a class behind one NAT.
+      - key: AUTH_RATE_LIMIT
+        value: "10"
+      - key: AUTH_IP_RATE_LIMIT
+        value: "100"
       - key: SEED_ADMIN_EMAIL
         sync: false
       - key: SEED_ADMIN_USERNAME

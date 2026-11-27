@@ -9,11 +9,11 @@ const { createUserRouter } = require('./userRoutes');
 const { createAdminRouter } = require('./adminRoutes');
 
 /** Builds the /api router. Feature routers are mounted here. */
-function createApiRouter({ authRateLimit }) {
+function createApiRouter({ authRateLimit, authIpRateLimit }) {
   const router = express.Router();
 
   router.get('/health', (req, res) => res.json({ status: 'ok' }));
-  router.use('/auth', createAuthRouter({ authRateLimit }));
+  router.use('/auth', createAuthRouter({ authRateLimit, authIpRateLimit }));
   router.use('/teams', createTeamRouter());
   router.use('/practice', createPracticeRouter());
   router.use('/themes', createThemeRouter());

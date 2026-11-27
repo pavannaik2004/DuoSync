@@ -26,7 +26,8 @@ const config = {
   mongoUri: process.env.MONGODB_URI || '',
   jwtSecret: process.env.JWT_SECRET || 'test-secret',
   clientOrigins: parseOrigins(process.env.CLIENT_ORIGIN || 'http://localhost:5173'),
-  authRateLimit: Number(process.env.AUTH_RATE_LIMIT) || 10,
+  authRateLimit: Number(process.env.AUTH_RATE_LIMIT) || 10, // per IP + account each minute (D93)
+  authIpRateLimit: Number(process.env.AUTH_IP_RATE_LIMIT) || 100, // per-IP ceiling each minute (D93)
 };
 
 module.exports = config;

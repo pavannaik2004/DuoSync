@@ -8,10 +8,11 @@ const AppError = require('./utils/AppError');
 
 /**
  * Builds the Express app without listening, so tests can drive it with
- * Supertest. Options override the login/signup limit and the allowed origins.
+ * Supertest. Options override the login/signup limits (per account and per IP, D93) and the allowed origins.
  */
 function createApp(options = {}) {
   const authRateLimit = options.authRateLimit ?? config.authRateLimit;
+  const authIpRateLimit = options.authIpRateLimit ?? config.authIpRateLimit;
   const clientOrigins = options.clientOrigins ?? config.clientOrigins;
   const app = express();
 
@@ -22,7 +23,7 @@ function createApp(options = {}) {
   app.use('/api/admin', express.json({ limit: '200kb' }));
   app.use(express.json({ limit: '20kb' }));
 
-  app.use('/api', createApiRouter({ authRateLimit }));
+  app.use('/api', createApiRouter({ authRateLimit, authIpRateLimit }));
   app.use('/api', (req, res, next) => next(new AppError(404, 'NOT_FOUND', 'No such endpoint')));
 
   app.use(errorHandler);
