@@ -1,6 +1,7 @@
 const themes = require('../services/adminThemeService');
 const levels = require('../services/adminLevelService');
 const { catalog } = require('../services/adminCatalog');
+const users = require('../services/adminUserService');
 
 async function listThemes(req, res) {
   res.json(await themes.listThemes({ q: req.query.q, status: req.query.status }));
@@ -51,7 +52,17 @@ async function previewTheme(req, res) {
   res.json(await themes.previewTheme(req.params.id, req.body.seed || undefined));
 }
 
+async function searchUsers(req, res) {
+  res.json(await users.searchUsers(req.query.q));
+}
+
+async function setOrganizer(req, res) {
+  res.json(await users.setOrganizer(req.params.id, req.body.organizer));
+}
+
 module.exports = {
+  searchUsers,
+  setOrganizer,
   getCatalog,
   previewTheme,
   listThemes, getTheme, createTheme, updateTheme, deleteTheme, listLevels, createLevel, updateLevel, deleteLevel, reorderLevels,

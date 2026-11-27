@@ -95,6 +95,12 @@ const previewRules = [
     .withMessage('Seed must be 1-32 letters, digits or dashes'),
 ];
 
+const userSearchRules = [
+  query('q').isString().withMessage('Enter 2-40 characters to search').bail().trim()
+    .isLength({ min: 2, max: 40 }).withMessage('Enter 2-40 characters to search'),
+];
+const organizerRules = [body('organizer').isBoolean({ strict: true }).withMessage('Organizer must be true or false')];
+
 const listRules = [
   query('q').optional().isString().bail().isLength({ max: 40 }).withMessage('Search is at most 40 characters'),
   query('status').optional().isIn(['active', 'inactive', 'deleted', 'all']).withMessage('Status must be active, inactive, deleted or all'),
@@ -118,6 +124,9 @@ function createAdminRouter() {
   router.delete('/levels/:id', admin.deleteLevel);
 
   router.get('/catalog', admin.getCatalog);
+
+  router.get('/users', validate(userSearchRules), admin.searchUsers);
+  router.patch('/users/:id/roles', validate(organizerRules), admin.setOrganizer);
   router.post('/themes/:id/preview', validate(previewRules), admin.previewTheme);
 
   return router;

@@ -57,4 +57,4 @@ async function me(auth) {
   return { kind: 'user', user: user.toJSON() };
 }
 
-module.exports = { signup, login, guest, me };
+module.exports = { signup, login, guest, me, BCRYPT_COST };
