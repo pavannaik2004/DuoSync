@@ -4,12 +4,12 @@ The single source of truth for project progress. **Read this before starting any
 
 ## Current state
 
-- **Phase:** Phases 1–4 complete: merged into `main`, pushed and deployed; hosted gates passed (2–4 confirmed by the user on 2026-11-27). Phase 5 Admin + organizers merged into `main` and pushed (2026-11-27, PR #1); local gate passed, hosted gate pending.
-- **Next (needs the user):** (1) confirm D93 (auth limits per IP + account with a per-IP ceiling, a reading of NFR-6) or ask for it to be reverted; (2) check Render and Vercel redeployed from `main`; (3) hosted Phase 5 gate: with the real admin from `SEED_ADMIN_*`, build a theme only in the panel, grant organizer, publish a public challenge on it, find it in `/challenges`, and have a team enter and see level 1.
+- **Phase:** Phases 1–4 complete: merged into `main`, pushed and deployed; hosted gates passed (2–4 confirmed by the user on 2026-11-27). Phase 5 Admin + organizers merged into `main` and pushed (2026-11-27, PR #1); local gate passed, hosted gate pending. Phase 6 Polish + hardening built on branch `phase-6-polish` (2026-11-27), not merged or pushed; hosted gate pending.
+- **Next (needs the user):** (0) review `phase-6-polish` and decide merge/push; decide whether the Detective 4-of-5 rate (docs/acceptance.md note A) is acceptable; (1) confirm D93 (auth limits per IP + account with a per-IP ceiling, a reading of NFR-6) or ask for it to be reverted; (2) check Render and Vercel redeployed from `main`; (3) hosted Phase 5 gate: with the real admin from `SEED_ADMIN_*`, build a theme only in the panel, grant organizer, publish a public challenge on it, find it in `/challenges`, and have a team enter and see level 1; (4) hosted Phase 6 gate: walk `docs/acceptance.md` on the hosted build with 3 teams on different networks, following `docs/demo-script.md`, and run the load check against the hosted API.
 - **Hosted URLs:** API `https://duosync-api.onrender.com` (Render, free tier; sleeps when idle). Client `https://duo-sync-lovat.vercel.app` (Vercel, root `client`). Repo: `https://github.com/pavannaik2004/DuoSync`
 - **Open blockers:** none.
 - **Run locally:** `npm --prefix server run dev:memory` + `npm run dev:client` (no database needed)
-- **Tests:** `npm test` → 749 backend tests (REST, scoring, views, generators, challenges, leaderboards and ranks, pauses and boot recovery, history and profiles, Socket.io games, the admin API, the public list, practice expiry, auth limits). Client lint clean; build 123.3 KB gzip main JS, admin pages in their own chunks.
+- **Tests:** `npm test` → 53 suites, 792 backend tests (REST, scoring, views, generators, challenges, leaderboards and ranks, pauses and boot recovery, history and profiles, Socket.io games, the admin API, the public list, practice expiry, auth limits, chat limit, profile editing, rankings, acceptance gaps, hardening). Client lint clean; `check:contrast` 9/9; build 126.4 KB gzip main JS, admin pages in their own chunks. Load check (local): PASS.
 - **Deferred minors** (none blocks the gate; grouped from the Phase 3 task and final reviews):
   - *Races and atomicity (low odds):* `ensureSeeded` check-then-insert can double-insert if two instances boot together and does not repair a partial seed; the TEAM-7 check and the `maxTeams` check are not atomic with their writes (D61); `addToEntries` re-check and `syncEntries` are separate reads/writes; 
   - *Silent failures:* after a restart the quiet `scheduleHint` never emits `hint:available` if the delay already passed (the snapshot still shows ready).
@@ -28,6 +28,9 @@ The single source of truth for project progress. **Read this before starting any
 | `docs/superpowers/plans/2026-11-10-03-challenges-engine.md` | Phase 3 task plan (13 tasks) |
 | `docs/superpowers/plans/2026-11-12-04-competition.md` | Phase 4 task plan (13 tasks) |
 | `docs/superpowers/plans/2026-11-27-05-admin.md` | Phase 5 task plan (13 tasks) |
+| `docs/superpowers/plans/2026-11-27-06-polish.md` | Phase 6 task plan (11 tasks) |
+| `docs/acceptance.md` | Every §11 acceptance check → the test that proves it and the hosted step |
+| `docs/demo-script.md` | Demo day: warm-up, accounts, walk-through, CO1 trace |
 | `docs/themed-puzzle-sets.md` | The 8 themes: stories, roles, styles, level designs, pools, fallback values |
 | `DECISIONS.md` | Decisions made where the PRD was silent, and decisions deferred |
 | `README.md` | Setup, tests, deploy, MVC map |
@@ -38,8 +41,8 @@ The single source of truth for project progress. **Read this before starting any
 - [x] 2 Core attempt (EL Phase I): hosted gate passed (user-confirmed 2026-11-27)
 - [x] 3 Challenges + level engine (EL Phase I scope): hosted gate passed (user-confirmed 2026-11-27)
 - [x] 4 Competition + resilience (EL Phase II): hosted gate passed (user-confirmed 2026-11-27)
-- [ ] 5 Admin + organizers: built on branch, local gate passed; hosted gate pending
-- [ ] 6 Polish + hardening
+- [ ] 5 Admin + organizers: merged into `main`, local gate passed; hosted gate pending
+- [ ] 6 Polish + hardening: built on branch `phase-6-polish`; hosted gate pending
 
 ## Log
 
@@ -302,3 +305,22 @@ Newest entry last. Format: `### YYYY-MM-DD — <title>`, then what was done, the
 - At the user's request, `phase-5-admin` was fast-forwarded into `main` and pushed; GitHub marked PR #1 merged. The branch was deleted locally and on `origin`.
 - Verify on the merged `main`: `npm test` → 749/749; client lint clean.
 - The push triggers the Render and Vercel redeploys. Next: the D93 decision and the hosted Phase 5 gate.
+
+### 2026-11-27 — Phase 6 plan written and Polish + hardening built (Tasks 1–11)
+
+- Wrote `docs/superpowers/plans/2026-11-27-06-polish.md` (11 tasks, D97–D108) and executed it inline on branch `phase-6-polish` (from `main` 6863b16).
+- **T1** CHAT-6: 5 messages per player per 3 s across sockets (`runtime.allowChat`, `chatBurst`/`chatWindowMs`), `socketChat.test.js`.
+- **T2** AUTH-7: `PATCH /api/users/me` (username, avatarColor), `profileEdit.test.js`.
+- **T3** SCORE-6: `services/rankingService.js`, `GET /api/themes/:slug/rankings`, `rankings.test.js`.
+- **T4** `theme.styleKey` in player and result views; `acceptance.test.js` (4-of-5 levels differ as a rate, 3 scripted §7.3 runs, CHAL-7 ticking after the window). Ruling: Detective differs in only 3 levels in about 0.4% of pairs (small value spaces in its story), so the test pins ≥ 99% of 300 pairs and never fewer than 3; widening Detective's ranges would close it (docs/acceptance.md note A).
+- **T5** Hardening (D108): array values in `isIn`/`isInt` fields, repeated `page`, 65-character attempt ids; `hardening.test.js`. `npm audit`: server 0; client 0 (full audit; `--omit=dev` errors at the endpoint).
+- **T6** `server/scripts/loadCheck.js` (`npm run load`). Local vs `dev:memory`: 25 games started in 6.3 s, 500/500 messages, p50 16 ms, p95 91 ms, max 111 ms, tick skew 1 ms → PASS.
+- **T7** UI-2: `hooks/useThemeStyle.js`, 8 sheets in `client/src/styles/themes/`, fonts on demand, `TimerDisplay` `--time-left` + `.timer-gauge`; `client/scripts/checkContrast.js` (found default `--danger` at 4.47:1 on surface-2 → fixed). Browser check 40/40 (8 themes × lobby, game at 360/1280, results, leave → default, Back → theme); screenshots reviewed (Pirata One numerals and the compass rose fixed).
+- **T8** AUDIO-1/2: `audio/sounds.js` (Web Audio), `SoundContext`, `game/soundCues.js`, `MuteToggle` in the header; reducer `snapshotSeq`. Browser check 11/11 (no AudioContext before a gesture, mute persists, wrong / correct+unlock once, reload and start play nothing).
+- **T9** UI-5 animations (unlock, solve, wrong shake, reveal), focusable `<main>` for the skip link, polite announcements of timer warnings, deferred client minors (GridClue keys and labels, 12 px grid labels, PracticeHome retry, guests don't see Create, one interval on ChallengePage, one timer in ChallengePlay). Found and fixed: the challenges filter could show "All themes" for any slug in the URL because the form mounted before themes loaded. Browser check 13/13.
+- **T10** Client: Profile edit (username + 8 labelled colour swatches), `/rankings?theme=` page and nav link. Browser check 9/9.
+- **T11** `docs/acceptance.md`, `docs/demo-script.md`, README (status, MVC map, API, tests, checks), DECISIONS D97–D108 (Q6 resolved by D97), roadmap.
+- Files touched: see `git log main..phase-6-polish`.
+- Verify: `npm test` → 53 suites, 792/792; client lint clean; `check:contrast` 9/9; build main JS 126.40 KB gzip (123.26 at the start of the phase).
+- **Not done (needs the user):** review and merge/push; the hosted Phase 6 gate (every row of `docs/acceptance.md` with 3 teams on different networks); the Detective rate decision.
+

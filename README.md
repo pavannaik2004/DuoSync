@@ -12,12 +12,14 @@ It is the Experiential Learning project for Full Stack Application Development (
 | 2 Core attempt | Socket.io, practice rooms, team lobby with roles, team chat, server timer, Cyber Heist with fixed values, scoring, results | Done (hosted gate passed) |
 | 3 Challenges + level engine | 8 themes in MongoDB, generators for all 11 mechanics, challenges with time windows, entries, one attempt per team and member, extra team hints, grid clues, challenge pages | Done (hosted gate passed) |
 | 4 Competition + resilience | Live challenge leaderboards with in-progress teams, ranks on results, creator's team view, answers after closing, disconnect pause with a 60 s grace and a 3-minute budget, resync on refresh, boot-time recovery, profiles and history | Done (hosted gate passed) |
-| 5 Admin + organizers | Admin panel: themes and levels (create, edit, reorder, activate with checks, soft delete), mechanic examples, level-set preview, organizer role; public challenges list with filters; practice rooms expire after 30 idle minutes; auth limits per account | Built; hosted gate pending |
-| 6 | Polish and hardening | Not started |
+| 5 Admin + organizers | Admin panel: themes and levels (create, edit, reorder, activate with checks, soft delete), mechanic examples, level-set preview, organizer role; public challenges list with filters; practice rooms expire after 30 idle minutes; auth limits per account | Done (merged); hosted gate pending |
+| 6 Polish + hardening | A look per theme (colours, fonts, textures, timer) on the lobby, game and results; synthesized sound effects with a remembered mute; animations that respect reduced motion; chat limit of 5 messages in 3 s; editing your username and colour; best result per team per theme; contrast check; load check for 25 games; acceptance map and demo script | Built; hosted gate pending |
 
 Progress is logged in [`CONTEXT.md`](CONTEXT.md). Design decisions and open questions are in [`DECISIONS.md`](DECISIONS.md). Phase plans are in [`docs/superpowers/plans/`](docs/superpowers/plans/).
 
 The 8 themes (stories, roles, styles, level designs, generator pools and fallback values) are in [`docs/themed-puzzle-sets.md`](docs/themed-puzzle-sets.md).
+
+For demo day: [`docs/demo-script.md`](docs/demo-script.md) (warm-up, accounts, a 12-minute walk-through, the CO1 trace) and [`docs/acceptance.md`](docs/acceptance.md) (every §11 acceptance check, the test that proves it, and the hosted step).
 
 ## Stack
 
@@ -34,12 +36,13 @@ The 8 themes (stories, roles, styles, level designs, generator pools and fallbac
 ```
 client/src/
   api/          one module per REST resource, the fetch wrapper (client.js) and the socket (socket.js)
-  context/      AuthContext — who is signed in
-  hooks/        useForm (regex validation), useAsync (loading and error states), useAttempt (live game state), useLeaderboard (live board)
-  game/         attemptReducer — applies server events to the game state
+  context/      AuthContext — who is signed in; SoundContext — the remembered mute (AUDIO-2)
+  audio/        sounds.js — the 7 sound effects, synthesized with the Web Audio API
+  hooks/        useForm (regex validation), useAsync (loading and error states), useAttempt (live game state), useLeaderboard (live board), useThemeStyle (a theme's look while a game page is open)
+  game/         attemptReducer — applies server events to the game state; soundCues — which sound a state change plays
   components/   shared UI with PropTypes; game/ (lobby, attempt, results), clues/ (one renderer per clue type), admin/ (JSON field, problem list)
   pages/        one component per route; pages/admin/ is lazy-loaded, so players never download it
-  styles/       base.css design tokens, game.css, admin.css (admin chunk only); per-theme sheets arrive in Phase 6
+  styles/       base.css design tokens, game.css, admin.css (admin chunk only); themes/<styleKey>.css — one sheet per theme, overriding the tokens under [data-theme]
 server/src/
   routes/       URL → middleware → controller          (the "C" entry point)
   controllers/  read the request, call a service, send JSON
@@ -86,7 +89,9 @@ All routes are under `/api`. Errors are `{ error, message }`. Theme routes and t
 | `GET /challenges/:id/teams` | Every entered team's status, level and points. Creator, organizer or admin (`NOT_CREATOR`) |
 | `GET /challenges/:id/solutions` | Each level's answer and explanation, only once the challenge is closed (`NOT_CLOSED`) |
 | `GET /attempts/:id/result` | Your game's result, current rank and chat log (players and practice guests; `NOT_FINISHED` while running) |
-| `GET /users/me`, `GET /users/me/history?page=` | Your profile (teams, challenges played, total points, best rank) and history, 10 per page, newest first |
+| `GET /users/me`, `GET /users/me/history?page=` | Your profile (teams, challenges played, total points, best rank, the avatar colours to choose from) and history, 10 per page, newest first |
+| `PATCH /users/me { username?, avatarColor? }` | Change your username (same rules as signup, `USERNAME_TAKEN` in any case) or avatar colour (one of 8) |
+| `GET /themes/:slug/rankings` | Each team's best challenge result in a theme by §7.3, top 20 (players only; practice never counts) |
 | `GET /teams/:id/history?page=` | A team's challenge history, also for archived teams. `GET /teams/mine` items carry `record: { played, totalPoints }` |
 | `GET /admin/themes?q=&status=`, `POST /admin/themes` | Admin: list (search, status filter) and create themes. A new theme starts inactive |
 | `GET`, `PUT`, `DELETE /admin/themes/:id` | Admin: a theme with its levels and `problems`; edit (the slug is fixed; activating runs the check, `THEME_INVALID`); soft delete (`THEME_DELETED` afterwards) |
@@ -122,6 +127,7 @@ Live play runs over Socket.io on the API's own server. The handshake sends the s
 | server → client | `attempt:ended { status, result }` | Finished, timed out or ended early. `result.rank` is `{ position, outOf, provisional }` for challenges |
 | server → client | `leaderboard:update` | The full board, at most every 500 ms per challenge, to `leaderboard:<id>` watchers only |
 
+Chat allows 5 messages per player in any 3 seconds; the 6th answers `RATE_LIMITED` and is not sent (CHAT-6).
 Every client event takes an acknowledgement callback, which answers `{ ok: true }` or `{ error, message }`, the same error shape as REST. While the clock is paused, `level:submit` and `hint:reveal` answer `ATTEMPT_PAUSED` at no cost.
 
 When the API starts it rebuilds every live game (`sockets/recovery.js`): a countdown goes back to the lobby, a game whose time or grace has run out ends, and any other game waits for its players as if both had just disconnected.
@@ -192,7 +198,14 @@ An active theme must stay playable: an edit that would break it is refused with 
 npm test          # Jest + Supertest + Socket.io client against an in-memory MongoDB
 ```
 
-There are 749 tests: REST routes, the admin API (every route refused to non-admins, the theme check, levels and reorder, preview, the Phase 5 gate as a test), the public challenges list, practice expiry, auth limits, scoring and answer rules, the 8 theme puzzle sets (each fallback solved from its own clues, every pool rule), the level generators (200 seeds per template, validated by per-mechanic solvers), challenges and entries, leaderboards and ranks (ties, 100 teams under 1 s), pauses and boot recovery, history and profiles, the player views (no answer or partner half ever leaves the server), and full Socket.io games with two connected players. The first run downloads a MongoDB binary (about 780 MB unpacked) into `server/node_modules/.cache`. Later runs take about a minute.
+There are 792 tests: REST routes, the admin API (every route refused to non-admins, the theme check, levels and reorder, preview, the Phase 5 gate as a test), the public challenges list, practice expiry, auth limits, the chat limit, profile editing, per-theme rankings, the §11 acceptance gaps (`acceptance.test.js`), inputs that used to slip past validation (`hardening.test.js`), scoring and answer rules, the 8 theme puzzle sets (each fallback solved from its own clues, every pool rule), the level generators (200 seeds per template, validated by per-mechanic solvers), challenges and entries, leaderboards and ranks (ties, 100 teams under 1 s), pauses and boot recovery, history and profiles, the player views (no answer or partner half ever leaves the server), and full Socket.io games with two connected players. The first run downloads a MongoDB binary (about 780 MB unpacked) into `server/node_modules/.cache`. Later runs take about four minutes.
+
+**Other checks** (run by hand; not part of `npm test`):
+
+```bash
+npm --prefix client run check:contrast                 # every theme's text reaches 4.5:1 contrast (NFR-16)
+npm --prefix server run load -- --url http://localhost:4000   # 25 games at once: chat under 500 ms, timers within 1 s (NFR-10, NFR-13)
+```
 
 ## Deploy
 
