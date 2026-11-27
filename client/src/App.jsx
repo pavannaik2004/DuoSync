@@ -1,6 +1,8 @@
-import { Route, Routes } from 'react-router-dom';
+import { lazy } from 'react';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
+import RoleRoute from './components/RoleRoute';
 import Landing from './pages/Landing';
 import Dashboard from './pages/Dashboard';
 import NotFound from './pages/NotFound';
@@ -18,6 +20,12 @@ import ChallengePage from './pages/ChallengePage';
 import ChallengePlay from './pages/ChallengePlay';
 import Profile from './pages/Profile';
 import AttemptResult from './pages/AttemptResult';
+
+// Admin pages load only when an admin opens them (NFR-12); AdminLayout holds their Suspense boundary.
+const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
+const AdminThemes = lazy(() => import('./pages/admin/AdminThemes'));
+const AdminThemeEdit = lazy(() => import('./pages/admin/AdminThemeEdit'));
+const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
 
 const players = ['user'];
 const anyone = ['user', 'guest'];
@@ -43,6 +51,12 @@ export default function App() {
         <Route path="challenge/:code/play" element={<ProtectedRoute allow={players}><ChallengePlay /></ProtectedRoute>} />
         <Route path="profile" element={<ProtectedRoute allow={players}><Profile /></ProtectedRoute>} />
         <Route path="results/:attemptId" element={<ProtectedRoute allow={anyone}><AttemptResult /></ProtectedRoute>} />
+        <Route path="admin" element={<RoleRoute role="admin"><AdminLayout /></RoleRoute>}>
+          <Route index element={<Navigate to="themes" replace />} />
+          <Route path="themes" element={<AdminThemes />} />
+          <Route path="themes/:id" element={<AdminThemeEdit />} />
+          <Route path="users" element={<AdminUsers />} />
+        </Route>
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

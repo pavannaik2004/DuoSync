@@ -13,6 +13,7 @@ export const patterns = {
   PRACTICE_CODE: /^[A-HJ-NP-Z2-9]{6}$/i,
   CHALLENGE_NAME: /^(?=.{3,40}$)[A-Za-z0-9_'!?-]+(?: [A-Za-z0-9_'!?-]+)*$/,
   CHALLENGE_CODE: /^[A-HJ-NP-Z2-9]{6}$/i,
+  THEME_SLUG: /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
 };
 
 const check = (pattern, empty, wrong) => (value) => {
@@ -44,4 +45,17 @@ export const validators = {
     "Use 3-40 letters, digits, single spaces, _ ' ! ? or -, with no space at the start or end.",
   ),
   challengeCode: check(patterns.CHALLENGE_CODE, 'Enter the challenge code.', 'Challenge codes have 6 letters and digits, like K7QM2X.'),
+  // Admin theme fields (ADMIN-2): the same rules as server/src/routes/adminRoutes.js.
+  themeSlug: (value) => {
+    const v = value ?? '';
+    if (!v) return 'Choose a slug.';
+    return v.length >= 3 && v.length <= 40 && patterns.THEME_SLUG.test(v)
+      ? '' : 'Use 3-40 lowercase letters and digits, joined by single dashes, like night-train.';
+  },
+  themeName: (value) => (((value ?? '').trim().length >= 3 && (value ?? '').length <= 60) ? '' : 'Use 3-60 characters.'),
+  roleName: (value) => (((value ?? '').trim().length >= 2 && (value ?? '').length <= 30) ? '' : 'Use 2-30 characters.'),
+  timerMinutes: (value) => {
+    const n = Number(value);
+    return Number.isInteger(n) && n >= 5 && n <= 60 ? '' : 'Use a whole number of minutes from 5 to 60.';
+  },
 };

@@ -1,4 +1,6 @@
+import { Suspense } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
+import StatusMessage from './StatusMessage';
 import { useAuth } from '../context/useAuth';
 
 export default function Layout() {
@@ -24,6 +26,7 @@ export default function Layout() {
               <NavLink to="/challenges">Challenges</NavLink>
               <NavLink to="/practice">Practice</NavLink>
               <NavLink to="/profile">Profile</NavLink>
+              {user.roles.includes('admin') && <NavLink to="/admin">Admin</NavLink>}
               <span className="who" title="Signed in">{user.username}</span>
               <button type="button" className="btn btn-ghost" onClick={handleLogout}>Log out</button>
             </>
@@ -45,7 +48,9 @@ export default function Layout() {
         </nav>
       </header>
       <main id="main" className="site-main">
-        <Outlet />
+        <Suspense fallback={<StatusMessage kind="loading" message="Loading…" />}>
+          <Outlet />
+        </Suspense>
       </main>
     </>
   );
