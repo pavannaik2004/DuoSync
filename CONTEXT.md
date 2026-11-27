@@ -4,12 +4,12 @@ The single source of truth for project progress. **Read this before starting any
 
 ## Current state
 
-- **Phase:** Phases 1–4 complete: merged into `main`, pushed and deployed; hosted gates passed (2–4 confirmed by the user on 2026-11-27). Phase 5 Admin + organizers planned (`docs/superpowers/plans/2026-11-27-05-admin.md`), not started.
-- **Next:** the user reviews the Phase 5 plan (confirm D93, the Q7 limiter reading of NFR-6) and picks an execution method; then build on branch `phase-5-admin`.
+- **Phase:** Phases 1–4 complete: merged into `main`, pushed and deployed; hosted gates passed (2–4 confirmed by the user on 2026-11-27). Phase 5 Admin + organizers built on branch `phase-5-admin` (local gate passed), not merged.
+- **Next (needs the user):** (1) confirm D93 (auth limits per IP + account with a per-IP ceiling, a reading of NFR-6) or ask for it to be reverted; (2) merge `phase-5-admin` and push; (3) hosted Phase 5 gate: with the real admin from `SEED_ADMIN_*`, build a theme only in the panel, grant organizer, publish a public challenge on it, find it in `/challenges`, and have a team enter and see level 1.
 - **Hosted URLs:** API `https://duosync-api.onrender.com` (Render, free tier; sleeps when idle). Client `https://duo-sync-lovat.vercel.app` (Vercel, root `client`). Repo: `https://github.com/pavannaik2004/DuoSync`
 - **Open blockers:** none.
 - **Run locally:** `npm --prefix server run dev:memory` + `npm run dev:client` (no database needed)
-- **Tests:** `npm test` → 566 backend tests (REST, scoring, views, generators, challenges, leaderboards and ranks, pauses and boot recovery, history and profiles, Socket.io games). Client lint clean; build 120.7 KB gzip JS.
+- **Tests:** `npm test` → 744 backend tests (REST, scoring, views, generators, challenges, leaderboards and ranks, pauses and boot recovery, history and profiles, Socket.io games, the admin API, the public list, practice expiry, auth limits). Client lint clean; build 123.3 KB gzip main JS, admin pages in their own chunks.
 - **Deferred minors** (none blocks the gate; grouped from the Phase 3 task and final reviews):
   - *Races and atomicity (low odds):* `ensureSeeded` check-then-insert can double-insert if two instances boot together and does not repair a partial seed; the TEAM-7 check and the `maxTeams` check are not atomic with their writes (D61); `addToEntries` re-check and `syncEntries` are separate reads/writes; 
   - *Silent failures:* after a restart the quiet `scheduleHint` never emits `hint:available` if the delay already passed (the snapshot still shows ready).
@@ -38,7 +38,7 @@ The single source of truth for project progress. **Read this before starting any
 - [x] 2 Core attempt (EL Phase I): hosted gate passed (user-confirmed 2026-11-27)
 - [x] 3 Challenges + level engine (EL Phase I scope): hosted gate passed (user-confirmed 2026-11-27)
 - [x] 4 Competition + resilience (EL Phase II): hosted gate passed (user-confirmed 2026-11-27)
-- [ ] 5 Admin + organizers
+- [ ] 5 Admin + organizers: built on branch, local gate passed; hosted gate pending
 - [ ] 6 Polish + hardening
 
 ## Log
@@ -264,3 +264,19 @@ Newest entry last. Format: `### YYYY-MM-DD — <title>`, then what was done, the
 - Key finding: generators read each template's `fallback` for captions and columns, so the fallback is the PRD's "clue templates" (D83). The level editor pre-fills it from built-in examples per mechanic.
 - Proposes D83–D96, to be written into DECISIONS.md in Task 13. D93 reads NFR-6 "per IP" as "per IP + account, with a per-IP ceiling", which needs the user's OK. The `seedThemes` deferred minor is moot (D94).
 - Files touched: the new plan, `CONTEXT.md`, the roadmap's Phase 5 row. No code yet.
+
+### 2026-11-27 — Phase 5 Admin + organizers built (Tasks 1–13)
+
+- Branch `phase-5-admin` (from `main` 5a808bc), executed inline (native) from the plan; rulings are in the hand-off.
+- **T1** `services/themeCheck.js` `checkTheme` (D84) and `generateLevelSet(..., { quiet })` returning `failure` (D95); `themeService.draftContent`.
+- **T2** `/api/admin` (requirePlayer + requireRole('admin'), 200 KB bodies): theme list with search and status filter, create (inactive), detail with `problems`, PUT (slug fixed, activation checked, active themes stay valid), soft delete. `utils/jsonGuard.js`. `tests/adminAuth.test.js` lists all 14 admin routes (401 anon, 403 guest/player/organizer).
+- **T3** Levels: create (append, `THEME_FULL`), edit, delete (renumber), two-phase reorder; every write to an active theme checked first. D94 pinned by a test (seedThemes already restored by order).
+- **T4** `GET /admin/catalog` (11 mechanics with built-in examples, their pools and `mechanic`) and `POST /admin/themes/:id/preview`.
+- **T5** `GET /admin/users?q=`, `PATCH /admin/users/:id/roles { organizer }`; `services/userSeed.js` `seedAdmin` (tested; seed.js uses it); `dev:memory` creates admin@duosync.local / devadmin123.
+- **T6** `GET /api/challenges?status=&theme=&page=` (public only, 20 per page, guests allowed). `tests/adminGate.test.js`: the Phase 5 gate through the API.
+- **T7** PRAC-4: `lastActivityAt`, `expireIdlePractice` (conditional deletes/releases), last-socket-leaves stamp, `sockets/practiceSweeper.js` every 60 s (`practiceSweepMs: null` in tests).
+- **T8** Q7 / D93: auth limiter per IP + account with a per-IP ceiling (`AUTH_IP_RATE_LIMIT`, default 100).
+- **T9–T12** Client: `/challenges` list with URL filters and paging; Challenges nav link and Browse tile; lazy admin shell (`RoleRoute`, AdminLayout, Themes, Users); theme editor (fields, pools JSON, levels ↑/↓/edit/delete, problems, activate/deactivate, soft delete, read-only when deleted); level editor (Load example, add missing pools) and preview (clue A | clue B | answer).
+- **T13** README (status, MVC map, REST table, dev admin, `AUTH_IP_RATE_LIMIT`, seed warning, "Building a theme in the admin panel", CO1 trace for activating a theme), DECISIONS D83–D96 (Q7 resolved by D93), roadmap.
+- Verify: `npm test` → 48 suites, 744/744. Client lint clean; build main JS 123.26 KB gzip (120.67 at the start; admin pages in separate chunks, AdminThemeEdit 2.76 KB). Browser checks (headless Chrome over CDP, `dev:memory` + Vite, 360 and 1280 px; not committed): Task 9 5/5, Task 10 5/5, Task 11 6/6, Task 12 5/5. Local gate walk-through 9/9: the dev admin created `gate-vault` in the panel, added 5 levels from examples with their pools, previewed without fallback, activated, granted organizer; the organizer created public challenge 7LTLT4 on it; it showed in `/challenges?theme=…`; a team entered and each player saw their own level-1 half (Safecracker: keypad, Lookout: order); a guest played practice and got "Players only" on the challenge.
+- **Not done (needs the user):** D93 confirmation, merge/push, hosted gate.
