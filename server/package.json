@@ -8,7 +8,8 @@
     "start": "node src/server.js",
     "test": "jest --runInBand",
     "seed": "node scripts/seed.js",
-    "dev:memory": "node scripts/devMemoryDb.js"
+    "dev:memory": "node scripts/devMemoryDb.js",
+    "load": "node scripts/loadCheck.js"
   },
   "license": "UNLICENSED",
   "dependencies": {
