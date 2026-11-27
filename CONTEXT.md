@@ -4,8 +4,8 @@ The single source of truth for project progress. **Read this before starting any
 
 ## Current state
 
-- **Phase:** Phases 1–4 complete: merged into `main`, pushed and deployed; hosted gates passed (2–4 confirmed by the user on 2026-11-27). Phase 5 Admin + organizers built on branch `phase-5-admin` (local gate passed), not merged.
-- **Next (needs the user):** (1) confirm D93 (auth limits per IP + account with a per-IP ceiling, a reading of NFR-6) or ask for it to be reverted; (2) merge `phase-5-admin` and push; (3) hosted Phase 5 gate: with the real admin from `SEED_ADMIN_*`, build a theme only in the panel, grant organizer, publish a public challenge on it, find it in `/challenges`, and have a team enter and see level 1.
+- **Phase:** Phases 1–4 complete: merged into `main`, pushed and deployed; hosted gates passed (2–4 confirmed by the user on 2026-11-27). Phase 5 Admin + organizers merged into `main` and pushed (2026-11-27, PR #1); local gate passed, hosted gate pending.
+- **Next (needs the user):** (1) confirm D93 (auth limits per IP + account with a per-IP ceiling, a reading of NFR-6) or ask for it to be reverted; (2) check Render and Vercel redeployed from `main`; (3) hosted Phase 5 gate: with the real admin from `SEED_ADMIN_*`, build a theme only in the panel, grant organizer, publish a public challenge on it, find it in `/challenges`, and have a team enter and see level 1.
 - **Hosted URLs:** API `https://duosync-api.onrender.com` (Render, free tier; sleeps when idle). Client `https://duo-sync-lovat.vercel.app` (Vercel, root `client`). Repo: `https://github.com/pavannaik2004/DuoSync`
 - **Open blockers:** none.
 - **Run locally:** `npm --prefix server run dev:memory` + `npm run dev:client` (no database needed)
@@ -296,3 +296,9 @@ Newest entry last. Format: `### YYYY-MM-DD — <title>`, then what was done, the
 
 - At the user's request, `phase-5-admin` was pushed to `origin` and opened as PR #1 against `main` (https://github.com/pavannaik2004/DuoSync/pull/1). Not merged.
 - Open before merge: the user's decision on D93 (auth limits per IP + account). After merge and deploy: the hosted Phase 5 gate.
+
+### 2026-11-27 — Phase 5 merged into main and pushed
+
+- At the user's request, `phase-5-admin` was fast-forwarded into `main` and pushed; GitHub marked PR #1 merged. The branch was deleted locally and on `origin`.
+- Verify on the merged `main`: `npm test` → 749/749; client lint clean.
+- The push triggers the Render and Vercel redeploys. Next: the D93 decision and the hosted Phase 5 gate.
