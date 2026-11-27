@@ -254,6 +254,10 @@ function registerHandlers(socket, runtimes) {
         await flow.systemMessage(runtime, `${identity.name} left`);
       }
       if (!Attempt.FINAL.includes(attempt.status)) flow.broadcastLobby(runtime, attempt);
+      // PRAC-4: the room's last socket is gone; its 30-minute idle clock starts now (D92).
+      if (attempt.practiceCode && !runtime.hasSockets()) {
+        await Attempt.updateOne({ _id: attempt._id }, { $set: { lastActivityAt: new Date() } });
+      }
       if (Attempt.FINAL.includes(attempt.status)) runtime.release();
     }).catch(errorBody);
   });

@@ -49,6 +49,7 @@ const attemptSchema = new mongoose.Schema(
     bonus: { type: Number, default: 0 },
     stars: { type: Number, default: 0 },
     finishedAt: { type: Date, default: null },
+    lastActivityAt: { type: Date, default: null }, // practice rooms: created, joined, last socket left (PRAC-4, D92)
   },
   // Every save checks __v, so a lobby save on a stale copy fails instead of writing
   // over a team change (D79); the lobby service retries it.
@@ -56,6 +57,7 @@ const attemptSchema = new mongoose.Schema(
 );
 
 attemptSchema.index({ practiceCode: 1 }, { unique: true, partialFilterExpression: { practiceCode: { $type: 'string' } } });
+attemptSchema.index({ lastActivityAt: 1 }, { partialFilterExpression: { practiceCode: { $type: 'string' } } }); // the expiry sweep (D92)
 
 // One attempt per team and one team per player in a challenge (D56, NFR-7).
 const inChallenge = { partialFilterExpression: { challengeId: { $type: 'objectId' } } };

@@ -13,6 +13,8 @@ const { GRACE_MS, PAUSE_BUDGET_MS } = require('../services/clock');
 const Attempt = require('../models/Attempt');
 const { registerHandlers } = require('./handlers');
 const { createLeaderboardHub } = require('./leaderboard');
+const { startPracticeSweeper } = require('./practiceSweeper');
+const { PRACTICE_IDLE_MS } = require('../services/practiceService');
 
 const DEFAULTS = {
   countdownMs: 5000, // LOBBY-3
@@ -24,6 +26,8 @@ const DEFAULTS = {
   leaderboardDelayMs: 500, // D73: at most one leaderboard recompute per challenge per this long
   timerMs: null, // overrides the theme timer; tests only
   levelSetFor: undefined, // (themeContent) => levels; default is a fresh generated set (D60)
+  practiceSweepMs: 60000, // D92: how often idle practice rooms are expired; null disables (tests)
+  practiceIdleMs: PRACTICE_IDLE_MS, // PRAC-4
 };
 
 function attachSockets(httpServer, { clientOrigins, ...rest } = {}) {
@@ -65,10 +69,12 @@ function attachSockets(httpServer, { clientOrigins, ...rest } = {}) {
     });
   };
   attemptEvents.on('members-removed', onRemoved);
+  const stopSweeper = startPracticeSweeper(io, { everyMs: options.practiceSweepMs, idleMs: options.practiceIdleMs });
   const close = io.close.bind(io);
   io.close = (...args) => {
     attemptEvents.off('members-removed', onRemoved);
     io.leaderboards.stop();
+    stopSweeper();
     return close(...args);
   };
 
