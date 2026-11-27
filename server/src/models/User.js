@@ -49,3 +49,4 @@ const User = mongoose.model('User', userSchema);
 module.exports = User;
 module.exports.CASE_INSENSITIVE = CASE_INSENSITIVE;
 module.exports.AVATAR_COLORS = AVATAR_COLORS;
+module.exports.AVATAR_COLORS = AVATAR_COLORS;
