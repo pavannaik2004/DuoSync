@@ -4,10 +4,10 @@ The single source of truth for project progress. **Read this before starting any
 
 ## Current state
 
-- **Phase:** 1 Foundation complete. 2 Core attempt, 3 Challenges + level engine and 4 Competition + resilience merged into `main` and pushed (Phase 4 on 2026-11-13); hosted gates pending.
-- **Next (needs the user):** (1) check that Render and Vercel redeployed from `main` (01b4efb); (2) set `SEED_ADMIN_*` on Render and run `npm run seed` once from the Render shell; check `GET /api/themes` returns 8; (3) run the hosted gates: Phase 2 (two devices finish Cyber Heist at `/practice`), Phase 3 (two teams on two networks get identical clue halves; a second challenge differs), Phase 4 (3 teams on different networks finish one challenge and every viewer's leaderboard ranks them by §7.3; a refresh mid-attempt restores clue, board, chat, score and timer within 2 s; closing one tab for more than 60 s ends the attempt early with points kept); record the results here.
+- **Phase:** Phases 1–4 complete: merged into `main`, pushed and deployed; hosted gates passed (2–4 confirmed by the user on 2026-11-27). Phase 5 Admin + organizers planned (`docs/superpowers/plans/2026-11-27-05-admin.md`), not started.
+- **Next:** the user reviews the Phase 5 plan (confirm D93, the Q7 limiter reading of NFR-6) and picks an execution method; then build on branch `phase-5-admin`.
 - **Hosted URLs:** API `https://duosync-api.onrender.com` (Render, free tier; sleeps when idle). Client `https://duo-sync-lovat.vercel.app` (Vercel, root `client`). Repo: `https://github.com/pavannaik2004/DuoSync`
-- **Open blockers:** none for the code. The Phase 2, 3 and 4 hosted gates need the user's deploy.
+- **Open blockers:** none.
 - **Run locally:** `npm --prefix server run dev:memory` + `npm run dev:client` (no database needed)
 - **Tests:** `npm test` → 566 backend tests (REST, scoring, views, generators, challenges, leaderboards and ranks, pauses and boot recovery, history and profiles, Socket.io games). Client lint clean; build 120.7 KB gzip JS.
 - **Deferred minors** (none blocks the gate; grouped from the Phase 3 task and final reviews):
@@ -27,6 +27,7 @@ The single source of truth for project progress. **Read this before starting any
 | `docs/superpowers/plans/2026-11-09-01-foundation.md` | Phase 1 task plan |
 | `docs/superpowers/plans/2026-11-10-03-challenges-engine.md` | Phase 3 task plan (13 tasks) |
 | `docs/superpowers/plans/2026-11-12-04-competition.md` | Phase 4 task plan (13 tasks) |
+| `docs/superpowers/plans/2026-11-27-05-admin.md` | Phase 5 task plan (13 tasks) |
 | `docs/themed-puzzle-sets.md` | The 8 themes: stories, roles, styles, level designs, pools, fallback values |
 | `DECISIONS.md` | Decisions made where the PRD was silent, and decisions deferred |
 | `README.md` | Setup, tests, deploy, MVC map |
@@ -34,9 +35,9 @@ The single source of truth for project progress. **Read this before starting any
 ## Phase checklist
 
 - [x] 1 Foundation: gate passed 2026-11-09 (two accounts formed a team on the hosted site)
-- [ ] 2 Core attempt (EL Phase I): code done, hosted gate pending
-- [ ] 3 Challenges + level engine (EL Phase I scope): code done, hosted gate pending
-- [ ] 4 Competition + resilience (EL Phase II): code done on branch, hosted gate pending
+- [x] 2 Core attempt (EL Phase I): hosted gate passed (user-confirmed 2026-11-27)
+- [x] 3 Challenges + level engine (EL Phase I scope): hosted gate passed (user-confirmed 2026-11-27)
+- [x] 4 Competition + resilience (EL Phase II): hosted gate passed (user-confirmed 2026-11-27)
 - [ ] 5 Admin + organizers
 - [ ] 6 Polish + hardening
 
@@ -250,3 +251,16 @@ Newest entry last. Format: `### YYYY-MM-DD — <title>`, then what was done, the
 - At the user's request, `phase-4-competition` was merged into `main` (fast-forward to 01b4efb) and pushed to `origin/main`; the branch was deleted.
 - Verify on the merged `main`: `npm test` → 566/566; client lint clean.
 - The push triggers the Render and Vercel redeploys. The Phase 2, 3 and 4 hosted gates are next.
+
+### 2026-11-27 — Phase 2–4 hosted gates passed
+
+- The user reported that everything through Phase 4 is done and that they tested it on the deployed site and it works. Recorded the Phase 2, 3 and 4 gates as passed on their word; no checks were run from this session.
+- Files touched: `CONTEXT.md` (Current state, Phase checklist, this entry).
+- Next: the Phase 5 plan.
+
+### 2026-11-27 — Phase 5 plan written
+
+- Wrote `docs/superpowers/plans/2026-11-27-05-admin.md`: 13 tasks in 3 parts. Part A, the admin API: `checkTheme` (ADMIN-4) and fallback reasons; theme CRUD with activation and soft delete; level CRUD and reorder; mechanic examples and preview; user search and the organizer role (plus `seedAdmin` moved into a tested service and a dev admin for `dev:memory`). Part B: the public challenges list (CHAL-4) and the gate as a server test; practice expiry (PRAC-4); auth limits per IP + account (Q7). Part C, the client: challenges list; admin shell, themes list and users; theme editor; level editor and preview. Then docs and the gate.
+- Key finding: generators read each template's `fallback` for captions and columns, so the fallback is the PRD's "clue templates" (D83). The level editor pre-fills it from built-in examples per mechanic.
+- Proposes D83–D96, to be written into DECISIONS.md in Task 13. D93 reads NFR-6 "per IP" as "per IP + account, with a per-IP ceiling", which needs the user's OK. The `seedThemes` deferred minor is moot (D94).
+- Files touched: the new plan, `CONTEXT.md`, the roadmap's Phase 5 row. No code yet.
