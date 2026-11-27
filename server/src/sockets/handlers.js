@@ -133,6 +133,10 @@ function registerHandlers(socket, runtimes) {
   socket.on('chat:send', handle(socket, async ({ text }) => {
     const clean = str(text, { field: 'Message', max: CHAT_MAX });
     await queued(async (runtime, player) => {
+      const { chatBurst: burst, chatWindowMs: windowMs } = runtime.options;
+      if (!runtime.allowChat(player.id, Date.now(), { burst, windowMs })) {
+        throw new AppError(429, 'RATE_LIMITED', `Slow down: at most ${burst} messages in ${windowMs / 1000} seconds`);
+      }
       const msg = await postMessage(runtime.attemptId, { kind: 'user', senderName: player.name, role: player.role || null, text: clean });
       runtime.emitToRoom('chat:message', msg);
     })();

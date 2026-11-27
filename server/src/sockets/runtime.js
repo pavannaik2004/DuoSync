@@ -17,6 +17,7 @@ class AttemptRuntime {
     this.sockets = new Map(); // playerId → Set<socket>
     this.timers = new Set();
     this.lastSubmitAt = new Map(); // playerId → ms, for the 2-second submit gap (§7.4)
+    this.chatTimes = new Map(); // playerId → send times inside the chat window (CHAT-6)
     this.resumed = false; // set once the first join has rebuilt timers from the database (D37)
     this.clock = null; // { endsAt, pausedAt } in ms, read by the ticks (D81)
     this.awaySince = new Map(); // playerId → ms, for the grace left in each tick
@@ -62,6 +63,21 @@ class AttemptRuntime {
   /** Removes this runtime from its registry when nobody is connected (an idle, finished attempt). */
   release() {
     if (!this.hasSockets()) this.drop(this.attemptId);
+  }
+
+  /**
+   * CHAT-6 (D104): true and recorded when the player has sent fewer than `burst` messages
+   * in the last `windowMs`; false otherwise. Counts the player across all their sockets.
+   */
+  allowChat(playerId, now, { burst, windowMs }) {
+    const recent = (this.chatTimes.get(playerId) || []).filter((t) => t > now - windowMs);
+    if (recent.length >= burst) {
+      this.chatTimes.set(playerId, recent);
+      return false;
+    }
+    recent.push(now);
+    this.chatTimes.set(playerId, recent);
+    return true;
   }
 
   emitToRoom(event, payload) {

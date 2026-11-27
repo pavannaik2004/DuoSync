@@ -20,6 +20,8 @@ const DEFAULTS = {
   countdownMs: 5000, // LOBBY-3
   tickMs: 1000, // TIME-1
   submitGapMs: 2000, // §7.4
+  chatBurst: 5, // CHAT-6: messages per player…
+  chatWindowMs: 3000, // …in any window this long (D104)
   hintDelayMs: HINT_DELAY_MS, // GAME-10
   graceMs: GRACE_MS, // §7.6 reconnect grace
   pauseBudgetMs: PAUSE_BUDGET_MS, // §7.6 stopped-clock budget per attempt
