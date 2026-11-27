@@ -1,7 +1,7 @@
 const express = require('express');
-const { body } = require('express-validator');
+const { body, query } = require('express-validator');
 const validate = require('../middleware/validate');
-const { requirePlayer } = require('../middleware/auth');
+const { requireAuth, requirePlayer } = require('../middleware/auth');
 const patterns = require('../utils/patterns');
 const challenges = require('../controllers/challengeController');
 
@@ -33,8 +33,17 @@ const updateRules = [
   maxTeamsRule(body('maxTeams').optional({ nullable: true })),
 ];
 
+// CHAL-4 / D91: the filter form's query.
+const listRules = [
+  query('status').optional().isIn(['upcoming', 'open', 'closed', 'all']).withMessage('Status must be upcoming, open, closed or all'),
+  query('theme').optional().isString().bail().matches(/^[a-z0-9-]{1,40}$/).withMessage('Choose a valid theme'),
+  query('page').optional().isInt({ min: 1, max: 100000 }).withMessage('Page must be a whole number from 1').toInt(),
+];
+
 function createChallengeRouter() {
   const router = express.Router();
+  // §9.2 "Any": guests may browse public challenges; everything below needs an account.
+  router.get('/', requireAuth, validate(listRules), challenges.list);
   router.use(requirePlayer);
 
   router.post('/', validate(createRules), challenges.create);

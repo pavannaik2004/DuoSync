@@ -8,7 +8,7 @@ const patterns = require('../utils/patterns');
 const { generateCode } = require('./codeService');
 const { loadThemeContent } = require('./themeService');
 const { generateLevelSet, newSeed } = require('../generators/levelSet');
-const { challengeView, solutionsView } = require('./challengeView');
+const { challengeView, solutionsView, listRowView } = require('./challengeView');
 
 const CODE_LENGTH = 6;
 const MIN_WINDOW_MS = 15 * 60 * 1000;
@@ -25,6 +25,36 @@ function statusOf(challenge, now, hasRunning) {
   if (now < challenge.startsAt.getTime()) return 'upcoming';
   if (now < challenge.endsAt.getTime()) return 'open';
   return hasRunning ? 'closing' : 'closed';
+}
+
+const PAGE_SIZE = 20;
+
+/**
+ * CHAL-4 / D91: public challenges, 20 per page. The status filter is a date filter on the window; "closed" includes
+ * windows that ended while attempts still run, and each row shows its real status.
+ */
+async function listPublic({ status = 'all', theme, page = 1 }, now) {
+  const at = new Date(now);
+  const filter = { visibility: 'public' };
+  if (status === 'upcoming') filter.startsAt = { $gt: at };
+  if (status === 'open') Object.assign(filter, { startsAt: { $lte: at }, endsAt: { $gt: at } });
+  if (status === 'closed') filter.endsAt = { $lte: at };
+  if (theme) filter.themeSlug = theme;
+  const sort = status === 'upcoming' ? { startsAt: 1, _id: 1 } : { startsAt: -1, _id: -1 };
+  const [challenges, total] = await Promise.all([
+    Challenge.find(filter, { levels: 0, seed: 0 }).sort(sort).skip((page - 1) * PAGE_SIZE).limit(PAGE_SIZE).lean(),
+    Challenge.countDocuments(filter),
+  ]);
+  const counts = await Attempt.aggregate([
+    { $match: { challengeId: { $in: challenges.map((c) => c._id) } } },
+    { $group: { _id: '$challengeId', entered: { $sum: 1 }, running: { $sum: { $cond: [{ $in: ['$status', RUNNING] }, 1, 0] } } } },
+  ]);
+  const countOf = Object.fromEntries(counts.map((c) => [String(c._id), c]));
+  const items = challenges.map((c) => {
+    const count = countOf[String(c._id)] || { entered: 0, running: 0 };
+    return listRowView(c, statusOf(c, now, count.running > 0), count.entered);
+  });
+  return { items, page, pageSize: PAGE_SIZE, total };
 }
 
 function checkWindow(startsAt, endsAt) {
@@ -240,5 +270,5 @@ async function enterChallenge(challengeId, user, { teamId }, now) {
 }
 
 module.exports = {
-  enterChallenge, createChallenge, getChallengeByCode, updateChallenge, deleteChallenge, statusOf, teamStatuses, solutions,
+  listPublic, enterChallenge, createChallenge, getChallengeByCode, updateChallenge, deleteChallenge, statusOf, teamStatuses, solutions,
 };

@@ -40,7 +40,8 @@ test('the catalog lists every mechanic with examples, and the form lists', async
   for (const m of res.body.mechanics) {
     expect([m.slug, m.examples.length > 0]).toEqual([m.slug, true]);
     for (const ex of m.examples) {
-      expect(Object.keys(ex).sort()).toEqual(['fallback', 'hint', 'order', 'params', 'pools', 'rewardRule', 'theme', 'timeEstimateSec', 'title']);
+      expect(ex.mechanic).toBe(m.slug);
+      expect(Object.keys(ex).sort()).toEqual(['fallback', 'hint', 'mechanic', 'order', 'params', 'pools', 'rewardRule', 'theme', 'timeEstimateSec', 'title']);
       if (typeof ex.params.pool === 'string') expect(ex.pools[ex.params.pool].length).toBeGreaterThan(0);
       expect(Object.keys(ex.pools).sort()).toEqual(poolNamesIn(ex.params, ex.pools).sort());
     }

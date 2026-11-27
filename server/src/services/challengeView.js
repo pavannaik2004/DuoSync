@@ -29,4 +29,18 @@ function solutionsView(challenge) {
   };
 }
 
-module.exports = { challengeView, solutionsView };
+/** CHAL-4 / D91: one row of the public list. Never levels, seed, answers or the creator. */
+function listRowView(challenge, status, teamsEntered) {
+  return {
+    id: String(challenge._id),
+    code: challenge.code,
+    name: challenge.name,
+    theme: { slug: challenge.theme.slug, name: challenge.theme.name },
+    startsAt: challenge.startsAt.toISOString(),
+    endsAt: challenge.endsAt.toISOString(),
+    status,
+    teamsEntered,
+  };
+}
+
+module.exports = { challengeView, solutionsView, listRowView };

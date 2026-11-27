@@ -25,6 +25,7 @@ function exampleOf(slug, template, pools) {
     theme: slug,
     order: template.order,
     title: template.title,
+    mechanic: template.mechanic,
     params: template.params,
     fallback: template.fallback,
     hint: template.hint === undefined ? null : template.hint,
