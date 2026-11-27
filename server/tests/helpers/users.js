@@ -1,4 +1,5 @@
 const request = require('supertest');
+const User = require('../../src/models/User');
 
 /** Signs up a player through the API and returns { token, user, auth } where auth is the header value. */
 async function createPlayer(app, username) {
@@ -20,4 +21,14 @@ async function createRoom(app, auth, theme) {
   return res.body.code;
 }
 
-module.exports = { createPlayer, createGuest, createRoom };
+/** A player who also holds `role`, added straight in the DB (roles are read fresh on each request, D4). */
+async function createWithRole(app, username, role) {
+  const player = await createPlayer(app, username);
+  await User.updateOne({ _id: player.user.id }, { $addToSet: { roles: role } });
+  return player;
+}
+
+const createAdmin = (app, username = 'admin1') => createWithRole(app, username, 'admin');
+const createOrganizer = (app, username = 'org1') => createWithRole(app, username, 'organizer');
+
+module.exports = { createPlayer, createGuest, createRoom, createAdmin, createOrganizer };

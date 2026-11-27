@@ -18,6 +18,8 @@ function createApp(options = {}) {
   app.set('trust proxy', 1); // behind Render's proxy: rate-limit by the real client IP
   app.use(helmet());
   app.use(cors({ origin: clientOrigins }));
+  // D89: admin bodies carry pools and fallbacks; parsed first, so the 20 KB parser skips them.
+  app.use('/api/admin', express.json({ limit: '200kb' }));
   app.use(express.json({ limit: '20kb' }));
 
   app.use('/api', createApiRouter({ authRateLimit }));

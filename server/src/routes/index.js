@@ -6,6 +6,7 @@ const { createThemeRouter } = require('./themeRoutes');
 const { createChallengeRouter } = require('./challengeRoutes');
 const { createAttemptRouter } = require('./attemptRoutes');
 const { createUserRouter } = require('./userRoutes');
+const { createAdminRouter } = require('./adminRoutes');
 
 /** Builds the /api router. Feature routers are mounted here. */
 function createApiRouter({ authRateLimit }) {
@@ -19,6 +20,7 @@ function createApiRouter({ authRateLimit }) {
   router.use('/challenges', createChallengeRouter());
   router.use('/attempts', createAttemptRouter());
   router.use('/users', createUserRouter());
+  router.use('/admin', createAdminRouter());
 
   return router;
 }
