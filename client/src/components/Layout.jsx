@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import StatusMessage from './StatusMessage';
+import MuteToggle from './MuteToggle';
 import { useAuth } from '../context/useAuth';
 
 export default function Layout() {
@@ -45,6 +46,7 @@ export default function Layout() {
               <Link className="btn btn-primary" to="/signup">Sign up</Link>
             </>
           )}
+          <MuteToggle />
         </nav>
       </header>
       <main id="main" className="site-main">

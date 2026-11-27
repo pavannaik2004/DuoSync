@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import StatusMessage from '../StatusMessage';
@@ -6,6 +7,8 @@ import GameScreen from './GameScreen';
 import Results from './Results';
 import useAttempt from '../../hooks/useAttempt';
 import useThemeStyle from '../../hooks/useThemeStyle';
+import { useSound } from '../../context/useSound';
+import { cuesFor } from '../../game/soundCues';
 
 /**
  * The lobby, the game and the results of one attempt. `target` is what useAttempt
@@ -16,6 +19,14 @@ export default function AttemptScreen({
 }) {
   const { state, connection, error, actions, retry } = useAttempt(target);
   useThemeStyle(state?.theme?.styleKey);
+  const { play } = useSound();
+  const previous = useRef(null);
+
+  // AUDIO-1: compare each new state with the last one and play what changed (D99).
+  useEffect(() => {
+    cuesFor(previous.current, state).forEach(play);
+    previous.current = state;
+  }, [state, play]);
 
   if (error && !state) {
     return (

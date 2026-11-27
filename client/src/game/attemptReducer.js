@@ -18,7 +18,8 @@ function statusFor(state, clockStopped) {
 }
 
 export default function attemptReducer(state, { type, payload }) {
-  if (type === 'snapshot') return { ...payload, lastResult: state?.lastResult ?? null };
+  // snapshotSeq tells sound cues a snapshot happened, so a reconnect never replays them (D99).
+  if (type === 'snapshot') return { ...payload, lastResult: state?.lastResult ?? null, snapshotSeq: (state?.snapshotSeq ?? 0) + 1 };
   if (!state) return state;
 
   switch (type) {
