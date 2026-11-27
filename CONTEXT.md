@@ -4,8 +4,8 @@ The single source of truth for project progress. **Read this before starting any
 
 ## Current state
 
-- **Phase:** Phases 1–4 complete: merged into `main`, pushed and deployed; hosted gates passed (2–4 confirmed by the user on 2026-11-27). Phase 5 Admin + organizers merged into `main` and pushed (2026-11-27, PR #1); local gate passed, hosted gate pending. Phase 6 Polish + hardening built on branch `phase-6-polish` (2026-11-27), not merged or pushed; hosted gate pending.
-- **Next (needs the user):** (0) review `phase-6-polish` and decide merge/push; decide whether the Detective 4-of-5 rate (docs/acceptance.md note A) is acceptable; (1) confirm D93 (auth limits per IP + account with a per-IP ceiling, a reading of NFR-6) or ask for it to be reverted; (2) check Render and Vercel redeployed from `main`; (3) hosted Phase 5 gate: with the real admin from `SEED_ADMIN_*`, build a theme only in the panel, grant organizer, publish a public challenge on it, find it in `/challenges`, and have a team enter and see level 1; (4) hosted Phase 6 gate: walk `docs/acceptance.md` on the hosted build with 3 teams on different networks, following `docs/demo-script.md`, and run the load check against the hosted API.
+- **Phase:** Phases 1–4 complete: merged into `main`, pushed and deployed; hosted gates passed (2–4 confirmed by the user on 2026-11-27). Phase 5 Admin + organizers merged into `main` and pushed (2026-11-27, PR #1); local gate passed, hosted gate pending. Phase 6 Polish + hardening merged into `main` and pushed (2026-11-27, PR #2); hosted gate pending.
+- **Next (needs the user):** (1) check Render and Vercel redeployed from `main`; (2) hosted Phase 5 gate: with the real admin from `SEED_ADMIN_*`, build a theme only in the panel, grant organizer, publish a public challenge on it, find it in `/challenges`, and have a team enter and see level 1; (3) hosted Phase 6 gate: walk `docs/acceptance.md` on the hosted build with 3 teams on different networks, following `docs/demo-script.md`, and run the load check against the hosted API.
 - **Hosted URLs:** API `https://duosync-api.onrender.com` (Render, free tier; sleeps when idle). Client `https://duo-sync-lovat.vercel.app` (Vercel, root `client`). Repo: `https://github.com/pavannaik2004/DuoSync`
 - **Open blockers:** none.
 - **Run locally:** `npm --prefix server run dev:memory` + `npm run dev:client` (no database needed)
@@ -42,7 +42,7 @@ The single source of truth for project progress. **Read this before starting any
 - [x] 3 Challenges + level engine (EL Phase I scope): hosted gate passed (user-confirmed 2026-11-27)
 - [x] 4 Competition + resilience (EL Phase II): hosted gate passed (user-confirmed 2026-11-27)
 - [ ] 5 Admin + organizers: merged into `main`, local gate passed; hosted gate pending
-- [ ] 6 Polish + hardening: built on branch `phase-6-polish`; hosted gate pending
+- [ ] 6 Polish + hardening: merged into `main`; hosted gate pending
 
 ## Log
 
@@ -324,4 +324,10 @@ Newest entry last. Format: `### YYYY-MM-DD — <title>`, then what was done, the
 - Verify: `npm test` → 53 suites, 792/792; client lint clean; `check:contrast` 9/9; build main JS 126.40 KB gzip (123.26 at the start of the phase).
 - **Not done (needs the user):** review and merge/push; the hosted Phase 6 gate (every row of `docs/acceptance.md` with 3 teams on different networks); the Detective rate decision.
 - Final review: self-review of the whole branch (no reviewer agent was spawned). Fixed: the new CHAL-7 acceptance test used a 1.5 s window that slow machines could miss before the start; it now uses a 6 s window and waits on the challenge's real `endsAt`. Closed deferred minors from earlier phases (removed from the list above): long attempt ids, CHAL-7 ticking test, GridClue keys and labels, 11 px grid labels, PracticeHome retry, the two intervals, guests seeing "Create a challenge", the theme select for an unknown slug, array values in admin fields, `page=1&page=2`.
+
+### 2026-11-27 — Phase 6 decisions, merged into main and pushed
+
+- The user left the open calls to Claude ("do as you think is good"). D93 (auth limits per IP + account) kept as built and marked Decided. D109: the 4-of-5 check stays a rate; Detective's content is unchanged.
+- `phase-6-polish` pushed, opened as PR #2, fast-forwarded into `main` and pushed; the branch was deleted locally and on `origin`. The push triggers the Render and Vercel redeploys.
+- Next (needs the user): check the redeploys; the hosted Phase 5 gate; the hosted Phase 6 gate (`docs/acceptance.md`, `docs/demo-script.md`).
 
