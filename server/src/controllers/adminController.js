@@ -1,5 +1,6 @@
 const themes = require('../services/adminThemeService');
 const levels = require('../services/adminLevelService');
+const { catalog } = require('../services/adminCatalog');
 
 async function listThemes(req, res) {
   res.json(await themes.listThemes({ q: req.query.q, status: req.query.status }));
@@ -42,6 +43,16 @@ async function reorderLevels(req, res) {
   res.json(await levels.reorderLevels(req.params.id, req.body.levelIds));
 }
 
+function getCatalog(req, res) {
+  res.json(catalog());
+}
+
+async function previewTheme(req, res) {
+  res.json(await themes.previewTheme(req.params.id, req.body.seed || undefined));
+}
+
 module.exports = {
+  getCatalog,
+  previewTheme,
   listThemes, getTheme, createTheme, updateTheme, deleteTheme, listLevels, createLevel, updateLevel, deleteLevel, reorderLevels,
 };

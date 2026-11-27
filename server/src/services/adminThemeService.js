@@ -9,6 +9,7 @@ const AppError = require('../utils/AppError');
 const { escapeRegex } = require('../utils/jsonGuard');
 const { checkTheme } = require('./themeCheck');
 const { draftContent } = require('./themeService');
+const { generateLevelSet, newSeed } = require('../generators/levelSet');
 
 const EDITABLE = ['name', 'genre', 'story', 'roles', 'timerMinutes', 'styleKey', 'boardLabel', 'revealText', 'failText', 'pools'];
 const LEVEL_KEYS = ['order', 'title', 'mechanic', 'params', 'hint', 'rewardRule', 'timeEstimateSec', 'fallback'];
@@ -145,6 +146,21 @@ async function deleteTheme(id, now) {
   await theme.save();
 }
 
+/** ADMIN-5 / D96: a sample level set, answers included, for any theme that isn't deleted. Nothing is saved. */
+async function previewTheme(id, seed = newSeed()) {
+  const { theme, templates } = await loadDraft(id, { writable: true });
+  const content = draftContent(plain(theme), templates.map(plain));
+  const set = generateLevelSet(content, seed, { quiet: true });
+  const mechanicOf = Object.fromEntries(content.templates.map((t) => [t.order, t.mechanic]));
+  return {
+    seed: set.seed,
+    usedFallback: set.usedFallback,
+    failure: set.failure,
+    levels: set.levels.map((level) => ({ ...level, mechanic: mechanicOf[level.order] })),
+  };
+}
+
 module.exports = {
+  previewTheme,
   listThemes, getTheme, createTheme, updateTheme, deleteTheme, loadDraft, assertPlayable, detailOf, findTheme, plain,
 };

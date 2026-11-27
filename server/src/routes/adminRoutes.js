@@ -90,6 +90,11 @@ const levelRules = [
 
 const orderRules = [body('levelIds').isArray({ min: 1, max: 5 }).withMessage('List every level of this theme exactly once')];
 
+const previewRules = [
+  body('seed').optional({ values: 'falsy' }).isString().bail().matches(/^[A-Za-z0-9-]{1,32}$/)
+    .withMessage('Seed must be 1-32 letters, digits or dashes'),
+];
+
 const listRules = [
   query('q').optional().isString().bail().isLength({ max: 40 }).withMessage('Search is at most 40 characters'),
   query('status').optional().isIn(['active', 'inactive', 'deleted', 'all']).withMessage('Status must be active, inactive, deleted or all'),
@@ -111,6 +116,9 @@ function createAdminRouter() {
   router.patch('/themes/:id/levels/order', validate(orderRules), admin.reorderLevels);
   router.put('/levels/:id', validate(levelRules), admin.updateLevel);
   router.delete('/levels/:id', admin.deleteLevel);
+
+  router.get('/catalog', admin.getCatalog);
+  router.post('/themes/:id/preview', validate(previewRules), admin.previewTheme);
 
   return router;
 }
