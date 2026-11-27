@@ -114,4 +114,4 @@ async function rankOf(attempt, now = Date.now()) {
   return { position: ahead + 1, outOf, provisional };
 }
 
-module.exports = { leaderboardFor, rankOf, findChallenge };
+module.exports = { leaderboardFor, rankOf, findChallenge, withRanks };
