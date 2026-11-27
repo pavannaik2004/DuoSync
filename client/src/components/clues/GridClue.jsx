@@ -15,12 +15,12 @@ export default function GridClue({ data }) {
   const items = [];
   if (colLabels) {
     colLabels.forEach((label, c) => {
-      items.push(<span key={`col-${label}`} className="grid-head" style={{ gridColumn: c + offsetCol, gridRow: 1 }}>{label}</span>);
+      items.push(<span key={`col-${c}`} className="grid-head" style={{ gridColumn: c + offsetCol, gridRow: 1 }}>{label}</span>);
     });
   }
   if (rowLabels) {
     rowLabels.forEach((label, r) => {
-      items.push(<span key={`row-${label}`} className="grid-head" style={{ gridColumn: 1, gridRow: r + offsetRow }}>{label}</span>);
+      items.push(<span key={`row-${r}`} className="grid-head" style={{ gridColumn: 1, gridRow: r + offsetRow }}>{label}</span>);
     });
   }
   for (let r = 0; r < rows; r += 1) {
@@ -32,7 +32,7 @@ export default function GridClue({ data }) {
           className={`grid-cell${cell ? ' has-content' : ''}`}
           style={{ gridColumn: c + offsetCol, gridRow: r + offsetRow }}
           role="img"
-          aria-label={`Row ${r + 1}, column ${c + 1}${cell ? `: ${cell.mark || cell.label || ''}` : ', empty'}`}
+          aria-label={`Row ${r + 1}, column ${c + 1}${cell ? `: ${[cell.mark, cell.label].filter(Boolean).join(', ')}` : ', empty'}`}
         >
           {cell?.mark && <Glyph shape={cell.mark} size={28} decorative />}
           {cell?.label && <span className="grid-label" aria-hidden="true">{cell.label}</span>}

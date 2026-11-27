@@ -425,3 +425,4 @@ a { color: var(--role-a); }
 .filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-3); margin: var(--space-4) 0; }
 .filters .field { flex: 1 1 12rem; min-width: 0; }
 .mute-toggle { gap: var(--space-2); }
+.site-main:focus { outline: none; }

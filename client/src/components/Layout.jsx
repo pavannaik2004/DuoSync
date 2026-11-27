@@ -49,7 +49,7 @@ export default function Layout() {
           <MuteToggle />
         </nav>
       </header>
-      <main id="main" className="site-main">
+      <main id="main" className="site-main" tabIndex={-1}>
         <Suspense fallback={<StatusMessage kind="loading" message="Loading…" />}>
           <Outlet />
         </Suspense>

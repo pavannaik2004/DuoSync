@@ -13,9 +13,17 @@ import challengeMessage from '../utils/challengeErrors';
 function Waiting({ challenge, onOpen }) {
   const now = useNow();
   const start = new Date(challenge.startsAt).getTime();
+  // One timer for the opening, re-armed hourly for far-off starts (setTimeout caps near 24.8 days).
   useEffect(() => {
-    if (now >= start) onOpen();
-  }, [now, start, onOpen]);
+    let timer;
+    const check = () => {
+      const left = start - Date.now();
+      if (left <= 0) onOpen();
+      else timer = setTimeout(check, Math.min(left, 3600000));
+    };
+    check();
+    return () => clearTimeout(timer);
+  }, [start, onOpen]);
   return (
     <StatusMessage
       kind="empty"

@@ -43,7 +43,12 @@ export default function PracticeHome() {
           <h2>Start a room</h2>
           <p>You get a room code to send to your teammate.</p>
           {themes.loading && <StatusMessage kind="loading" message="Loading themes…" />}
-          {themes.error && <p className="form-error" role="alert">Could not load the themes. {themes.error.message}</p>}
+          {themes.error && (
+            <>
+              <p className="form-error" role="alert">Could not load the themes. {themes.error.message}</p>
+              <button type="button" className="btn" onClick={themes.reload}>Try again</button>
+            </>
+          )}
           {chosen && (
             <div className="field">
               <label htmlFor="practice-theme">Theme</label>

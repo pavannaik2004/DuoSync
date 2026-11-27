@@ -40,8 +40,7 @@ const challengeShape = PropTypes.shape({
   canSeeTeams: PropTypes.bool,
 });
 
-function Countdown({ challenge }) {
-  const now = useNow();
+function Countdown({ challenge, now }) {
   const start = new Date(challenge.startsAt).getTime();
   const end = new Date(challenge.endsAt).getTime();
   if (now < start) return <p className="challenge-countdown">Opens in <strong>{formatCountdown(start - now)}</strong></p>;
@@ -49,7 +48,7 @@ function Countdown({ challenge }) {
   return <p className="challenge-countdown">This challenge has closed.</p>;
 }
 
-Countdown.propTypes = { challenge: challengeShape.isRequired };
+Countdown.propTypes = { challenge: challengeShape.isRequired, now: PropTypes.number.isRequired };
 
 function ShareBox({ code }) {
   const [copied, setCopied] = useState(false);
@@ -264,7 +263,7 @@ function ChallengeDetails({ challenge, reload }) {
         Opens <strong>{formatLocal(challenge.startsAt)}</strong><br />
         Closes <strong>{formatLocal(challenge.endsAt)}</strong>
       </p>
-      <Countdown challenge={challenge} />
+      <Countdown challenge={challenge} now={now} />
       <p>
         Teams entered: <strong>{challenge.teamsEntered}</strong>
         {challenge.maxTeams !== null && <> of {challenge.maxTeams}</>}

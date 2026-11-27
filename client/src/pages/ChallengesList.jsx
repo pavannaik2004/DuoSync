@@ -5,6 +5,7 @@ import useAsync from '../hooks/useAsync';
 import { listChallenges } from '../api/challenges';
 import { listThemes } from '../api/themes';
 import { formatLocal } from '../utils/time';
+import { useAuth } from '../context/useAuth';
 
 const STATUSES = [['all', 'All'], ['upcoming', 'Upcoming'], ['open', 'Open'], ['closed', 'Closed']];
 const STATUS_TEXT = { upcoming: 'Upcoming', open: 'Open', closing: 'Closing', closed: 'Closed' };
@@ -23,6 +24,7 @@ export default function ChallengesList() {
   const filters = filtersFrom(params);
   const list = useAsync(() => listChallenges(filters), [filters]);
   const themes = useAsync(() => listThemes(), []);
+  const { status: authStatus } = useAuth();
 
   const apply = (next) => {
     const copy = new URLSearchParams();
@@ -42,11 +44,11 @@ export default function ChallengesList() {
     <section className="page">
       <div className="page-head">
         <h1>Challenges</h1>
-        <Link className="btn" to="/challenges/new">Create a challenge</Link>
+        {authStatus === 'user' && <Link className="btn" to="/challenges/new">Create a challenge</Link>}
       </div>
       <p className="form-note">Public challenges anyone can enter with a team. Private ones are reached only by their code.</p>
 
-      <form className="filters" onSubmit={onSubmit} key={params.toString()} aria-label="Filter challenges">
+      <form className="filters" onSubmit={onSubmit} key={`${params.toString()}${themes.data ? '#themes' : ''}`} aria-label="Filter challenges">
         <div className="field">
           <label htmlFor="filter-status">Status</label>
           <select id="filter-status" name="status" defaultValue={filters.status}>
@@ -58,6 +60,9 @@ export default function ChallengesList() {
           <select id="filter-theme" name="theme" defaultValue={filters.theme}>
             <option value="">All themes</option>
             {(themes.data || []).map((t) => <option key={t.slug} value={t.slug}>{t.name}</option>)}
+            {filters.theme && themes.data && !themes.data.some((t) => t.slug === filters.theme) && (
+              <option value={filters.theme}>(unavailable theme)</option>
+            )}
           </select>
         </div>
         <button type="submit" className="btn">Apply</button>

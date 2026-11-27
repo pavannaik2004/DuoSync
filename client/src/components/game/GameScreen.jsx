@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import ConfirmButton from '../ConfirmButton';
 import ClueView from '../clues/ClueView';
 import TimerDisplay from './TimerDisplay';
@@ -10,6 +10,9 @@ import Board from './Board';
 import ChatPanel from './ChatPanel';
 import PauseBanner from './PauseBanner';
 import { attemptShape, gameActionsShape } from './gameShapes';
+
+// TIME-2 warnings, announced once each to screen readers (the timer itself is aria-live off).
+const WARNINGS = [[300000, '5 minutes left'], [60000, '1 minute left'], [10000, '10 seconds left']];
 
 const TABS = [
   ['clue', 'Clue'],
@@ -30,6 +33,17 @@ export default function GameScreen({ state, actions }) {
   const myRole = me.role ? theme.roles[me.role] : null;
   const unread = tab === 'chat' ? 0 : Math.max(0, state.chat.length - seenChat);
   const paused = Boolean(state.pause?.clockStopped);
+  const [announcement, setAnnouncement] = useState('');
+  const lastMs = useRef(state.remainingMs);
+
+  useEffect(() => {
+    const before = lastMs.current;
+    const now = state.remainingMs;
+    lastMs.current = now;
+    if (before == null || now == null) return;
+    const crossed = WARNINGS.find(([t]) => before > t && now <= t);
+    if (crossed) setAnnouncement(crossed[1]);
+  }, [state.remainingMs]);
 
   function openTab(next) {
     if (tab === 'chat' || next === 'chat') setSeenChat(state.chat.length);
@@ -50,6 +64,7 @@ export default function GameScreen({ state, actions }) {
         <ConfirmButton label="End attempt" confirmLabel="End now, keep my points" danger busy={quitting} onConfirm={quit} />
       </header>
 
+      <p className="visually-hidden" aria-live="polite">{announcement}</p>
       {state.pause && <PauseBanner pause={state.pause} roles={theme.roles} meId={me.id} />}
       <LevelBar levels={state.levels} score={state.score} />
       <ResultFlash result={state.lastResult} roles={theme.roles} />
@@ -80,7 +95,7 @@ export default function GameScreen({ state, actions }) {
                 Level {clue.order}: {clue.title}
                 {myRole && <span className="clue-role">Your half as {myRole.name}</span>}
               </p>
-              <div className="clue-card">
+              <div className="clue-card" key={clue.order}>
                 <ClueView clue={clue.clue} />
               </div>
               <p className="form-note">Your teammate sees a different half. Describe yours in the chat.</p>
