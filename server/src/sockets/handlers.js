@@ -75,7 +75,8 @@ function registerHandlers(socket, runtimes) {
       throw new AppError(400, 'VALIDATION_ERROR', 'Send either a room code or an attempt id');
     }
     if (attemptId !== undefined) {
-      const id = str(attemptId, { field: 'Attempt id', max: 64 });
+      const id = str(attemptId, { field: 'Attempt id', max: 1000 });
+      if (id.length > 64) throw new AppError(404, 'ATTEMPT_NOT_FOUND', 'No challenge attempt has that id');
       if (socket.data.attemptId && socket.data.attemptId !== id) {
         throw new AppError(409, 'ALREADY_IN_ATTEMPT', 'This connection is already in another game');
       }

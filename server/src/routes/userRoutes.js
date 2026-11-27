@@ -8,7 +8,7 @@ const users = require('../controllers/userController');
 
 /** `?page=` for history lists (SCORE-7): a whole number from 1; defaults to 1. */
 const pageRules = [
-  query('page').optional().isInt({ min: 1, max: 100000 }).withMessage('Page must be a whole number from 1').toInt(),
+  query('page').optional().not().isArray().withMessage('Page must be a whole number from 1').bail().isInt({ min: 1, max: 100000 }).withMessage('Page must be a whole number from 1').toInt(),
 ];
 
 /** AUTH-7 (D105): username (AUTH-1) and/or a colour from the palette; at least one. */

@@ -57,8 +57,8 @@ function themeRules({ create }) {
     text('roles.B.name', 'Role B name', { min: 2, max: 30 }),
     text('roles.A.description', 'Role A description', { max: 200, multiLine: true, optional: true }),
     text('roles.B.description', 'Role B description', { max: 200, multiLine: true, optional: true }),
-    body('timerMinutes').isInt({ min: 5, max: 60 }).withMessage('Timer must be a whole number of minutes from 5 to 60').toInt(),
-    body('styleKey').isIn(STYLE_KEYS).withMessage('Choose a visual style from the list'),
+    body('timerMinutes').not().isArray().withMessage('Timer must be a whole number of minutes from 5 to 60').bail().isInt({ min: 5, max: 60 }).withMessage('Timer must be a whole number of minutes from 5 to 60').toInt(),
+    body('styleKey').not().isArray().withMessage('Choose a visual style from the list').bail().isIn(STYLE_KEYS).withMessage('Choose a visual style from the list'),
     (create ? body('pools').optional() : body('pools')).custom(checkPools),
     create ? body('active').not().exists().withMessage('A new theme starts inactive') : body('active').optional().isBoolean({ strict: true })
       .withMessage('Active must be true or false'),
@@ -76,15 +76,15 @@ function checkFallback(fallback) {
 /** ADMIN-3 fields. The order is set by creating, deleting and reordering, never in this body (D87). */
 const levelRules = [
   text('title', 'Title', { min: 3, max: 40 }),
-  body('mechanic').isIn(MECHANICS).withMessage('Choose a mechanic from the list'),
+  body('mechanic').not().isArray().withMessage('Choose a mechanic from the list').bail().isIn(MECHANICS).withMessage('Choose a mechanic from the list'),
   body('params').custom((v) => {
     if (!isPlainJson(v)) throw new Error('Parameters must be a JSON object, without $ or . in keys, at most 10 deep');
     return true;
   }),
   body('fallback').custom(checkFallback),
   text('hint', 'Hint', { max: 300, optional: true }),
-  body('rewardRule').optional({ values: 'null' }).isIn(REWARD_RULES).withMessage('Choose a reward rule from the list'),
-  body('timeEstimateSec').optional({ values: 'null' }).isInt({ min: 30, max: 1800 })
+  body('rewardRule').optional({ values: 'null' }).not().isArray().withMessage('Choose a reward rule from the list').bail().isIn(REWARD_RULES).withMessage('Choose a reward rule from the list'),
+  body('timeEstimateSec').optional({ values: 'null' }).not().isArray().withMessage('Time estimate must be 30 to 1800 seconds').bail().isInt({ min: 30, max: 1800 })
     .withMessage('Time estimate must be 30 to 1800 seconds').toInt(),
 ];
 
@@ -103,7 +103,7 @@ const organizerRules = [body('organizer').isBoolean({ strict: true }).withMessag
 
 const listRules = [
   query('q').optional().isString().bail().isLength({ max: 40 }).withMessage('Search is at most 40 characters'),
-  query('status').optional().isIn(['active', 'inactive', 'deleted', 'all']).withMessage('Status must be active, inactive, deleted or all'),
+  query('status').optional().not().isArray().withMessage('Status must be active, inactive, deleted or all').bail().isIn(['active', 'inactive', 'deleted', 'all']).withMessage('Status must be active, inactive, deleted or all'),
 ];
 
 /** /api/admin — admins only (ADMIN-1, NFR-3). */

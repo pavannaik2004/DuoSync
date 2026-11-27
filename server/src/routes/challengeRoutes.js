@@ -13,7 +13,7 @@ const OFFSET = /(Z|[+-]\d{2}:?\d{2})$/i;
 const dateRule = (chain, label) => chain.isString().bail().isISO8601({ strict: true })
   .bail().matches(OFFSET)
   .withMessage(`${label} must be an ISO-8601 date with a Z or UTC offset`);
-const maxTeamsRule = (chain) => chain.isInt({ min: 2, max: 500 })
+const maxTeamsRule = (chain) => chain.not().isArray().withMessage('Max teams must be a whole number from 2 to 500').bail().isInt({ min: 2, max: 500 })
   .withMessage('Max teams must be a whole number from 2 to 500').toInt();
 
 const createRules = [
@@ -22,7 +22,7 @@ const createRules = [
     .matches(/^[a-z0-9-]{1,40}$/).withMessage('Choose a valid theme'),
   dateRule(body('startsAt'), 'Start time'),
   dateRule(body('endsAt'), 'End time'),
-  body('visibility').isIn(['public', 'private']).withMessage('Visibility must be public or private'),
+  body('visibility').not().isArray().withMessage('Visibility must be public or private').bail().isIn(['public', 'private']).withMessage('Visibility must be public or private'),
   maxTeamsRule(body('maxTeams').optional({ nullable: true })),
 ];
 
@@ -35,9 +35,9 @@ const updateRules = [
 
 // CHAL-4 / D91: the filter form's query.
 const listRules = [
-  query('status').optional().isIn(['upcoming', 'open', 'closed', 'all']).withMessage('Status must be upcoming, open, closed or all'),
+  query('status').optional().not().isArray().withMessage('Status must be upcoming, open, closed or all').bail().isIn(['upcoming', 'open', 'closed', 'all']).withMessage('Status must be upcoming, open, closed or all'),
   query('theme').optional().isString().bail().matches(/^[a-z0-9-]{1,40}$/).withMessage('Choose a valid theme'),
-  query('page').optional().isInt({ min: 1, max: 100000 }).withMessage('Page must be a whole number from 1').toInt(),
+  query('page').optional().not().isArray().withMessage('Page must be a whole number from 1').bail().isInt({ min: 1, max: 100000 }).withMessage('Page must be a whole number from 1').toInt(),
 ];
 
 function createChallengeRouter() {
