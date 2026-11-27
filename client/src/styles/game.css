@@ -175,14 +175,19 @@
 
 .timer {
   display: grid;
+  grid-template-columns: auto auto;
+  grid-template-areas: 'gauge label' 'gauge value';
+  align-items: center;
   justify-items: end;
   padding: var(--space-1) var(--space-3);
   border: 2px solid var(--line);
   border-radius: var(--radius-s);
   background: var(--surface);
 }
-.timer-label { font-size: 0.75rem; color: var(--muted); }
-.timer-value { font-family: var(--font-display); font-size: 1.75rem; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.timer-label { grid-area: label; font-size: 0.75rem; color: var(--muted); }
+/* D102: hidden in the default look; each theme sheet shapes it from --time-left. */
+.timer-gauge { grid-area: gauge; display: none; width: 14px; height: 40px; margin-right: var(--space-3); }
+.timer-value { grid-area: value; font-family: var(--font-display); font-size: 1.75rem; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .timer-low { border-color: var(--danger); }
 .timer-low .timer-value { color: var(--danger); }
 

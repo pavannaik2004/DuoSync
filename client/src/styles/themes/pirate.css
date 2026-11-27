@@ -1,0 +1,62 @@
+/* Pirate: a parchment chart in sea blue, rope brown and treasure gold, with a compass rose,
+   and an hourglass whose sand falls. */
+[data-theme='pirate'] {
+  --bg: #efe0bd;
+  --surface: #f7ecd2;
+  --surface-2: #e6d3a8;
+  --line: #a88b5a;
+  --text: #1f2a30;
+  --muted: #52432d;
+  --role-a: #14425c;
+  --role-b: #6b4423;
+  --on-accent: #f7ecd2;
+  --danger: #8c1f1f;
+  --ok: #24573a;
+  --focus: #14425c;
+  --font-body: 'Crimson Text', Georgia, serif;
+  --font-display: 'Pirata One', Georgia, serif;
+  color-scheme: light;
+}
+
+[data-theme='pirate'] body {
+  /* A compass rose (ring and cross) in the top corner over a faint chart grid and old stains. */
+  background-image:
+    radial-gradient(circle, transparent 0 40px, rgb(107 68 35 / 0.22) 41px 42px, transparent 43px 52px, rgb(107 68 35 / 0.16) 53px 54px, transparent 55px),
+    linear-gradient(rgb(107 68 35 / 0.2), rgb(107 68 35 / 0.2)),
+    linear-gradient(rgb(107 68 35 / 0.2), rgb(107 68 35 / 0.2)),
+    radial-gradient(ellipse at 15% 80%, rgb(120 80 30 / 0.14), transparent 40%),
+    linear-gradient(rgb(20 66 92 / 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(20 66 92 / 0.05) 1px, transparent 1px);
+  background-size: 120px 120px, 2px 120px, 120px 2px, auto, 48px 48px, 48px 48px;
+  background-position: right 16px top 72px, right 75px top 72px, right 16px top 131px, 0 0, 0 0, 0 0;
+  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, repeat, repeat;
+  background-attachment: fixed;
+  font-size: 1.125rem;
+  line-height: 1.6;
+}
+[data-theme='pirate'] h1,
+[data-theme='pirate'] h2 { font-weight: 400; letter-spacing: 0.02em; }
+[data-theme='pirate'] .clue-card { border-style: dashed; }
+/* Pirata One's numerals are hard to tell apart (0 reads as 8), so figures use the body face. */
+[data-theme='pirate'] .timer-value,
+[data-theme='pirate'] .score strong,
+[data-theme='pirate'] .level,
+[data-theme='pirate'] .token-value,
+[data-theme='pirate'] .code-display,
+[data-theme='pirate'] .invite-code { font-family: var(--font-body); font-weight: 700; }
+
+/* Hourglass: sand left in the top bulb, sand fallen into the bottom one. */
+[data-theme='pirate'] .timer-gauge {
+  display: block;
+  width: 24px;
+  background:
+    linear-gradient(
+      to bottom,
+      transparent 0 calc(50% - var(--time-left) * 50%),
+      #c99a2e 0 50%,
+      transparent 50% calc(50% + var(--time-left) * 50%),
+      #c99a2e 0
+    ),
+    var(--surface-2);
+  clip-path: polygon(0 0, 100% 0, 58% 50%, 100% 100%, 0 100%, 42% 50%);
+}

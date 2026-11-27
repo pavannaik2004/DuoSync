@@ -5,6 +5,7 @@ import Lobby from './Lobby';
 import GameScreen from './GameScreen';
 import Results from './Results';
 import useAttempt from '../../hooks/useAttempt';
+import useThemeStyle from '../../hooks/useThemeStyle';
 
 /**
  * The lobby, the game and the results of one attempt. `target` is what useAttempt
@@ -14,6 +15,7 @@ export default function AttemptScreen({
   target, describeError, backLink, resultActions,
 }) {
   const { state, connection, error, actions, retry } = useAttempt(target);
+  useThemeStyle(state?.theme?.styleKey);
 
   if (error && !state) {
     return (

@@ -1,0 +1,65 @@
+/* Haunted Asylum: candlelight on cold grey-green, faded hospital green, water-stained
+   plaster with a slow vignette flicker, and a candle that burns down. */
+[data-theme='haunted'] {
+  --bg: #11140f;
+  --surface: #191d16;
+  --surface-2: #232920;
+  --line: #3d4836;
+  --text: #ece3c8;
+  --muted: #aab4a1;
+  --role-a: #f2d48a;
+  --role-b: #9fbda8;
+  --on-accent: #11140f;
+  --danger: #ea7a6a;
+  --ok: #a8d08d;
+  --focus: #f2d48a;
+  --font-body: 'EB Garamond', Georgia, serif;
+  --font-display: 'Special Elite', 'Courier New', monospace;
+  color-scheme: dark;
+}
+
+[data-theme='haunted'] body {
+  background-image:
+    radial-gradient(ellipse at 22% 12%, rgb(127 154 134 / 0.1), transparent 35%),
+    radial-gradient(ellipse at 78% 64%, rgb(140 28 28 / 0.08), transparent 30%),
+    radial-gradient(ellipse at 40% 92%, rgb(127 154 134 / 0.08), transparent 30%);
+  font-size: 1.125rem;
+  line-height: 1.6;
+}
+[data-theme='haunted'] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 55%, rgb(0 0 0 / 0.55));
+}
+[data-theme='haunted'] .site-header,
+[data-theme='haunted'] .site-main { position: relative; }
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-theme='haunted'] body::before { animation: haunted-flicker 7s ease-in-out infinite; }
+}
+@keyframes haunted-flicker {
+  0%, 43%, 100% { opacity: 1; }
+  40% { opacity: 0.8; }
+  70% { opacity: 0.88; }
+}
+
+/* Candle: the wax shortens and the flame rides down with it. */
+[data-theme='haunted'] .timer-gauge {
+  display: block;
+  position: relative;
+  width: 12px;
+  background: linear-gradient(to top, #e8dcc0 calc(var(--time-left) * 72%), transparent 0);
+  border-bottom: 3px solid var(--line);
+}
+[data-theme='haunted'] .timer-gauge::after {
+  content: '';
+  position: absolute;
+  left: 2px;
+  bottom: calc(var(--time-left) * 72%);
+  width: 8px;
+  height: 11px;
+  border-radius: 50% 50% 50% 50% / 65% 65% 35% 35%;
+  background: radial-gradient(ellipse at 50% 70%, #fff4cf, #f2d48a 45%, #e07b2a);
+}

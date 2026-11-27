@@ -3,7 +3,9 @@ import PropTypes from 'prop-types';
 
 /**
  * The attempt timer, as a class component (§10.1 Unit II). It only displays the
- * server's remaining time (TIME-1); it never counts down on its own.
+ * server's remaining time (TIME-1); it never counts down on its own. Each theme draws
+ * `.timer-gauge` from `--time-left`, the share of the timer still left (UI-2, D102);
+ * the digits always stay as text.
  */
 export default class TimerDisplay extends Component {
   static format(ms) {
@@ -14,12 +16,20 @@ export default class TimerDisplay extends Component {
   }
 
   render() {
-    const { remainingMs, paused } = this.props;
+    const { remainingMs, totalMs, paused } = this.props;
     const low = remainingMs !== null && remainingMs <= 60000;
     const text = remainingMs === null ? '--:--' : TimerDisplay.format(remainingMs);
     const label = paused ? 'Paused' : 'Time left';
+    const left = remainingMs === null || !totalMs ? 1 : Math.min(1, Math.max(0, remainingMs / totalMs));
     return (
-      <div className={`timer${low ? ' timer-low' : ''}${paused ? ' timer-paused' : ''}`} role="timer" aria-live="off" aria-label={`${label} ${text}`}>
+      <div
+        className={`timer${low ? ' timer-low' : ''}${paused ? ' timer-paused' : ''}`}
+        role="timer"
+        aria-live="off"
+        aria-label={`${label} ${text}`}
+        style={{ '--time-left': left.toFixed(3) }}
+      >
+        <span className="timer-gauge" aria-hidden="true" />
         <span className="timer-label">{label}</span>
         <span className="timer-value">{text}</span>
       </div>
@@ -27,5 +37,5 @@ export default class TimerDisplay extends Component {
   }
 }
 
-TimerDisplay.propTypes = { remainingMs: PropTypes.number, paused: PropTypes.bool };
-TimerDisplay.defaultProps = { remainingMs: null, paused: false };
+TimerDisplay.propTypes = { remainingMs: PropTypes.number, totalMs: PropTypes.number, paused: PropTypes.bool };
+TimerDisplay.defaultProps = { remainingMs: null, totalMs: null, paused: false };

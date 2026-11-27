@@ -1,0 +1,49 @@
+/* Sun King's Tomb: carved sandstone with lapis and a gold-leaf border, charcoal text,
+   and a torch flame that shrinks. */
+[data-theme='tomb'] {
+  --bg: #e8d3a8;
+  --surface: #f2e3c2;
+  --surface-2: #dfc797;
+  --line: #a88a4e;
+  --text: #2b2420;
+  --muted: #523f2a;
+  --role-a: #1f3a93;
+  --role-b: #6f4a05;
+  --on-accent: #f8efd9;
+  --danger: #8c1f1f;
+  --ok: #2c5a2a;
+  --focus: #1f3a93;
+  --font-body: 'Cormorant Garamond', Georgia, serif;
+  --font-display: 'Cinzel', Georgia, serif;
+  color-scheme: light;
+}
+
+[data-theme='tomb'] body {
+  background-image:
+    repeating-linear-gradient(0deg, rgb(43 36 32 / 0.05) 0 2px, transparent 2px 64px),
+    repeating-linear-gradient(90deg, rgb(43 36 32 / 0.04) 0 2px, transparent 2px 128px);
+  font-size: 1.1875rem;
+  font-weight: 500;
+  line-height: 1.6;
+}
+[data-theme='tomb'] .clue-card { border-color: #d4a017; box-shadow: inset 0 0 0 3px var(--surface), inset 0 0 0 4px #d4a017; }
+
+/* Torch: the flame shrinks toward its handle as time runs out. */
+[data-theme='tomb'] .timer-gauge {
+  display: block;
+  position: relative;
+  width: 18px;
+  border-bottom: 10px solid var(--text);
+}
+[data-theme='tomb'] .timer-gauge::after {
+  content: '';
+  position: absolute;
+  left: 1px;
+  bottom: 0;
+  width: 16px;
+  height: 28px;
+  transform-origin: 50% 100%;
+  transform: scale(calc(0.25 + 0.75 * var(--time-left)));
+  border-radius: 50% 50% 45% 45% / 65% 65% 35% 35%;
+  background: radial-gradient(ellipse at 50% 75%, #fff2c0, #d4a017 45%, #b4400f);
+}

@@ -1,0 +1,41 @@
+/* Space Station: cool white and cyan on deep space, alert orange, a sparse starfield,
+   and a circular O2 gauge that drains. */
+[data-theme='orbital'] {
+  --bg: #070b1a;
+  --surface: #0e1530;
+  --surface-2: #16204a;
+  --line: #2c3c7a;
+  --text: #e6ecff;
+  --muted: #a3b3dc;
+  --role-a: #4fd1ff;
+  --role-b: #ff8a50;
+  --on-accent: #070b1a;
+  --danger: #ff8a8a;
+  --ok: #6ff0b0;
+  --focus: #4fd1ff;
+  --font-body: 'Exo 2', system-ui, sans-serif;
+  --font-display: 'Orbitron', system-ui, sans-serif;
+  color-scheme: dark;
+}
+
+[data-theme='orbital'] body {
+  background-image:
+    radial-gradient(1px 1px at 20px 30px, #e6ecff 50%, transparent 51%),
+    radial-gradient(1px 1px at 140px 90px, #9fb0d9 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 260px 40px, #e6ecff 50%, transparent 51%),
+    radial-gradient(1px 1px at 330px 170px, #4fd1ff 50%, transparent 51%),
+    radial-gradient(1px 1px at 80px 220px, #9fb0d9 50%, transparent 51%);
+  background-size: 360px 260px;
+}
+[data-theme='orbital'] .timer-value { letter-spacing: 0.04em; }
+
+/* O2 ring: the cyan arc shrinks as time runs out; orange in the last minute. */
+[data-theme='orbital'] .timer-gauge {
+  display: block;
+  width: 40px;
+  border-radius: 50%;
+  background: conic-gradient(var(--role-a) calc(var(--time-left) * 360deg), var(--surface-2) 0);
+  -webkit-mask: radial-gradient(circle, transparent 0 11px, #000 12px);
+  mask: radial-gradient(circle, transparent 0 11px, #000 12px);
+}
+[data-theme='orbital'] .timer-low .timer-gauge { background: conic-gradient(var(--role-b) calc(var(--time-left) * 360deg), var(--surface-2) 0); }

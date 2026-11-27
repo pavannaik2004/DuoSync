@@ -88,6 +88,7 @@ export const attemptShape = PropTypes.shape({
     story: PropTypes.string.isRequired,
     timerMinutes: PropTypes.number.isRequired,
     roles: rolesShape.isRequired,
+    styleKey: PropTypes.string,
   }).isRequired,
   me: PropTypes.shape({ id: PropTypes.string.isRequired, role: PropTypes.oneOf(['A', 'B', null]) }).isRequired,
   players: PropTypes.arrayOf(playerShape).isRequired,

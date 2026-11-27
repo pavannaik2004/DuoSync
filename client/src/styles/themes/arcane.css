@@ -1,0 +1,44 @@
+/* Alchemist's Tower: moon silver on midnight violet, potion teal and ember, a faint
+   constellation, and a moon that waxes to full at zero. */
+[data-theme='arcane'] {
+  --bg: #1a1033;
+  --surface: #231646;
+  --surface-2: #2e1d5a;
+  --line: #4b3786;
+  --text: #ece8fb;
+  --muted: #b8afdb;
+  --role-a: #2ec4b6;
+  --role-b: #ff9f1c;
+  --on-accent: #1a1033;
+  --danger: #ff8f8f;
+  --ok: #7de0b0;
+  --focus: #ff9f1c;
+  --font-body: 'Alegreya', Georgia, serif;
+  --font-display: 'Uncial Antiqua', Georgia, serif;
+  color-scheme: dark;
+}
+
+[data-theme='arcane'] body {
+  background-image:
+    radial-gradient(1.5px 1.5px at 40px 60px, #d9d4f0 50%, transparent 51%),
+    radial-gradient(1px 1px at 120px 30px, #d9d4f0 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 200px 110px, #d9d4f0 50%, transparent 51%),
+    radial-gradient(1px 1px at 290px 70px, #2ec4b6 50%, transparent 51%),
+    radial-gradient(circle at 50% 40%, transparent 0 220px, rgb(217 212 240 / 0.06) 221px 222px, transparent 223px);
+  background-size: 340px 200px, 340px 200px, 340px 200px, 340px 200px, 100% 100%;
+  background-attachment: fixed;
+  line-height: 1.6;
+}
+[data-theme='arcane'] h1,
+[data-theme='arcane'] h2 { font-weight: 400; }
+
+/* Moon: the shadow slides off the face; a full moon when the timer reaches zero. */
+[data-theme='arcane'] .timer-gauge {
+  display: block;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #d9d4f0;
+  border: 1px solid #d9d4f0;
+  box-shadow: inset calc(var(--time-left) * -36px) 0 0 0 var(--surface-2);
+}

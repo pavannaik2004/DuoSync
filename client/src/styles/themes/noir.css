@@ -1,0 +1,45 @@
+/* Detective Story: sepia paper, ink and oxblood, a typewriter-ribbon underline on headings,
+   and a pocket-watch dial for the timer. */
+[data-theme='noir'] {
+  --bg: #f3ead8;
+  --surface: #fbf5e8;
+  --surface-2: #ebdfc6;
+  --line: #b9a681;
+  --text: #2a2118;
+  --muted: #5c4c3a;
+  --role-a: #7a1f1f;
+  --role-b: #2c4766;
+  --on-accent: #fbf5e8;
+  --danger: #8f1d1d;
+  --ok: #2d5a2d;
+  --focus: #7a1f1f;
+  --font-body: 'Lora', Georgia, serif;
+  --font-display: 'Playfair Display', Georgia, serif;
+  color-scheme: light;
+}
+
+[data-theme='noir'] body {
+  background-image:
+    radial-gradient(ellipse at 12% 18%, rgb(150 110 60 / 0.12), transparent 40%),
+    radial-gradient(ellipse at 88% 72%, rgb(150 110 60 / 0.1), transparent 45%);
+  line-height: 1.65;
+}
+[data-theme='noir'] h1,
+[data-theme='noir'] h2 {
+  text-decoration: underline;
+  text-decoration-color: var(--role-a);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
+}
+[data-theme='noir'] .clue-card { box-shadow: 2px 3px 0 var(--line); }
+
+/* Pocket watch: the face empties clockwise as time runs out. */
+[data-theme='noir'] .timer-gauge {
+  display: block;
+  width: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--text);
+  background:
+    radial-gradient(circle, var(--text) 0 2px, transparent 3px),
+    conic-gradient(var(--role-a) calc(var(--time-left) * 360deg), var(--surface) 0);
+}

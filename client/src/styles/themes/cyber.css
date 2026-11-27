@@ -1,0 +1,45 @@
+/* Cyber Heist (docs/themed-puzzle-sets.md): terminal green on near-black, amber warnings,
+   faint scanlines, a segmented LED timer that flickers in the last minute. */
+[data-theme='cyber'] {
+  --bg: #0b0f14;
+  --surface: #111a22;
+  --surface-2: #18242e;
+  --line: #2a4a50;
+  --text: #d9ffe9;
+  --muted: #8fbfa6;
+  --role-a: #3dff9a;
+  --role-b: #ffb000;
+  --on-accent: #0b0f14;
+  --danger: #ff7a6b;
+  --ok: #3dff9a;
+  --focus: #ffb000;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-display: 'JetBrains Mono', ui-monospace, monospace;
+  color-scheme: dark;
+}
+
+[data-theme='cyber'] body {
+  background-image: repeating-linear-gradient(0deg, rgb(61 255 154 / 0.035) 0 1px, transparent 1px 3px);
+}
+[data-theme='cyber'] .clue-card { box-shadow: inset 0 0 0 1px rgb(61 255 154 / 0.25); }
+[data-theme='cyber'] .timer-value { color: var(--role-a); text-shadow: 0 0 8px rgb(61 255 154 / 0.45); letter-spacing: 0.06em; }
+[data-theme='cyber'] .timer-low .timer-value { color: var(--role-b); text-shadow: 0 0 8px rgb(255 176 0 / 0.5); }
+
+/* LED column: lit segments from the bottom, in proportion to the time left. */
+[data-theme='cyber'] .timer-gauge {
+  display: block;
+  width: 10px;
+  background: linear-gradient(to top, var(--role-a) calc(var(--time-left) * 100%), #1f3a33 0);
+  -webkit-mask: repeating-linear-gradient(to top, #000 0 3px, transparent 3px 4px);
+  mask: repeating-linear-gradient(to top, #000 0 3px, transparent 3px 4px);
+}
+[data-theme='cyber'] .timer-low .timer-gauge { background: linear-gradient(to top, var(--role-b) calc(var(--time-left) * 100%), #3a2e14 0); }
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-theme='cyber'] .timer-low .timer-value { animation: cyber-flicker 1.6s steps(1) infinite; }
+}
+@keyframes cyber-flicker {
+  0%, 47%, 52%, 79%, 100% { opacity: 1; }
+  48% { opacity: 0.55; }
+  80% { opacity: 0.8; }
+}

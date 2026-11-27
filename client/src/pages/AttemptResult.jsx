@@ -3,6 +3,7 @@ import StatusMessage from '../components/StatusMessage';
 import Results from '../components/game/Results';
 import useAsync from '../hooks/useAsync';
 import { getResult } from '../api/attempts';
+import useThemeStyle from '../hooks/useThemeStyle';
 
 const ERRORS = {
   ATTEMPT_NOT_FOUND: 'We could not find that game.',
@@ -14,6 +15,7 @@ const ERRORS = {
 export default function AttemptResult() {
   const { attemptId = '' } = useParams();
   const data = useAsync(() => getResult(attemptId), [attemptId]);
+  useThemeStyle(data.data?.theme?.styleKey);
   const back = <Link className="btn" to="/profile">Back to my profile</Link>;
 
   if (data.loading) return <StatusMessage kind="loading" message="Loading the results…" />;

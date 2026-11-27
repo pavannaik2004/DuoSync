@@ -46,7 +46,7 @@ export default function GameScreen({ state, actions }) {
     <div className="game">
       <header className="game-head">
         <h1>{theme.name}</h1>
-        <TimerDisplay remainingMs={state.remainingMs} paused={paused} />
+        <TimerDisplay remainingMs={state.remainingMs} totalMs={theme.timerMinutes * 60000} paused={paused} />
         <ConfirmButton label="End attempt" confirmLabel="End now, keep my points" danger busy={quitting} onConfirm={quit} />
       </header>
 

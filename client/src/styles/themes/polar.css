@@ -1,0 +1,46 @@
+/* Polar Expedition: snow white with glacier blue, aurora green and signal red, wind-blown
+   snow (still under reduced motion), and a thermometer whose mercury falls. */
+[data-theme='polar'] {
+  --bg: #f4f8fb;
+  --surface: #ffffff;
+  --surface-2: #e2ecf3;
+  --line: #a6bfd2;
+  --text: #10283a;
+  --muted: #3d586c;
+  --role-a: #1e5f8c;
+  --role-b: #0d6a47;
+  --on-accent: #ffffff;
+  --danger: #b0202c;
+  --ok: #0d6a47;
+  --focus: #e63946;
+  --font-body: 'Source Sans 3', system-ui, sans-serif;
+  --font-display: 'Rajdhani', system-ui, sans-serif;
+  color-scheme: light;
+}
+
+[data-theme='polar'] body {
+  background-image:
+    radial-gradient(2px 2px at 30px 40px, #c9dceb 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 110px 120px, #c9dceb 50%, transparent 51%),
+    radial-gradient(2px 2px at 190px 70px, #d7e5ef 50%, transparent 51%),
+    linear-gradient(170deg, transparent 70%, rgb(54 211 153 / 0.07));
+  background-size: 220px 160px, 220px 160px, 220px 160px, 100% 100%;
+}
+[data-theme='polar'] h1,
+[data-theme='polar'] .timer-value { letter-spacing: 0.03em; }
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-theme='polar'] body { animation: polar-drift 30s linear infinite; }
+}
+@keyframes polar-drift {
+  to { background-position: 220px 60px, 220px 60px, 220px 60px, 0 0; }
+}
+
+/* Thermometer: the red mercury falls toward the bulb. */
+[data-theme='polar'] .timer-gauge {
+  display: block;
+  width: 12px;
+  border-radius: 6px;
+  border: 2px solid var(--line);
+  background: linear-gradient(to top, #e63946 calc(12% + var(--time-left) * 88%), var(--surface) 0);
+}
