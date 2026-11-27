@@ -60,8 +60,13 @@ test('level bar, board, score, me and remaining time after one solve', () => {
     story: cyberHeist.theme.story,
     timerMinutes: 15,
     roles: cyberHeist.theme.roles,
+    styleKey: 'cyber',
   });
   expect(view.result).toBeNull();
+});
+
+test('the theme carries its style key for UI-2 (D100)', () => {
+  expect(toPlayerView(inProgress(), 'ann', { now }).theme.styleKey).toBe('cyber');
 });
 
 test('before the start: no levels, no clue, remainingMs null', () => {

@@ -28,7 +28,7 @@ async function getResult(attemptId, identity) {
   return {
     attemptId: String(attempt._id),
     challenge: challenge ? { id: String(challenge._id), code: challenge.code, name: challenge.name } : null,
-    theme: { name: theme.name, roles: theme.roles },
+    theme: { name: theme.name, roles: theme.roles, styleKey: theme.styleKey || '' },
     result: resultView(attempt, { rank }),
     chat: messages.map(messageView),
   };

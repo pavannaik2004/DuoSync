@@ -133,7 +133,9 @@ function toPlayerView(attempt, playerId, {
     id: String(attempt._id),
     practiceCode: attempt.practiceCode || null,
     status: attempt.status,
-    theme: { slug: theme.slug, name: theme.name, story: theme.story, timerMinutes: attempt.timerMinutes, roles: theme.roles },
+    theme: {
+      slug: theme.slug, name: theme.name, story: theme.story, timerMinutes: attempt.timerMinutes, roles: theme.roles, styleKey: theme.styleKey || '',
+    },
     me: { id: playerId, role: (me && me.role) || null },
     players: playersView(attempt, connectedIds),
     countdownEndsAt: iso(attempt.countdownEndsAt),

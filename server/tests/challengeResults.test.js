@@ -113,7 +113,7 @@ test('GET /attempts/:id/result: members get result, rank and chat; others 403; a
   expect(res.body).toMatchObject({
     attemptId: String(attempt._id),
     challenge: { id: String(c._id), code: c.code, name: c.name },
-    theme: { name: c.theme.name, roles: expect.any(Object) },
+    theme: { name: c.theme.name, roles: expect.any(Object), styleKey: 'cyber' },
     result: { status: 'finished', rank: { position: 1, outOf: 1, provisional: true } },
   });
   expect(res.body.chat.map((m) => m.text)).toEqual(['we did it']);
