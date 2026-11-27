@@ -41,12 +41,16 @@ export default function Dashboard() {
           <h2>Practice</h2>
           <p>Play Cyber Heist with any partner. Not ranked.</p>
         </Link>
-        <Link className="tile tile-b" to="/challenges/new">
+        <Link className="tile tile-b" to="/challenges">
+          <h2>Browse challenges</h2>
+          <p>Find public challenges and events, and filter them by theme.</p>
+        </Link>
+        <Link className="tile tile-a" to="/challenges/new">
           <h2>Create a challenge</h2>
           <p>Pick a story and a time window, then share the code.</p>
         </Link>
-        <div className="tile tile-a">
-          <h2>Open a challenge</h2>
+        <section className="tile tile-b" aria-labelledby="open-challenge-title">
+          <h2 id="open-challenge-title">Open a challenge</h2>
           <form className="form" onSubmit={onOpen} noValidate>
             {form.formError && <p className="form-error" role="alert">{form.formError}</p>}
             <FormField
@@ -59,7 +63,7 @@ export default function Dashboard() {
             />
             <button type="submit" className="btn">Open challenge</button>
           </form>
-        </div>
+        </section>
       </div>
     </section>
   );

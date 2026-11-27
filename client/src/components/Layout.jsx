@@ -21,6 +21,7 @@ export default function Layout() {
           {status === 'user' && (
             <>
               <NavLink to="/teams">My teams</NavLink>
+              <NavLink to="/challenges">Challenges</NavLink>
               <NavLink to="/practice">Practice</NavLink>
               <NavLink to="/profile">Profile</NavLink>
               <span className="who" title="Signed in">{user.username}</span>
@@ -30,6 +31,7 @@ export default function Layout() {
           {status === 'guest' && (
             <>
               <NavLink to="/practice">Practice</NavLink>
+              <NavLink to="/challenges">Challenges</NavLink>
               <span className="who" title="Playing as guest">{guest.nickname} (guest)</span>
               <button type="button" className="btn btn-ghost" onClick={handleLogout}>Leave</button>
             </>

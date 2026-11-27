@@ -420,3 +420,7 @@ a { color: var(--role-a); }
 .pager { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-top: var(--space-3); flex-wrap: wrap; }
 .team-card-record { display: block; color: var(--muted); font-size: 0.9375rem; }
 .history-table th[scope='row'] { min-width: 10rem; }
+
+/* Filter forms (CHAL-4, ADMIN-8): fields side by side, wrapping on phones */
+.filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-3); margin: var(--space-4) 0; }
+.filters .field { flex: 1 1 12rem; min-width: 0; }
