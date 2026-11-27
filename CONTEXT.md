@@ -9,7 +9,7 @@ The single source of truth for project progress. **Read this before starting any
 - **Hosted URLs:** API `https://duosync-api.onrender.com` (Render, free tier; sleeps when idle). Client `https://duo-sync-lovat.vercel.app` (Vercel, root `client`). Repo: `https://github.com/pavannaik2004/DuoSync`
 - **Open blockers:** none.
 - **Run locally:** `npm --prefix server run dev:memory` + `npm run dev:client` (no database needed)
-- **Tests:** `npm test` → 744 backend tests (REST, scoring, views, generators, challenges, leaderboards and ranks, pauses and boot recovery, history and profiles, Socket.io games, the admin API, the public list, practice expiry, auth limits). Client lint clean; build 123.3 KB gzip main JS, admin pages in their own chunks.
+- **Tests:** `npm test` → 749 backend tests (REST, scoring, views, generators, challenges, leaderboards and ranks, pauses and boot recovery, history and profiles, Socket.io games, the admin API, the public list, practice expiry, auth limits). Client lint clean; build 123.3 KB gzip main JS, admin pages in their own chunks.
 - **Deferred minors** (none blocks the gate; grouped from the Phase 3 task and final reviews):
   - *Races and atomicity (low odds):* `ensureSeeded` check-then-insert can double-insert if two instances boot together and does not repair a partial seed; the TEAM-7 check and the `maxTeams` check are not atomic with their writes (D61); `addToEntries` re-check and `syncEntries` are separate reads/writes; 
   - *Silent failures:* after a restart the quiet `scheduleHint` never emits `hint:available` if the delay already passed (the snapshot still shows ready).
@@ -280,3 +280,14 @@ Newest entry last. Format: `### YYYY-MM-DD — <title>`, then what was done, the
 - **T13** README (status, MVC map, REST table, dev admin, `AUTH_IP_RATE_LIMIT`, seed warning, "Building a theme in the admin panel", CO1 trace for activating a theme), DECISIONS D83–D96 (Q7 resolved by D93), roadmap.
 - Verify: `npm test` → 48 suites, 744/744. Client lint clean; build main JS 123.26 KB gzip (120.67 at the start; admin pages in separate chunks, AdminThemeEdit 2.76 KB). Browser checks (headless Chrome over CDP, `dev:memory` + Vite, 360 and 1280 px; not committed): Task 9 5/5, Task 10 5/5, Task 11 6/6, Task 12 5/5. Local gate walk-through 9/9: the dev admin created `gate-vault` in the panel, added 5 levels from examples with their pools, previewed without fallback, activated, granted organizer; the organizer created public challenge 7LTLT4 on it; it showed in `/challenges?theme=…`; a team entered and each player saw their own level-1 half (Safecracker: keypad, Lookout: order); a guest played practice and got "Players only" on the challenge.
 - **Not done (needs the user):** D93 confirmation, merge/push, hosted gate.
+
+### 2026-11-27 — Phase 5 final review and fixes
+
+- Whole-branch review (Opus): 1 Critical, 2 Important, 8 Minor; all five Review Focus cases verified correct.
+- Fixed (one pass, each RED → GREEN):
+  - Critical: an admin `params` typo could freeze the server (`distinctInts` looped forever on a range smaller than the count; `range()` and the grid-navigation map had no size limit). Now each fails fast as a `Generation:` problem. Tests `… is a Generation problem, reported quickly` (4 cases): RED hung and was killed, GREEN under 5 s.
+  - Important: Activate/Deactivate dropped unsaved theme-form edits (the form was keyed on `updatedAt`); it now reloads only after its own saves. Browser check RED (edit lost) → GREEN.
+  - Re-graded Important: role descriptions are multi-line boxes but the server refused line breaks; now allowed. Test RED (400) → GREEN.
+  - D93 marked "Pending user confirmation" in DECISIONS.md.
+- Verify: `npm test` → 749/749; client lint clean; main JS 123.26 KB gzip; Task 11 browser checks re-run 6/6.
+- Deferred minors (Phase 5): two admins writing one theme at once can break D85 or get a vague 409 `DUPLICATE`, and a start that reads templates mid-reorder can 500 (no version check on Theme); array values in admin fields (`styleKey: ['x']`, `mechanic`, `rewardRule`, `timeEstimateSec`) give 500, not 400; `GET /api/challenges?page=1&page=2` answers `page: null`; a member rejoining a practice room doesn't refresh `lastActivityAt` (a tiny sweep window), and deleted rooms leave their runtime in the registry; the 200 KB admin body parser runs before auth; `render.yaml` hard-codes the two auth limits (a Blueprint sync resets dashboard changes); the challenges list shows "Create a challenge" to guests, and its theme select shows "All themes" for a deactivated slug in the URL.

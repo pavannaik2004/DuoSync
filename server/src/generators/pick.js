@@ -63,6 +63,10 @@ function buildLevel({ template, context, answerKind, answer, acceptedAnswers = [
 
 /** `count` distinct integers in lo..hi, in random order. */
 function distinctInts(rng, lo, hi, count) {
+  // Admin params arrive over HTTP (Phase 5): an impossible range must fail, never loop forever.
+  if (![lo, hi, count].every(Number.isInteger) || count < 0 || count > 1000 || hi - lo + 1 < count) {
+    throw new Error(`Cannot pick ${count} different whole numbers from ${lo} to ${hi}`);
+  }
   const seen = new Set();
   while (seen.size < count) seen.add(rng.int(lo, hi));
   return [...seen];

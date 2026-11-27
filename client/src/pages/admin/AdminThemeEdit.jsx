@@ -25,6 +25,8 @@ export default function AdminThemeEdit() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const [deleted, setDeleted] = useState(false);
+  // The form reloads only after its own saves, so Activate or a level change never drops unsaved edits.
+  const [formSaves, setFormSaves] = useState(0);
 
   async function write(action) {
     setBusy(true);
@@ -121,12 +123,12 @@ export default function AdminThemeEdit() {
 
       <h2 className="section-title">Theme details</h2>
       <ThemeForm
-        key={theme.updatedAt}
+        key={formSaves}
         theme={theme}
         styleKeys={catalog.data ? catalog.data.styleKeys : [theme.styleKey]}
         readOnly={readOnly}
         busy={busy}
-        onSave={(body) => write(() => updateTheme(theme.id, body))}
+        onSave={async (body) => { if (await write(() => updateTheme(theme.id, body))) setFormSaves((n) => n + 1); }}
       />
 
       {!readOnly && (

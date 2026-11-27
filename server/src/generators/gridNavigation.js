@@ -57,6 +57,9 @@ function randomRoute(rng, rows, cols, legs) {
  */
 function generate({ template, params, pools, rng, context }) {
   const { rows, cols, copy } = params;
+  // The grid clue allows 2-8 rows and columns; checking first keeps a huge admin value from stalling the server.
+  must([rows, cols].every((n) => Number.isInteger(n) && n >= 2 && n <= 8), 'rows and cols must be whole numbers from 2 to 8');
+  must(Number.isInteger(params.moves) && params.moves >= 1 && params.moves <= 10, 'moves must be a whole number from 1 to 10');
   const pool = pools[params.pool];
   const route = randomRoute(rng, rows, cols, params.moves);
   const answer = pickAnswer(pool, rng, context, template.order, fixedText(template));

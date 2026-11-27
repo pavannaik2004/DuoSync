@@ -42,7 +42,14 @@ const text = (...paragraphs) => ({ type: 'text', data: { paragraphs } });
 const byNumber = (dir) => (a, b) => (dir === 'asc' ? 1 : -1) * (Number(a) - Number(b));
 /** The ids that match, sorted numerically the way the player must enter them. */
 const listAnswer = (ids, dir) => [...ids].sort(byNumber(dir)).join('-');
-const range = (lo, hi) => Array.from({ length: hi - lo + 1 }, (_, i) => lo + i);
+const MAX_RANGE = 1000;
+/** lo..hi as a list. Admin params arrive over HTTP, so a huge or broken range fails instead of exhausting memory. */
+function range(lo, hi) {
+  if (!Number.isInteger(lo) || !Number.isInteger(hi) || hi < lo || hi - lo + 1 > MAX_RANGE) {
+    throw new Error(`The range ${lo} to ${hi} must be whole numbers, at most ${MAX_RANGE} values`);
+  }
+  return Array.from({ length: hi - lo + 1 }, (_, i) => lo + i);
+}
 const pad2 = (n) => String(n).padStart(2, '0');
 
 /** '11:20 PM'-style label for minutes since midnight (1440 is midnight at the end of the evening). */

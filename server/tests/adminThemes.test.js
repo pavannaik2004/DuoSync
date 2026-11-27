@@ -203,3 +203,11 @@ test('a 100 KB body is accepted on /api/admin', async () => {
   expect(res.status).toBe(200);
   expect(res.body.theme.pools.padC).toHaveLength(300);
 });
+
+test('final review #7: a role description may span lines (the editor uses a multi-line box)', async () => {
+  const d = await detail('pirate');
+  const roles = { A: { ...d.theme.roles.A, description: 'Reads the map.\nKeeps the compass.' }, B: d.theme.roles.B };
+  const res = await as('put', `/api/admin/themes/${d.theme.id}`, { ...fieldsOf(d.theme), roles });
+  expect(res.status).toBe(200);
+  expect(res.body.theme.roles.A.description).toBe('Reads the map.\nKeeps the compass.');
+});

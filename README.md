@@ -192,7 +192,7 @@ An active theme must stay playable: an edit that would break it is refused with 
 npm test          # Jest + Supertest + Socket.io client against an in-memory MongoDB
 ```
 
-There are 744 tests: REST routes, the admin API (every route refused to non-admins, the theme check, levels and reorder, preview, the Phase 5 gate as a test), the public challenges list, practice expiry, auth limits, scoring and answer rules, the 8 theme puzzle sets (each fallback solved from its own clues, every pool rule), the level generators (200 seeds per template, validated by per-mechanic solvers), challenges and entries, leaderboards and ranks (ties, 100 teams under 1 s), pauses and boot recovery, history and profiles, the player views (no answer or partner half ever leaves the server), and full Socket.io games with two connected players. The first run downloads a MongoDB binary (about 780 MB unpacked) into `server/node_modules/.cache`. Later runs take about a minute.
+There are 749 tests: REST routes, the admin API (every route refused to non-admins, the theme check, levels and reorder, preview, the Phase 5 gate as a test), the public challenges list, practice expiry, auth limits, scoring and answer rules, the 8 theme puzzle sets (each fallback solved from its own clues, every pool rule), the level generators (200 seeds per template, validated by per-mechanic solvers), challenges and entries, leaderboards and ranks (ties, 100 teams under 1 s), pauses and boot recovery, history and profiles, the player views (no answer or partner half ever leaves the server), and full Socket.io games with two connected players. The first run downloads a MongoDB binary (about 780 MB unpacked) into `server/node_modules/.cache`. Later runs take about a minute.
 
 ## Deploy
 
