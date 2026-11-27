@@ -3,6 +3,7 @@
  * to its proof is docs/acceptance.md.
  */
 const Attempt = require('../src/models/Attempt');
+const Challenge = require('../src/models/Challenge');
 const { getContent, listThemes } = require('../src/content');
 const { generateLevelSet } = require('../src/generators/levelSet');
 const { levelPoints, summarize } = require('../src/services/scoring');
@@ -75,12 +76,15 @@ describe('CHAL-7 with a live server', () => {
   });
 
   test('an attempt started just before the window closes keeps ticking after it and ends by its own timer', async () => {
-    room = await startedChallengeAttempt({ endsInMs: 1500, timerMs: 4000 });
-    await new Promise((r) => setTimeout(r, 2000)); // the window has now closed
+    // A 6 s window leaves room for the sign-ups and the lobby on a slow machine; the game then outlives it.
+    room = await startedChallengeAttempt({ endsInMs: 6000, timerMs: 10000 });
+    const { endsAt } = await Challenge.findById(room.challenge.id);
+    expect((await Attempt.findById(room.attemptId)).status).toBe('in_progress');
+    await new Promise((r) => setTimeout(r, Math.max(0, endsAt.getTime() - Date.now()) + 300)); // the window has closed
     expect((await Attempt.findById(room.attemptId)).status).toBe('in_progress');
     const tick = await nextEvent(room.a, 'attempt:tick');
     expect(tick.remainingMs).toBeGreaterThan(0);
-    const ended = await nextEvent(room.a, 'attempt:ended', 4000);
+    const ended = await nextEvent(room.a, 'attempt:ended', 10000);
     expect(ended.status).toBe('timed_out');
-  });
+  }, 30000);
 });
